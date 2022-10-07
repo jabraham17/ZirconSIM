@@ -4,4 +4,4 @@
 *.o
 *.out
 *.bin
-bin/
+build/

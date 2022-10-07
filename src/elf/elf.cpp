@@ -102,21 +102,15 @@ std::string elf::File::getSectionHeaderString(uint64_t offset) {
     return std::string(buffer);
 }
 
-#include <iostream>
-
 uint64_t elf::File::getStartAddress() { return fh.e_entry; }
 
-void elf::File::buildMemIMG(memimg::Memory& mem) {
+void elf::File::buildMemoryImage(mem::MemoryImage& m) {
     // for each loadable segment
     for(auto ph : phs) {
-        // PT_LOAD = 0x1
-        if(ph.p_type == 1 && ph.p_memsz) {
-            mem.allocate(ph.p_vaddr, ph.p_memsz);
+        if(ph.p_type == 1/*PT_LOAD*/ && ph.p_memsz) {
+            m.allocate(ph.p_vaddr, ph.p_memsz);
             // find all sections that exist in this segment and load them into
             // memory
-            // std::cout << "Loadable Segment [" << std::hex << ph.p_offset << "
-            // "
-            //           << std::hex << ph.p_offset + ph.p_filesz << "]\n";
             for(auto sh : shs) {
                 if(sh.sh_type == 0 /*SHT_NULL*/) continue;
                 // if entire section fits in segment
@@ -126,19 +120,14 @@ void elf::File::buildMemIMG(memimg::Memory& mem) {
                    (sh.sh_type == 0x8 /*SHT_NOBITS*/ &&
                     sh.sh_offset >= ph.p_offset &&
                     sh.sh_offset <= ph.p_offset + ph.p_filesz)) {
-                    // std::cout << "section [" << std::hex << sh.sh_offset << "
-                    // "
-                    //           << std::hex << sh.sh_offset + sh.sh_size
-                    //           << "]: " << getSectionHeaderString(sh.sh_name)
-                    //           << "\n";
                     // if NOBITS, set to 0
                     if(sh.sh_type == 0x8 /*SHT_NOBITS*/) {
-                        std::memset(mem.get(sh.sh_addr), 0, sh.sh_size);
+                        std::memset(m.get(sh.sh_addr), 0, sh.sh_size);
                     }
                     // otherwise copy section to memory
                     else {
                         ifs.seekg(sh.sh_offset);
-                        ifs.read((char*)mem.get(sh.sh_addr), sh.sh_size);
+                        ifs.read((char*)m.get(sh.sh_addr), sh.sh_size);
                     }
                 }
             }

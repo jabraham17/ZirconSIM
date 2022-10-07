@@ -74,42 +74,42 @@ B_TYPE(bgeu, 0b1100011, 0b111,
 , 0)
 I_TYPE(lb, 0b0000011, 0b000,
     uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf[RS1];
-    hs.rf[RD] = SIGNEXT64(hs.mem.byte(address), 8);
+    hs.rf[RD] = SIGNEXT64(hs.memimg.byte(address), 8);
     hs.pc += 4;
 , 0)
 I_TYPE(lh, 0b0000011, 0b001,
     uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf[RS1];
-    hs.rf[RD] = SIGNEXT64(hs.mem.halfword(address), 16);
+    hs.rf[RD] = SIGNEXT64(hs.memimg.halfword(address), 16);
     hs.pc += 4;
 , 0)
 I_TYPE(lw, 0b0000011, 0b010,
     uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf[RS1];
-    hs.rf[RD] = SIGNEXT64(hs.mem.word(address), 32);
+    hs.rf[RD] = SIGNEXT64(hs.memimg.word(address), 32);
     hs.pc += 4;
 , 0)
 I_TYPE(lbu, 0b0000011, 0b100,
     uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf[RS1];
-    hs.rf[RD] = hs.mem.byte(address);
+    hs.rf[RD] = hs.memimg.byte(address);
     hs.pc += 4;
 , 0)
 I_TYPE(lhu, 0b0000011, 0b101,
     uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf[RS1];
-    hs.rf[RD] = hs.mem.halfword(address);
+    hs.rf[RD] = hs.memimg.halfword(address);
     hs.pc += 4;
 , 0)
 S_TYPE(sb, 0b0100011, 0b000,
     uint64_t address = IMM_S_TYPE_SEXT64 + hs.rf[RS1];
-    hs.mem.byte(address) = hs.rf[RS2] & 0xFF;
+    hs.memimg.byte(address) = hs.rf[RS2] & 0xFF;
     hs.pc += 4;
 , 0)
 S_TYPE(sh, 0b0100011, 0b001,
     uint64_t address = IMM_S_TYPE_SEXT64 + hs.rf[RS1];
-    hs.mem.halfword(address) = hs.rf[RS2] & 0xFFFF;
+    hs.memimg.halfword(address) = hs.rf[RS2] & 0xFFFF;
     hs.pc += 4;
 , 0)
 S_TYPE(sw, 0b0100011, 0b010,
     uint64_t address = IMM_S_TYPE_SEXT64 + hs.rf[RS1];
-    hs.mem.word(address) = hs.rf[RS2] & 0xFFFFFFFF;
+    hs.memimg.word(address) = hs.rf[RS2] & 0xFFFFFFFF;
     hs.pc += 4;
 , 0)
 I_TYPE(addi, 0b0010011, 0b000,

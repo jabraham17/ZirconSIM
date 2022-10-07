@@ -1,6 +1,6 @@
 
-#ifndef RISCV_SIM_REGISTER_H_
-#define RISCV_SIM_REGISTER_H_
+#ifndef ZIRCON_REGISTER_H_
+#define ZIRCON_REGISTER_H_
 
 #include <array>
 #include <cassert>

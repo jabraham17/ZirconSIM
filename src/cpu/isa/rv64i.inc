@@ -2,17 +2,17 @@
 
 I_TYPE(lwu, 0b0000011, 0b110,
     uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf[RS1];
-    hs.rf[RD] = hs.mem.word(address);
+    hs.rf[RD] = hs.memimg.word(address);
     hs.pc += 4;
 , 0)
 I_TYPE(ld, 0b0000011, 0b011,
     uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf[RS1];
-    hs.rf[RD] = hs.mem.doubleword(address);
+    hs.rf[RD] = hs.memimg.doubleword(address);
     hs.pc += 4;
 , 0)
 S_TYPE(sd, 0b0100011, 0b011,
     uint64_t address = IMM_S_TYPE_SEXT64 + hs.rf[RS1];
-    hs.mem.doubleword(address) = hs.rf[RS2] & 0xFFFFFFFFFFFFFFFF;
+    hs.memimg.doubleword(address) = hs.rf[RS2] & 0xFFFFFFFFFFFFFFFF;
     hs.pc += 4;
 , 0)
 CUSTOM(slli, 0b0010011,

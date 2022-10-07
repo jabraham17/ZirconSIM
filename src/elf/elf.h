@@ -1,7 +1,7 @@
-#ifndef RISCV_SIM_ELF_H_
-#define RISCV_SIM_ELF_H_
+#ifndef ZIRCON_ELF_H_
+#define ZIRCON_ELF_H_
 
-#include "memimg/memimg.h"
+#include "mem/memory-image.h"
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -98,7 +98,7 @@ class File {
 
     std::string getSectionHeaderString(uint64_t);
 
-    void buildMemIMG(memimg::Memory&);
+    void buildMemoryImage(mem::MemoryImage&);
     uint64_t getStartAddress();
 };
 

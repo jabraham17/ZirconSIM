@@ -1,9 +1,9 @@
 
-#ifndef RISCV_SIM_CPU_H_
-#define RISCV_SIM_CPU_H_
+#ifndef ZIRCON_CPU_H_
+#define ZIRCON_CPU_H_
 
 #include "isa/instruction_match.h"
-#include "memimg/memimg.h"
+#include "mem/memory-image.h"
 #include "register.h"
 
 #include <string>
@@ -17,13 +17,13 @@ namespace cpu {
 class Hart64State {
   public:
     RegisterFile<32> rf;
-    memimg::Memory mem;
+    mem::MemoryImage memimg;
     uint64_t pc; // address in memory of current instruction
     // Instructions::Instruction getInstruction();
-    uint32_t getInstWord() { return mem.word(pc); }
+    uint32_t getInstWord() { return memimg.word(pc); }
 
     Hart64State() = default;
-    Hart64State(memimg::Memory mem) : mem(std::move(mem)) {}
+    Hart64State(mem::MemoryImage m) : memimg(std::move(m)) {}
 };
 
 struct CPUException : public std::exception {
@@ -379,7 +379,7 @@ class Hart64 {
     Hart64State hs;
 
   public:
-    Hart64(memimg::Memory mem) : hs(std::move(mem)) {}
+    Hart64(mem::MemoryImage m) : hs(std::move(m)) {}
 
     void execute(uint64_t start_address) {
         hs.pc = start_address;

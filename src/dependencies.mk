@@ -1,8 +1,8 @@
 
 cpu=
-elf= memimg
-memimg= 
-zircon= cpu elf memimg
+elf= mem
+mem= 
+zircon= cpu elf mem
 
 define make_depen
 $(eval $1: $($1))

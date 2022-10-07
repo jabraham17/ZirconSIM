@@ -1,7 +1,7 @@
 
 
-#ifndef RISCV_SIM_MEMIMG_H_
-#define RISCV_SIM_MEMIMG_H_
+#ifndef ZIRCON_MEMIMG_H_
+#define ZIRCON_MEMIMG_H_
 
 #include <cstdint>
 #include <map>
@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace memimg {
+namespace mem {
 
 struct MemoryException : public std::exception {
     const char* what() const throw() { return "Memory Exception"; }
@@ -21,11 +21,11 @@ struct OutOfBoundsException : public MemoryException {
     const char* what() const throw() { return "Out of Bounds Access"; }
 };
 
-struct memory_region {
+struct MemoryRegion {
     uint64_t address;
     uint64_t size;
     uint8_t* buffer;
-    memory_region(uint64_t address, uint64_t size, uint8_t* buffer)
+    MemoryRegion(uint64_t address, uint64_t size, uint8_t* buffer)
         : address(address), size(size), buffer(buffer) {}
 
     uint8_t* get(uint64_t addr) {
@@ -42,26 +42,26 @@ struct memory_region {
     }
 };
 
-class Memory {
+class MemoryImage {
 
   private:
-    std::vector<memory_region> memory_map;
+    std::vector<MemoryRegion> memory_map;
     std::unique_ptr<uint8_t[]> memory;
     uint8_t* memory_ptr;
     size_t mem_size;
 
-    memory_region& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
+    MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
         if(memory_ptr - memory.get() + size >= mem_size)
             throw OutOfMemoryException();
 
         auto ptr = memory_ptr;
-        memory_region mr(addr, size, ptr);
+        MemoryRegion mr(addr, size, ptr);
         memory_map.push_back(mr);
         memory_ptr += size;
         return memory_map.back();
     }
 
-    memory_region& getMemoryRegion(uint64_t addr) {
+    MemoryRegion& getMemoryRegion(uint64_t addr) {
         for(auto& mr : memory_map) {
             if(addr >= mr.address && addr < mr.address + mr.size) {
                 return mr;
@@ -71,7 +71,7 @@ class Memory {
     }
 
   public:
-    Memory(size_t size = 0x1000) : mem_size(size) {
+    MemoryImage(size_t size = 0x1000) : mem_size(size) {
         memory = std::make_unique<uint8_t[]>(mem_size);
         memory_ptr = memory.get();
     }

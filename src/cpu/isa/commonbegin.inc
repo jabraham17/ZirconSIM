@@ -44,8 +44,9 @@
 // #define CUSTOM(name, opcode, matcher, execution)                               \
 //     CUSTOM(name, opcode, matcher, execution, 0)
 
-#ifndef RISCV_SIM_CPU_ISA_COMMON_BEGIN_HELPER_
-#define RISCV_SIM_CPU_ISA_COMMON_BEGIN_HELPER_
+#ifndef ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_
+#define ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_
+
 #define OPCODE (instruction::getOpcode(hs.getInstWord()))
 #define FUNCT7 (instruction::getFunct7(hs.getInstWord()))
 #define FUNCT3 (instruction::getFunct3(hs.getInstWord()))
@@ -72,4 +73,5 @@
 #define IMM_U_TYPE_SEXT32 (instruction::signext32<20>(instruction::getUTypeImm(hs.getInstWord())))
 #define IMM_J_TYPE_SEXT32 (instruction::signext32<20>(instruction::getJTypeImm(hs.getInstWord())))
 #define COMMA ,
+
 #endif
