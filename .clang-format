@@ -1,0 +1,16 @@
+BreakBeforeBraces: Attach
+AlignAfterOpenBracket: AlwaysBreak
+SpaceBeforeParens: Never
+IndentWidth: 4
+ColumnLimit: 80
+IndentCaseLabels: true
+UseTab: Never
+PointerAlignment: Left
+IndentPPDirectives: BeforeHash
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+
+BinPackArguments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
