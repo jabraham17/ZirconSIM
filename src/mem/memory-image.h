@@ -103,6 +103,6 @@ class MemoryImage {
     }
 };
 
-} // namespace memimg
+} // namespace mem
 
 #endif

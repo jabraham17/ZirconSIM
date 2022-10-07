@@ -49,7 +49,6 @@ constexpr Word getRs1(Word bits) { return getBitsFromLSB<15, 5>(bits); }
 constexpr Word getShamt5(Word bits) { return getBitsFromLSB<20, 5>(bits); }
 constexpr Word getShamt6(Word bits) { return getBitsFromLSB<20, 6>(bits); }
 
-
 constexpr Word getITypeImm(Word bits) { return getBitsFromLSB<20, 12>(bits); }
 constexpr Word getSTypeImm(Word bits) {
     return (/*imm11_5*/ getBitsFromLSB<25, 7>(bits) << 5) |

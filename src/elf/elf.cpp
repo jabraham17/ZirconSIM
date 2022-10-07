@@ -107,7 +107,7 @@ uint64_t elf::File::getStartAddress() { return fh.e_entry; }
 void elf::File::buildMemoryImage(mem::MemoryImage& m) {
     // for each loadable segment
     for(auto ph : phs) {
-        if(ph.p_type == 1/*PT_LOAD*/ && ph.p_memsz) {
+        if(ph.p_type == 1 /*PT_LOAD*/ && ph.p_memsz) {
             m.allocate(ph.p_vaddr, ph.p_memsz);
             // find all sections that exist in this segment and load them into
             // memory

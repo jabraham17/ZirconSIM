@@ -316,7 +316,7 @@ std::string disassemble(uint32_t bits, uint32_t pc = 0) {
 #define U_TYPE(name, opcode, execution, precedence)                            \
     case ISA::rv32i_##name:                                                    \
         ss << #name << " x" << instruction::getRd(bits) << ", "                \
-           << (instruction::getUTypeImm(bits) >> 12);      \
+           << (instruction::getUTypeImm(bits) >> 12);                          \
         break;
 #define J_TYPE(name, opcode, execution, precedence)                            \
     case ISA::rv32i_##name:                                                    \
@@ -356,7 +356,7 @@ std::string disassemble(uint32_t bits, uint32_t pc = 0) {
 #define U_TYPE(name, opcode, execution, precedence)                            \
     case ISA::rv64i_##name:                                                    \
         ss << #name << " x" + << instruction::getRd(bits) << ", "              \
-           << (instruction::getUTypeImm(bits) >> 12);      \
+           << (instruction::getUTypeImm(bits) >> 12);                          \
         break;
 #define J_TYPE(name, opcode, execution, precedence)                            \
     case ISA::rv64i_##name:                                                    \
