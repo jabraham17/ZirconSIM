@@ -1,42 +1,30 @@
 #ifndef R_TYPE
 #define R_TYPE(name, opcode, funct7, funct3, execution, precedence)
 #endif
-// #define R_TYPE(name, opcode, funct7, funct3, execution)                        \
-//     R_TYPE(name, opcode, funct7, funct3, execution, 0)
 
 #ifndef I_TYPE
 #define I_TYPE(name, opcode, funct3, execution, precedence)
 #endif
-// #define I_TYPE(name, opcode, funct3, execution)                                \
-//     I_TYPE(name, opcode, funct3, execution, 0)
 
 #ifndef S_TYPE
 #define S_TYPE(name, opcode, funct3, execution, precedence)
 #endif
-// #define S_TYPE(name, opcode, funct3, execution)                                \
-//     S_TYPE(name, opcode, funct3, execution, 0)
 
 #ifndef B_TYPE
 #define B_TYPE(name, opcode, funct3, execution, precedence)
 #endif
-// #define B_TYPE(name, opcode, funct3, execution)                                \
-//     B_TYPE(name, opcode, funct3, execution, 0)
 
 #ifndef U_TYPE
 #define U_TYPE(name, opcode, execution, precedence)
 #endif
-// #define U_TYPE(name, opcode, execution) U_TYPE(name, opcode, execution, 0)
 
 #ifndef J_TYPE
 #define J_TYPE(name, opcode, execution, precedence)
 #endif
-// #define J_TYPE(name, opcode, execution) J_TYPE(name, opcode, execution, 0)
 
 #ifndef CUSTOM
 #define CUSTOM(name, opcode, matcher, execution, precedence)
 #endif
-// #define CUSTOM(name, opcode, matcher, execution)                               \
-//     CUSTOM(name, opcode, matcher, execution, 0)
 
 #ifndef ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_
 #define ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_

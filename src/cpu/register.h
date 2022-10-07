@@ -1,6 +1,6 @@
 
-#ifndef ZIRCON_REGISTER_H_
-#define ZIRCON_REGISTER_H_
+#ifndef ZIRCON_CPU_REGISTER_H_
+#define ZIRCON_CPU_REGISTER_H_
 
 #include <array>
 #include <cassert>
@@ -8,24 +8,6 @@
 #include <iomanip>
 #include <ostream>
 #include <string>
-
-// template <size_t SIZE> struct Register {
-//   public:
-//     void setValue(uint64_t value) { this->value = bitmask() & value; }
-//     void setSextValue(int64_t value) { this->value = getSextValue(value); }
-//     uint64_t getValue() const { return bitmask() & value; }
-//     int64_t getSextValue() const {
-//         assert(SIZE <= 64 && SIZE >= 0);
-//         return int64_t(value << (64 - SIZE)) >> (64 - SIZE);
-//     }
-
-//     Register() : value(0) {}
-
-//   private:
-//     uint64_t value;
-//     uint64_t bitmask() const { return ((1 << (SIZE + 1)) - 1); }
-//     uint8_t msb() const { return value & (1 << SIZE); }
-// };
 
 template <size_t N> class RegisterFile {
 

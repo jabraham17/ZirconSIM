@@ -1,7 +1,7 @@
 
 
-#ifndef ZIRCON_MEMIMG_H_
-#define ZIRCON_MEMIMG_H_
+#ifndef ZIRCON_MEM_MEMORY_IMAGE_H_
+#define ZIRCON_MEM_MEMORY_IMAGE_H_
 
 #include <cstdint>
 #include <map>

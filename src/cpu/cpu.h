@@ -1,6 +1,6 @@
 
-#ifndef ZIRCON_CPU_H_
-#define ZIRCON_CPU_H_
+#ifndef ZIRCON_CPU_CPU_H_
+#define ZIRCON_CPU_CPU_H_
 
 #include "isa/instruction_match.h"
 #include "mem/memory-image.h"

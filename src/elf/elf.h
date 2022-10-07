@@ -1,5 +1,5 @@
-#ifndef ZIRCON_ELF_H_
-#define ZIRCON_ELF_H_
+#ifndef ZIRCON_ELF_ELF_H_
+#define ZIRCON_ELF_ELF_H_
 
 #include "mem/memory-image.h"
 #include <cstdint>
