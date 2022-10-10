@@ -58,7 +58,6 @@ class MemoryImage {
 
     MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
         if(memory_ptr - memory.get() + size >= mem_size) {
-
             throw OutOfMemoryException();
         }
 
@@ -82,9 +81,7 @@ class MemoryImage {
       private:
         MemoryImage* mi;
         uint64_t addr;
-
         friend MemoryImage;
-
         auto constexpr getPrintFormatter() {
             if(std::is_same<T, uint8_t>::value) return Trace::byte;
             else if(std::is_same<T, uint16_t>::value) return Trace::halfword;
@@ -93,34 +90,25 @@ class MemoryImage {
             return Trace::doubleword;
         }
         MemoryRegion& mr() { return mi->getMemoryRegion(addr); }
-
       public:
         T read();
         void write(T v);
-
         MemoryCellProxy(MemoryImage* mi, uint64_t addr) : mi(mi), addr(addr) {}
-
         operator T() {
             mi->trace_mem << "RD MEM[" << Trace::doubleword << addr << "]"
                       << Trace::flush;
-
             T v = read();
-
             mi->trace_mem << " = " << getPrintFormatter() << v << std::endl;
-
             return v;
         }
         MemoryCellProxy<T>& operator=(T v) {
             mi->trace_mem << "WR MEM[" << Trace::doubleword << addr << "]"
                       << Trace::flush;
-
             T old_value = read();
             write(v);
-
             mi->trace_mem << " = " << getPrintFormatter() << v
                       << "; OLD VALUE = " << getPrintFormatter() << old_value
                       << std::endl;
-
             return *this;
         }
     };

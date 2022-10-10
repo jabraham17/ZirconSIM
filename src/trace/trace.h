@@ -118,6 +118,14 @@ class Trace {
 
         return stream;
     }
+    static Trace& dec(Trace& stream) {
+        stream << std::setfill(' ');
+        stream << std::setw(2);
+        stream << std::right;
+        stream << std::dec;
+
+        return stream;
+    }
 
     using OStreamType = std::basic_ostream<char, std::char_traits<char>>;
     using OStreamManip = OStreamType& (*)(OStreamType&);

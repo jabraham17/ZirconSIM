@@ -29,7 +29,11 @@ class Hart64State {
     uint64_t pc; // address in memory of current instruction
     uint32_t getInstWord() { return memimg.word(pc); }
 
-    Hart64State(mem::MemoryImage& m) : memimg(m) {}
+    Hart64State(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE) : memimg(m) {
+        #define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size) \
+        classname##_RF.setTraceMode(tm);
+        #include "isa/defs/registers.inc"
+    }
 };
 
 struct CPUException : public std::exception {
@@ -387,7 +391,7 @@ class Hart64 {
 
   public:
     Hart64(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE)
-        : hs(m), trace_mode(tm), trace_inst("INSTRUCTION TRACE") {
+        : hs(m, tm), trace_mode(tm), trace_inst("INSTRUCTION TRACE") {
         trace_inst.setState((trace_mode & TraceMode::INSTRUCTION));
     }
 

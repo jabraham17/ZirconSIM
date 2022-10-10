@@ -11,6 +11,8 @@
 #include <sstream>
 #include <string>
 
+#include "trace/trace.h"
+
 template <size_t SIZE> class Register {
   private:
     std::bitset<SIZE> value;
@@ -60,21 +62,62 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
     std::string classname;
     std::string regprefix;
     std::array<Register<SIZE>, NUM> registers;
+    Trace trace_reg;
+
+    struct RegisterProxy {
+        using T = uint64_t;
+      private:
+        RegisterClass<NUM, SIZE>* rc;
+        unsigned reg_idx;
+        friend RegisterClass;
+      public:
+        T read() {
+            return rc->registers[reg_idx].get();
+        }
+        void write(T v) {
+            rc->registers[reg_idx].set(v);
+        }
+        RegisterProxy(RegisterClass* rc, unsigned reg_idx)
+            : rc(rc), reg_idx(reg_idx) {}
+        operator T() {
+            rc->trace_reg << "RD " << rc->classname << "[" << Trace::dec << reg_idx << "]"
+                          << Trace::flush;
+            T v = read();
+            rc->trace_reg << " = " << Trace::doubleword << v << std::endl;
+            return v;
+        }
+        RegisterProxy& operator=(T v) {
+            rc->trace_reg << "WR " << rc->classname << "[" << Trace::dec << reg_idx << "]"
+                          << Trace::flush;
+            T old_value = read();
+            write(v);
+            rc->trace_reg << " = " << Trace::doubleword << v
+                          << "; OLD VALUE = " << Trace::doubleword << old_value
+                          << std::endl;
+            return *this;
+        }
+    };
 
   public:
     RegisterClass(
         std::string classname,
         std::string regprefix,
-        std::array<Register<SIZE>, NUM> registers = {})
-        : classname(classname), regprefix(regprefix), registers(registers) {}
-
-    RegisterClass() = default;
-
-    Register<SIZE>& reg(unsigned idx) {
-        assert(idx < NUM);
-        return registers[idx];
+        std::array<Register<SIZE>, NUM> registers = {},
+        TraceMode tm = TraceMode::NONE)
+        : classname(classname), regprefix(regprefix), registers(registers),
+          trace_reg("REGISTER TRACE: " + classname) {
+        trace_reg.setState(tm & TraceMode::REGISTER);
     }
-    Register<SIZE>& operator[](unsigned idx) { return reg(idx); }
+    RegisterClass() = default;
+    void setTraceMode(TraceMode tm) {
+        trace_reg.setState(tm & TraceMode::REGISTER);
+    }
+
+    RegisterProxy reg(unsigned idx) {
+        assert(idx < NUM);
+        return RegisterProxy(this, idx);
+    }
+    RegisterProxy operator[](unsigned idx) { return reg(idx); }
 
     const std::string& getName() { return classname; }
     void dump(std::ostream& o) {
