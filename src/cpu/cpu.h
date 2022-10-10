@@ -5,6 +5,7 @@
 #include "isa/instruction_match.h"
 #include "mem/memory-image.h"
 #include "register.h"
+#include "trace/trace.h"
 
 #include <string>
 
@@ -16,14 +17,19 @@ namespace cpu {
 
 class Hart64State {
   public:
-    RegisterFile<32> rf;
-    mem::MemoryImage memimg;
+#define REG_CASE(...) MAKE_REGISTER(__VA_ARGS__),
+#define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
+    RegisterClass<number_regs, reg_size> classname##_RF = {                    \
+        #classname,                                                            \
+        #reg_prefix,                                                           \
+        {REGISTER_CLASS_##classname(REG_CASE)}};
+#include "isa/defs/registers.inc"
+
+    mem::MemoryImage& memimg;
     uint64_t pc; // address in memory of current instruction
-    // Instructions::Instruction getInstruction();
     uint32_t getInstWord() { return memimg.word(pc); }
 
-    Hart64State() = default;
-    Hart64State(mem::MemoryImage m) : memimg(std::move(m)) {}
+    Hart64State(mem::MemoryImage& m) : memimg(m) {}
 };
 
 struct CPUException : public std::exception {
@@ -214,10 +220,8 @@ ISA decodeInstruction(uint32_t bits) {
     return matched;
 }
 
-void executeInstruction(Hart64State& hs) {
-    ISA op = decodeInstruction(hs.getInstWord());
-    // std::cout << std::hex << instruction::getOpcode(hs.getInstWord()) << " "
-    // << std::hex << instruction::getFunct3(hs.getInstWord())<< "\n";
+void executeInstruction(uint32_t bits, Hart64State& hs) {
+    ISA op = decodeInstruction(bits);
     switch(op) {
         default: throw IllegalInstructionException();
 
@@ -378,25 +382,27 @@ class Hart64 {
   private:
     Hart64State hs;
 
+    TraceMode trace_mode;
+    Trace trace_inst;
+
   public:
-    Hart64(mem::MemoryImage m) : hs(std::move(m)) {}
+    Hart64(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE)
+        : hs(m), trace_mode(tm), trace_inst("INSTRUCTION TRACE") {
+        trace_inst.setState((trace_mode & TraceMode::INSTRUCTION));
+    }
 
     void execute(uint64_t start_address) {
         hs.pc = start_address;
         while(1) {
             try {
-                std::cout << "PC[0x" << std::setfill('0') << std::setw(8)
-                          << std::right << std::hex << hs.pc << "] ";
-                std::cout << "INST[0x" << std::setfill('0') << std::setw(8)
-                          << std::right << std::hex << hs.getInstWord() << "]";
-                std::cout << " " << isa::disassemble(hs.getInstWord(), hs.pc);
-                std::cout << std::endl;
-                isa::executeInstruction(hs);
+                auto inst = hs.getInstWord();
+                trace_inst << "PC[" << Trace::doubleword << hs.pc << "] = ";
+                trace_inst << Trace::word << inst;
+                trace_inst << "; " << isa::disassemble(inst, hs.pc);
+                trace_inst << std::endl;
+                isa::executeInstruction(inst, hs);
             } catch(const std::exception& e) {
-                std::cerr << "\n" << e.what() << std::endl;
-                std::cerr << "Register File";
-                hs.rf.dump(std::cerr);
-                std::cerr << std::endl;
+                std::cerr << e.what() << std::endl;
                 break;
             }
         }

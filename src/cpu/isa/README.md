@@ -1,4 +1,4 @@
-# README
+# ISA
 
 R_TYPE(name, opcode, funct7, funct3, execution code, precedence)
 I_TYPE(name, opcode, funct3, execution code, precedence)
@@ -19,3 +19,9 @@ ALL REGISTER READS MUST OCCUR BEFORE ANY REGISTER WRITES
 
 
 immediate shifts are weird, they are kinda I type, kinda R type
+
+
+# registers
+
+REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)
+REGISTER(classname, number, nice_name)
