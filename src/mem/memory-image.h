@@ -152,40 +152,10 @@ class MemoryImage {
     MemoryCellProxy<uint64_t> doubleword(uint64_t addr) {
         return MemoryCellProxy<uint64_t>(this, addr);
     }
-
     uint8_t* get(uint64_t addr) {
         auto mr = getMemoryRegion(addr);
         return mr.get(addr);
     }
-    // // uint8_t& at(uint64_t addr) { return this->byte(addr); }
-    // uint8_t& byte(uint64_t addr) {
-    //     auto mr = getMemoryRegion(addr);
-    //     auto& v = mr.byte(addr);
-    //     trace_mem << "MEM[" << Trace::doubleword << addr
-    //               << "] = " << Trace::byte << v << std::endl;
-    //     return v;
-    // }
-    // uint16_t& halfword(uint64_t addr) {
-    //     auto mr = getMemoryRegion(addr);
-    //     auto& v = mr.halfword(addr);
-    //     trace_mem << "MEM[" << Trace::doubleword << addr
-    //               << "] = " << Trace::halfword << v << std::endl;
-    //     return v;
-    // }
-    // uint32_t& word(uint64_t addr) {
-    //     auto mr = getMemoryRegion(addr);
-    //     auto& v = mr.word(addr);
-    //     trace_mem << "MEM[" << Trace::doubleword << addr
-    //               << "] = " << Trace::word << v << std::endl;
-    //     return v;
-    // }
-    // uint64_t& doubleword(uint64_t addr) {
-    //     auto mr = getMemoryRegion(addr);
-    //     auto& v = mr.doubleword(addr);
-    //     trace_mem << "MEM[" << Trace::doubleword << addr
-    //               << "] = " << Trace::doubleword << v << std::endl;
-    //     return v;
-    // }
 };
 
 } // namespace mem

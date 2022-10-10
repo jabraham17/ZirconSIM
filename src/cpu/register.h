@@ -74,7 +74,6 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
         assert(idx < NUM);
         return registers[idx];
     }
-    // uint64_t& value(unsigned idx) { return reg(idx)(); }
     Register<SIZE>& operator[](unsigned idx) { return reg(idx); }
 
     const std::string& getName() { return classname; }

@@ -11,7 +11,7 @@
 
 struct zircon_args {
     char* file;
-    char* logfile;
+    char* logfile; // unimplemented
     TraceMode traces;
     bool separate_files; // unimplemented
 
