@@ -87,7 +87,7 @@ R_TYPE(subw,
        0b000,
        0b0100000,
        hs.GPR_RF[RD] = SIGNEXT64(
-           SIGNEXT32(hs.GPR_RF[RS2], 32) - SIGNEXT32(hs.GPR_RF[RS1], 32),
+           SIGNEXT32(hs.GPR_RF[RS1], 32) - SIGNEXT32(hs.GPR_RF[RS2], 32),
            32);
        hs.pc += 4;
        , 0)

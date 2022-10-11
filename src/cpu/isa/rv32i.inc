@@ -154,7 +154,7 @@ R_TYPE(sub,
        0b0110011,
        0b0100000,
        0b000,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS2] - hs.GPR_RF[RS1];
+       hs.GPR_RF[RD] = hs.GPR_RF[RS1] - hs.GPR_RF[RS2];
        hs.pc += 4;
        , 0)
 R_TYPE(sll,
