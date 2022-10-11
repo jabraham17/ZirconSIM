@@ -107,6 +107,7 @@ int main(int argc, const char** argv) {
     auto start = f.getStartAddress();
 
     cpu::Hart64 hart(memimg, args.traces);
+    hart.init();
     hart.execute(start);
 
     return 0;

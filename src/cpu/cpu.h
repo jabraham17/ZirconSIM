@@ -396,6 +396,12 @@ class Hart64 {
         trace_inst.setState((trace_mode & TraceMode::INSTRUCTION));
     }
 
+    void init() {
+        // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
+        hs.GPR_RF[2] = 0x7fffffff00010000;
+        hs.memimg.allocate(0x7fffffff00000000, 0x10008);
+    }
+
     void execute(uint64_t start_address) {
         hs.pc = start_address;
         while(1) {
