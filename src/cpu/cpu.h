@@ -29,10 +29,11 @@ class Hart64State {
     uint64_t pc; // address in memory of current instruction
     uint32_t getInstWord() { return memimg.word(pc); }
 
-    Hart64State(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE) : memimg(m) {
-        #define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size) \
-        classname##_RF.setTraceMode(tm);
-        #include "isa/defs/registers.inc"
+    Hart64State(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE)
+        : memimg(m) {
+#define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
+    classname##_RF.setTraceMode(tm);
+#include "isa/defs/registers.inc"
     }
 };
 
@@ -405,6 +406,7 @@ class Hart64 {
                 trace_inst << "; " << isa::disassemble(inst, hs.pc);
                 trace_inst << std::endl;
                 isa::executeInstruction(inst, hs);
+                if(trace_mode) std::cout << std::setfill('-') << std::setw(80) << "\n";
             } catch(const std::exception& e) {
                 std::cerr << e.what() << std::endl;
                 break;

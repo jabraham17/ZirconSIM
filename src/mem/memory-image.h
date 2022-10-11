@@ -90,25 +90,26 @@ class MemoryImage {
             return Trace::doubleword;
         }
         MemoryRegion& mr() { return mi->getMemoryRegion(addr); }
+
       public:
         T read();
         void write(T v);
         MemoryCellProxy(MemoryImage* mi, uint64_t addr) : mi(mi), addr(addr) {}
         operator T() {
             mi->trace_mem << "RD MEM[" << Trace::doubleword << addr << "]"
-                      << Trace::flush;
+                          << Trace::flush;
             T v = read();
-            mi->trace_mem << " = " << getPrintFormatter() << v << std::endl;
+            mi->trace_mem << " = " << getPrintFormatter() <<  (uint64_t)v << std::endl;
             return v;
         }
         MemoryCellProxy<T>& operator=(T v) {
             mi->trace_mem << "WR MEM[" << Trace::doubleword << addr << "]"
-                      << Trace::flush;
+                          << Trace::flush;
             T old_value = read();
             write(v);
-            mi->trace_mem << " = " << getPrintFormatter() << v
-                      << "; OLD VALUE = " << getPrintFormatter() << old_value
-                      << std::endl;
+            mi->trace_mem << " = " << getPrintFormatter() << (uint64_t)v
+                          << "; OLD VALUE = " << getPrintFormatter()
+                          <<  (uint64_t)old_value << std::endl;
             return *this;
         }
     };

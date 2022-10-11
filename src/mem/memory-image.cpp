@@ -16,12 +16,15 @@ template <> uint64_t mem::MemoryImage::MemoryCellProxy<uint64_t>::read() {
 template <> void mem::MemoryImage::MemoryCellProxy<uint8_t>::write(uint8_t v) {
     mr().byte(addr) = v;
 }
-template <> void mem::MemoryImage::MemoryCellProxy<uint16_t>::write(uint16_t v) {
+template <>
+void mem::MemoryImage::MemoryCellProxy<uint16_t>::write(uint16_t v) {
     mr().halfword(addr) = v;
 }
-template <> void mem::MemoryImage::MemoryCellProxy<uint32_t>::write(uint32_t v) {
+template <>
+void mem::MemoryImage::MemoryCellProxy<uint32_t>::write(uint32_t v) {
     mr().word(addr) = v;
 }
-template <> void mem::MemoryImage::MemoryCellProxy<uint64_t>::write(uint64_t v) {
+template <>
+void mem::MemoryImage::MemoryCellProxy<uint64_t>::write(uint64_t v) {
     mr().doubleword(addr) = v;
 }

@@ -66,29 +66,27 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
 
     struct RegisterProxy {
         using T = uint64_t;
+
       private:
         RegisterClass<NUM, SIZE>* rc;
         unsigned reg_idx;
         friend RegisterClass;
+
       public:
-        T read() {
-            return rc->registers[reg_idx].get();
-        }
-        void write(T v) {
-            rc->registers[reg_idx].set(v);
-        }
+        T read() { return rc->registers[reg_idx].get(); }
+        void write(T v) { rc->registers[reg_idx].set(v); }
         RegisterProxy(RegisterClass* rc, unsigned reg_idx)
             : rc(rc), reg_idx(reg_idx) {}
         operator T() {
-            rc->trace_reg << "RD " << rc->classname << "[" << Trace::dec << reg_idx << "]"
-                          << Trace::flush;
+            rc->trace_reg << "RD " << rc->classname << "[" << Trace::dec
+                          << reg_idx << "]" << Trace::flush;
             T v = read();
             rc->trace_reg << " = " << Trace::doubleword << v << std::endl;
             return v;
         }
         RegisterProxy& operator=(T v) {
-            rc->trace_reg << "WR " << rc->classname << "[" << Trace::dec << reg_idx << "]"
-                          << Trace::flush;
+            rc->trace_reg << "WR " << rc->classname << "[" << Trace::dec
+                          << reg_idx << "]" << Trace::flush;
             T old_value = read();
             write(v);
             rc->trace_reg << " = " << Trace::doubleword << v
