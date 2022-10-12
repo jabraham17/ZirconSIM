@@ -149,34 +149,24 @@ void executeInstruction(uint32_t bits, Hart64State& hs) {
     switch(op) {
         default: throw IllegalInstructionException();
 
+#define SIMPLE_EXECUTION(prefix, name, execution)                              \
+    case ISA::prefix##_##name: do { execution;                                 \
+        } while(0);                                                            \
+        break;
 #define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
-    case ISA::prefix##_##name: do { execution;                                 \
-        } while(0);                                                            \
-        break;
+    SIMPLE_EXECUTION(prefix, name, execution)
 #define I_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
-    case ISA::prefix##_##name: do { execution;                                 \
-        } while(0);                                                            \
-        break;
+    SIMPLE_EXECUTION(prefix, name, execution)
 #define S_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
-    case ISA::prefix##_##name: do { execution;                                 \
-        } while(0);                                                            \
-        break;
+    SIMPLE_EXECUTION(prefix, name, execution)
 #define B_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
-    case ISA::prefix##_##name: do { execution;                                 \
-        } while(0);                                                            \
-        break;
+    SIMPLE_EXECUTION(prefix, name, execution)
 #define U_TYPE(prefix, name, opcode, execution, precedence)                    \
-    case ISA::prefix##_##name: do { execution;                                 \
-        } while(0);                                                            \
-        break;
+    SIMPLE_EXECUTION(prefix, name, execution)
 #define J_TYPE(prefix, name, opcode, execution, precedence)                    \
-    case ISA::prefix##_##name: do { execution;                                 \
-        } while(0);                                                            \
-        break;
+    SIMPLE_EXECUTION(prefix, name, execution)
 #define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
-    case ISA::prefix##_##name: do { execution;                                 \
-        } while(0);                                                            \
-        break;
+    SIMPLE_EXECUTION(prefix, name, execution)
 #include "isa/defs/instructions.inc"
     }
 }
