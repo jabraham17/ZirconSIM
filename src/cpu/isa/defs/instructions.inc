@@ -1,3 +1,7 @@
+
+#include "rv32i.inc"
+#include "rv64i.inc"
+
 #undef R_TYPE
 #undef I_TYPE
 #undef S_TYPE

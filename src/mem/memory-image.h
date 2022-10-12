@@ -99,7 +99,8 @@ class MemoryImage {
             mi->trace_mem << "RD MEM[" << Trace::doubleword << addr << "]"
                           << Trace::flush;
             T v = read();
-            mi->trace_mem << " = " << getPrintFormatter() <<  (uint64_t)v << std::endl;
+            mi->trace_mem << " = " << getPrintFormatter() << (uint64_t)v
+                          << std::endl;
             return v;
         }
         MemoryCellProxy<T>& operator=(T v) {
@@ -109,7 +110,7 @@ class MemoryImage {
             write(v);
             mi->trace_mem << " = " << getPrintFormatter() << (uint64_t)v
                           << "; OLD VALUE = " << getPrintFormatter()
-                          <<  (uint64_t)old_value << std::endl;
+                          << (uint64_t)old_value << std::endl;
             return *this;
         }
     };

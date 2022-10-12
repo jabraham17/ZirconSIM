@@ -49,26 +49,14 @@ namespace isa {
 enum class ISA : uint64_t {
     FIRST_OP,
     UNKNOWN,
-    FIRST_RV32I_OP,
-#define R_TYPE(name, ...) rv32i_##name,
-#define I_TYPE(name, ...) rv32i_##name,
-#define S_TYPE(name, ...) rv32i_##name,
-#define B_TYPE(name, ...) rv32i_##name,
-#define U_TYPE(name, ...) rv32i_##name,
-#define J_TYPE(name, ...) rv32i_##name,
-#define CUSTOM(name, ...) rv32i_##name,
-#include "isa/rv32i.inc"
-    LAST_RV32I_OP,
-    FIRST_RV64I_OP,
-#define R_TYPE(name, ...) rv64i_##name,
-#define I_TYPE(name, ...) rv64i_##name,
-#define S_TYPE(name, ...) rv64i_##name,
-#define B_TYPE(name, ...) rv64i_##name,
-#define U_TYPE(name, ...) rv64i_##name,
-#define J_TYPE(name, ...) rv64i_##name,
-#define CUSTOM(name, ...) rv64i_##name,
-#include "isa/rv64i.inc"
-    LAST_RV64I_OP,
+#define R_TYPE(prefix, name, ...) prefix##_##name,
+#define I_TYPE(prefix, name, ...) prefix##_##name,
+#define S_TYPE(prefix, name, ...) prefix##_##name,
+#define B_TYPE(prefix, name, ...) prefix##_##name,
+#define U_TYPE(prefix, name, ...) prefix##_##name,
+#define J_TYPE(prefix, name, ...) prefix##_##name,
+#define CUSTOM(prefix, name, ...) prefix##_##name,
+#include "isa/defs/instructions.inc"
     LAST_OP
 };
 
@@ -76,26 +64,14 @@ std::string
     ISA_NAME_TABLE[uint64_t(ISA::LAST_OP) - uint64_t(ISA::FIRST_OP) + 1] = {
         "FIRST_OP",
         "UNKNOWN",
-        "FIRST_RV32I_OP",
-#define R_TYPE(name, ...) "rv32i_" #name,
-#define I_TYPE(name, ...) "rv32i_" #name,
-#define S_TYPE(name, ...) "rv32i_" #name,
-#define B_TYPE(name, ...) "rv32i_" #name,
-#define U_TYPE(name, ...) "rv32i_" #name,
-#define J_TYPE(name, ...) "rv32i_" #name,
-#define CUSTOM(name, ...) "rv32i_" #name,
-#include "isa/rv32i.inc"
-        "LAST_RV32I_OP",
-        "FIRST_RV64I_OP",
-#define R_TYPE(name, ...) "rv64i_" #name,
-#define I_TYPE(name, ...) "rv64i_" #name,
-#define S_TYPE(name, ...) "rv64i_" #name,
-#define B_TYPE(name, ...) "rv64i_" #name,
-#define U_TYPE(name, ...) "rv64i_" #name,
-#define J_TYPE(name, ...) "rv64i_" #name,
-#define CUSTOM(name, ...) "rv64i_" #name,
-#include "isa/rv64i.inc"
-        "LAST_RV64I_OP",
+#define R_TYPE(prefix, name, ...) #prefix "_" #name,
+#define I_TYPE(prefix, name, ...) #prefix "_" #name,
+#define S_TYPE(prefix, name, ...) #prefix "_" #name,
+#define B_TYPE(prefix, name, ...) #prefix "_" #name,
+#define U_TYPE(prefix, name, ...) #prefix "_" #name,
+#define J_TYPE(prefix, name, ...) #prefix "_" #name,
+#define CUSTOM(prefix, name, ...) #prefix "_" #name,
+#include "isa/defs/instructions.inc"
         "LAST_OP"};
 
 std::string getISAOpName(ISA op) { return ISA_NAME_TABLE[uint64_t(op)]; }
@@ -103,124 +79,67 @@ std::string getISAOpName(ISA op) { return ISA_NAME_TABLE[uint64_t(op)]; }
 uint64_t ISA_PRECEDENCE[uint64_t(ISA::LAST_OP) - uint64_t(ISA::FIRST_OP) + 1] =
     {0,
      0,
-     0,
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence) precedence,
-#define I_TYPE(name, opcode, funct3, execution, precedence) precedence,
-#define S_TYPE(name, opcode, funct3, execution, precedence) precedence,
-#define B_TYPE(name, opcode, funct3, execution, precedence) precedence,
-#define U_TYPE(name, opcode, execution, precedence) precedence,
-#define J_TYPE(name, opcode, execution, precedence) precedence,
-#define CUSTOM(name, opcode, matcher, execution, precedence) precedence,
-#include "isa/rv32i.inc"
-     0,
-     0,
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence) precedence,
-#define I_TYPE(name, opcode, funct3, execution, precedence) precedence,
-#define S_TYPE(name, opcode, funct3, execution, precedence) precedence,
-#define B_TYPE(name, opcode, funct3, execution, precedence) precedence,
-#define U_TYPE(name, opcode, execution, precedence) precedence,
-#define J_TYPE(name, opcode, execution, precedence) precedence,
-#define CUSTOM(name, opcode, matcher, execution, precedence) precedence,
-#include "isa/rv64i.inc"
-     0,
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
+    precedence,
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence) precedence,
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence) precedence,
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence) precedence,
+#define U_TYPE(prefix, name, opcode, execution, precedence) precedence,
+#define J_TYPE(prefix, name, opcode, execution, precedence) precedence,
+#define CUSTOM(prefix, name, opcode, matcher, execution, precedence) precedence,
+#include "isa/defs/instructions.inc"
      0};
 
-#define CUSTOM(name, opcode, matcher, execution, precedence)                   \
-    bool rv32i_##name##_matcher_func([[maybe_unused]] uint32_t bits) {         \
+#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
+    bool prefix##_##name##_matcher_func([[maybe_unused]] uint32_t bits) {      \
         do {                                                                   \
             matcher;                                                           \
         } while(0);                                                            \
     }
-#include "isa/rv32i.inc"
-#define CUSTOM(name, opcode, matcher, execution, precedence)                   \
-    bool rv64i_##name##_matcher_func([[maybe_unused]] uint32_t bits) {         \
-        do {                                                                   \
-            matcher;                                                           \
-        } while(0);                                                            \
-    }
-#include "isa/rv64i.inc"
+#include "isa/defs/instructions.inc"
 
 uint64_t getISAPrecedence(ISA op) { return ISA_PRECEDENCE[uint64_t(op)]; }
 
 ISA decodeInstruction(uint32_t bits) {
     ISA matched = ISA::UNKNOWN;
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence)            \
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
     if(instruction::getOpcode(bits) == opcode &&                               \
        instruction::getFunct7(bits) == funct7 &&                               \
        instruction::getFunct3(bits) == funct3 &&                               \
        (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv32i_##name;                                           \
+        matched = ISA::prefix##_##name;                                        \
     }
-#define I_TYPE(name, opcode, funct3, execution, precedence)                    \
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
     if(instruction::getOpcode(bits) == opcode &&                               \
        instruction::getFunct3(bits) == funct3 &&                               \
        (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv32i_##name;                                           \
+        matched = ISA::prefix##_##name;                                        \
     }
-#define S_TYPE(name, opcode, funct3, execution, precedence)                    \
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
     if(instruction::getOpcode(bits) == opcode &&                               \
        instruction::getFunct3(bits) == funct3 &&                               \
        (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv32i_##name;                                           \
+        matched = ISA::prefix##_##name;                                        \
     }
-#define B_TYPE(name, opcode, funct3, execution, precedence)                    \
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
     if(instruction::getOpcode(bits) == opcode &&                               \
        instruction::getFunct3(bits) == funct3 &&                               \
        (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv32i_##name;                                           \
+        matched = ISA::prefix##_##name;                                        \
     }
-#define U_TYPE(name, opcode, execution, precedence)                            \
+#define U_TYPE(prefix, name, opcode, execution, precedence)                    \
     if(instruction::getOpcode(bits) == opcode &&                               \
        (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv32i_##name;                                           \
+        matched = ISA::prefix##_##name;                                        \
     }
-#define J_TYPE(name, opcode, execution, precedence)                            \
+#define J_TYPE(prefix, name, opcode, execution, precedence)                    \
     if(instruction::getOpcode(bits) == opcode &&                               \
        (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv32i_##name;                                           \
+        matched = ISA::prefix##_##name;                                        \
     }
-#define CUSTOM(name, opcode, matcher, execution, precedence)                   \
-    if(rv32i_##name##_matcher_func(bits)) matched = ISA::rv32i_##name;
-#include "isa/rv32i.inc"
-
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence)            \
-    if(instruction::getOpcode(bits) == opcode &&                               \
-       instruction::getFunct7(bits) == funct7 &&                               \
-       instruction::getFunct3(bits) == funct3 &&                               \
-       (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv64i_##name;                                           \
-    }
-#define I_TYPE(name, opcode, funct3, execution, precedence)                    \
-    if(instruction::getOpcode(bits) == opcode &&                               \
-       instruction::getFunct3(bits) == funct3 &&                               \
-       (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv64i_##name;                                           \
-    }
-#define S_TYPE(name, opcode, funct3, execution, precedence)                    \
-    if(instruction::getOpcode(bits) == opcode &&                               \
-       instruction::getFunct3(bits) == funct3 &&                               \
-       (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv64i_##name;                                           \
-    }
-#define B_TYPE(name, opcode, funct3, execution, precedence)                    \
-    if(instruction::getOpcode(bits) == opcode &&                               \
-       instruction::getFunct3(bits) == funct3 &&                               \
-       (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv64i_##name;                                           \
-    }
-#define U_TYPE(name, opcode, execution, precedence)                            \
-    if(instruction::getOpcode(bits) == opcode &&                               \
-       (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv64i_##name;                                           \
-    }
-#define J_TYPE(name, opcode, execution, precedence)                            \
-    if(instruction::getOpcode(bits) == opcode &&                               \
-       (matched == ISA::UNKNOWN || precedence < getISAPrecedence(matched))) {  \
-        matched = ISA::rv64i_##name;                                           \
-    }
-#define CUSTOM(name, opcode, matcher, execution, precedence)                   \
-    if(rv64i_##name##_matcher_func(bits)) matched = ISA::rv64i_##name;
-#include "isa/rv64i.inc"
+#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
+    if(prefix##_##name##_matcher_func(bits)) matched = ISA::prefix##_##name;
+#include "isa/defs/instructions.inc"
 
     return matched;
 }
@@ -230,65 +149,35 @@ void executeInstruction(uint32_t bits, Hart64State& hs) {
     switch(op) {
         default: throw IllegalInstructionException();
 
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence)            \
-    case ISA::rv32i_##name: do { execution;                                    \
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
+    case ISA::prefix##_##name: do { execution;                                 \
         } while(0);                                                            \
         break;
-#define I_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv32i_##name: do { execution;                                    \
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    case ISA::prefix##_##name: do { execution;                                 \
         } while(0);                                                            \
         break;
-#define S_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv32i_##name: do { execution;                                    \
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    case ISA::prefix##_##name: do { execution;                                 \
         } while(0);                                                            \
         break;
-#define B_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv32i_##name: do { execution;                                    \
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    case ISA::prefix##_##name: do { execution;                                 \
         } while(0);                                                            \
         break;
-#define U_TYPE(name, opcode, execution, precedence)                            \
-    case ISA::rv32i_##name: do { execution;                                    \
+#define U_TYPE(prefix, name, opcode, execution, precedence)                    \
+    case ISA::prefix##_##name: do { execution;                                 \
         } while(0);                                                            \
         break;
-#define J_TYPE(name, opcode, execution, precedence)                            \
-    case ISA::rv32i_##name: do { execution;                                    \
+#define J_TYPE(prefix, name, opcode, execution, precedence)                    \
+    case ISA::prefix##_##name: do { execution;                                 \
         } while(0);                                                            \
         break;
-#define CUSTOM(name, opcode, matcher, execution, precedence)                   \
-    case ISA::rv32i_##name: do { execution;                                    \
+#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
+    case ISA::prefix##_##name: do { execution;                                 \
         } while(0);                                                            \
         break;
-#include "isa/rv32i.inc"
-
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence)            \
-    case ISA::rv64i_##name: do { execution;                                    \
-        } while(0);                                                            \
-        break;
-#define I_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv64i_##name: do { execution;                                    \
-        } while(0);                                                            \
-        break;
-#define S_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv64i_##name: do { execution;                                    \
-        } while(0);                                                            \
-        break;
-#define B_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv64i_##name: do { execution;                                    \
-        } while(0);                                                            \
-        break;
-#define U_TYPE(name, opcode, execution, precedence)                            \
-    case ISA::rv64i_##name: do { execution;                                    \
-        } while(0);                                                            \
-        break;
-#define J_TYPE(name, opcode, execution, precedence)                            \
-    case ISA::rv64i_##name: do { execution;                                    \
-        } while(0);                                                            \
-        break;
-#define CUSTOM(name, opcode, matcher, execution, precedence)                   \
-    case ISA::rv64i_##name: do { execution;                                    \
-        } while(0);                                                            \
-        break;
-#include "isa/rv64i.inc"
+#include "isa/defs/instructions.inc"
     }
 }
 
@@ -297,86 +186,46 @@ std::string disassemble(uint32_t bits, uint32_t pc = 0) {
     std::stringstream ss;
     switch(op) {
         default: ss << "UNKNOWN[" << getISAOpName(op) << "]"; break;
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence)            \
-    case ISA::rv32i_##name:                                                    \
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
+    case ISA::prefix##_##name:                                                 \
         ss << #name << " x" << instruction::getRd(bits) << ", x"               \
            << instruction::getRs1(bits) << ", x" << instruction::getRs2(bits); \
         break;
-#define I_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv32i_##name:                                                    \
-        ss << #name << " x" << instruction::getRd(bits) << ", x"               \
-           << instruction::getRs1(bits) << ", "                                \
-           << instruction::signext32<12>(instruction::getITypeImm(bits));      \
-        break;
-#define S_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv32i_##name:                                                    \
-        ss << #name << " x" << instruction::getRs2(bits) << ", "               \
-           << instruction::signext32<12>(instruction::getSTypeImm(bits))       \
-           << "(x" << instruction::getRs1(bits) << ")";                        \
-        break;
-#define B_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv32i_##name:                                                    \
-        ss << #name << " x" << instruction::getRs1(bits) << ", x"              \
-           << instruction::getRs2(bits) << ", "                                \
-           << "0x" << std::hex                                                 \
-           << (instruction::signext64<12>(instruction::getBTypeImm(bits)) +    \
-               pc);                                                            \
-        break;
-#define U_TYPE(name, opcode, execution, precedence)                            \
-    case ISA::rv32i_##name:                                                    \
-        ss << #name << " x" << instruction::getRd(bits) << ", "                \
-           << (instruction::getUTypeImm(bits) >> 12);                          \
-        break;
-#define J_TYPE(name, opcode, execution, precedence)                            \
-    case ISA::rv32i_##name:                                                    \
-        ss << #name << " x" << (instruction::getRd(bits)) << ", "              \
-           << "0x" << std::hex                                                 \
-           << (instruction::signext32<20>(instruction::getJTypeImm(bits)) +    \
-               pc);                                                            \
-        break;
-#define CUSTOM(name, opcode, matcher, execution, precedence)                   \
-    case ISA::rv32i_##name: ss << "custom_" #name; break;
-#include "isa/rv32i.inc"
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence)            \
-    case ISA::rv64i_##name:                                                    \
-        ss << #name << " x" << instruction::getRd(bits) << ", x"               \
-           << instruction::getRs1(bits) << ", x" << instruction::getRs2(bits); \
-        break;
-#define I_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv64i_##name:                                                    \
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    case ISA::prefix##_##name:                                                 \
         ss << #name << " x" << instruction::getRd(bits) << ", x"               \
            << instruction::getRs1(bits) << ", "                                \
            << instruction::signext64<12>(instruction::getITypeImm(bits));      \
         break;
-#define S_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv64i_##name:                                                    \
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    case ISA::prefix##_##name:                                                 \
         ss << #name << " x" << instruction::getRs2(bits) << ", "               \
            << instruction::signext64<12>(instruction::getSTypeImm(bits))       \
            << "(x" << instruction::getRs1(bits) << ")";                        \
         break;
-#define B_TYPE(name, opcode, funct3, execution, precedence)                    \
-    case ISA::rv64i_##name:                                                    \
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    case ISA::prefix##_##name:                                                 \
         ss << #name << " x" << instruction::getRs1(bits) << ", x"              \
            << instruction::getRs2(bits) << ", "                                \
            << "0x" << std::hex                                                 \
            << (instruction::signext64<12>(instruction::getBTypeImm(bits)) +    \
                pc);                                                            \
         break;
-#define U_TYPE(name, opcode, execution, precedence)                            \
-    case ISA::rv64i_##name:                                                    \
-        ss << #name << " x" + << instruction::getRd(bits) << ", "              \
+#define U_TYPE(prefix, name, opcode, execution, precedence)                    \
+    case ISA::prefix##_##name:                                                 \
+        ss << #name << " x" << instruction::getRd(bits) << ", "                \
            << (instruction::getUTypeImm(bits) >> 12);                          \
         break;
-#define J_TYPE(name, opcode, execution, precedence)                            \
-    case ISA::rv64i_##name:                                                    \
-        ss << #name << " x" + << instruction::getRd(bits) << ", "              \
+#define J_TYPE(prefix, name, opcode, execution, precedence)                    \
+    case ISA::prefix##_##name:                                                 \
+        ss << #name << " x" << instruction::getRd(bits) << ", "                \
            << "0x" << std::hex                                                 \
            << (instruction::signext32<20>(instruction::getJTypeImm(bits)) +    \
                pc);                                                            \
         break;
-#define CUSTOM(name, opcode, matcher, execution, precedence)                   \
-    case ISA::rv64i_##name: ss << "custom_" #name; break;
-#include "isa/rv64i.inc"
+#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
+    case ISA::prefix##_##name: ss << "custom_" #name; break;
+#include "isa/defs/instructions.inc"
     }
     return ss.str();
 }
@@ -412,7 +261,8 @@ class Hart64 {
                 trace_inst << "; " << isa::disassemble(inst, hs.pc);
                 trace_inst << std::endl;
                 isa::executeInstruction(inst, hs);
-                if(trace_mode) std::cout << std::setfill('-') << std::setw(80) << "\n";
+                if(trace_mode)
+                    std::cout << std::setfill('-') << std::setw(80) << "\n";
             } catch(const std::exception& e) {
                 std::cerr << e.what() << std::endl;
                 break;

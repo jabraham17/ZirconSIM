@@ -58,7 +58,7 @@ int main(int argc, const char** argv) {
          TraceMode::INSTRUCTION,
          "trace instructions",
          "TRACE"},
-         {"no-trace-inst",
+        {"no-trace-inst",
          0,
          POPT_ARG_VAL | POPT_ARGFLAG_AND,
          &args.traces,

@@ -1,29 +1,29 @@
 #ifndef R_TYPE
-#define R_TYPE(name, opcode, funct7, funct3, execution, precedence)
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)
 #endif
 
 #ifndef I_TYPE
-#define I_TYPE(name, opcode, funct3, execution, precedence)
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence)
 #endif
 
 #ifndef S_TYPE
-#define S_TYPE(name, opcode, funct3, execution, precedence)
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence)
 #endif
 
 #ifndef B_TYPE
-#define B_TYPE(name, opcode, funct3, execution, precedence)
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence)
 #endif
 
 #ifndef U_TYPE
-#define U_TYPE(name, opcode, execution, precedence)
+#define U_TYPE(prefix, name, opcode, execution, precedence)
 #endif
 
 #ifndef J_TYPE
-#define J_TYPE(name, opcode, execution, precedence)
+#define J_TYPE(prefix, name, opcode, execution, precedence)
 #endif
 
 #ifndef CUSTOM
-#define CUSTOM(name, opcode, matcher, execution, precedence)
+#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)
 #endif
 
 #ifndef ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_
@@ -64,6 +64,6 @@
     (instruction::signext32<20>(instruction::getUTypeImm(bits)))
 #define IMM_J_TYPE_SEXT32                                                      \
     (instruction::signext32<20>(instruction::getJTypeImm(bits)))
-#define COMMA ,
 
+#define COMMA ,
 #endif
