@@ -33,19 +33,19 @@ class MemoryImage {
         MemoryRegion(uint64_t address, uint64_t size, uint8_t* buffer)
             : address(address), size(size), buffer(buffer) {}
 
-        uint8_t* get(uint64_t addr) {
+        uint8_t* raw(uint64_t addr) {
             if(addr >= address && addr < address + size)
                 return buffer + (addr - address);
             else throw OutOfBoundsException();
         }
         // uint8_t& at(uint64_t addr) { return *((uint8_t*)this->get(addr)); }
-        uint8_t& byte(uint64_t addr) { return *((uint8_t*)this->get(addr)); }
+        uint8_t& byte(uint64_t addr) { return *((uint8_t*)this->raw(addr)); }
         uint16_t& halfword(uint64_t addr) {
-            return *((uint16_t*)this->get(addr));
+            return *((uint16_t*)this->raw(addr));
         }
-        uint32_t& word(uint64_t addr) { return *((uint32_t*)this->get(addr)); }
+        uint32_t& word(uint64_t addr) { return *((uint32_t*)this->raw(addr)); }
         uint64_t& doubleword(uint64_t addr) {
-            return *((uint64_t*)this->get(addr));
+            return *((uint64_t*)this->raw(addr));
         }
     };
 
@@ -142,9 +142,9 @@ class MemoryImage {
     MemoryCellProxy<uint64_t> doubleword(uint64_t addr) {
         return MemoryCellProxy<uint64_t>(this, addr);
     }
-    uint8_t* get(uint64_t addr) {
+    uint8_t* raw(uint64_t addr) {
         auto mr = getMemoryRegion(addr);
-        return mr.get(addr);
+        return mr.raw(addr);
     }
 };
 

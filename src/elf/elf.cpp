@@ -122,12 +122,12 @@ void elf::File::buildMemoryImage(mem::MemoryImage& m) {
                     sh.sh_offset <= ph.p_offset + ph.p_filesz)) {
                     // if NOBITS, set to 0
                     if(sh.sh_type == 0x8 /*SHT_NOBITS*/) {
-                        std::memset(m.get(sh.sh_addr), 0, sh.sh_size);
+                        std::memset(m.raw(sh.sh_addr), 0, sh.sh_size);
                     }
                     // otherwise copy section to memory
                     else {
                         ifs.seekg(sh.sh_offset);
-                        ifs.read((char*)m.get(sh.sh_addr), sh.sh_size);
+                        ifs.read((char*)m.raw(sh.sh_addr), sh.sh_size);
                     }
                 }
             }

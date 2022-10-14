@@ -1,53 +1,53 @@
 #include "isa-begin.inc"
 
-U_TYPE(rv32i, lui, 0b0110111, hs.GPR_RF[RD] = IMM_U_TYPE; hs.pc += 4, 0)
-U_TYPE(rv32i, auipc, 0b0010111, hs.GPR_RF[RD] = IMM_U_TYPE + hs.pc;
+U_TYPE(rv32i, lui, 0b0110111, hs.rf.GPR[RD] = IMM_U_TYPE; hs.pc += 4, 0)
+U_TYPE(rv32i, auipc, 0b0010111, hs.rf.GPR[RD] = IMM_U_TYPE + hs.pc;
        hs.pc += 4, 0)
-J_TYPE(rv32i, jal, 0b1101111, hs.GPR_RF[RD] = hs.pc + 4;
+J_TYPE(rv32i, jal, 0b1101111, hs.rf.GPR[RD] = hs.pc + 4;
        hs.pc = IMM_J_TYPE_SEXT64 + hs.pc;
        , 0)
 I_TYPE(rv32i,
        jalr,
        0b1100111,
        0b000,
-       uint64_t new_pc = (IMM_I_TYPE_SEXT64 + hs.GPR_RF[RS1]) &
+       uint64_t new_pc = (IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1]) &
                          (~(1)); // clear LSB
-       hs.GPR_RF[RD] = hs.pc + 4;
+       hs.rf.GPR[RD] = hs.pc + 4;
        hs.pc = new_pc;
        , 0)
 B_TYPE(
     rv32i, beq, 0b1100011, 0b000, uint64_t target = IMM_B_TYPE_SEXT64 + hs.pc;
-    if(hs.GPR_RF[RS1] == hs.GPR_RF[RS2]) { hs.pc = target; } else {
+    if(hs.rf.GPR[RS1] == hs.rf.GPR[RS2]) { hs.pc = target; } else {
         hs.pc += 4;
     },
     0)
 B_TYPE(
     rv32i, bne, 0b1100011, 0b001, uint64_t target = IMM_B_TYPE_SEXT64 + hs.pc;
-    if(hs.GPR_RF[RS1] != hs.GPR_RF[RS2]) { hs.pc = target; } else {
+    if(hs.rf.GPR[RS1] != hs.rf.GPR[RS2]) { hs.pc = target; } else {
         hs.pc += 4;
     },
     0)
 B_TYPE(
     rv32i, blt, 0b1100011, 0b100, uint64_t target = IMM_B_TYPE_SEXT64 + hs.pc;
-    if(int64_t(hs.GPR_RF[RS1]) < int64_t(hs.GPR_RF[RS2])) {
+    if(int64_t(hs.rf.GPR[RS1]) < int64_t(hs.rf.GPR[RS2])) {
         hs.pc = target;
     } else { hs.pc += 4; },
     0)
 B_TYPE(
     rv32i, bge, 0b1100011, 0b101, uint64_t target = IMM_B_TYPE_SEXT64 + hs.pc;
-    if(int64_t(hs.GPR_RF[RS1]) >= int64_t(hs.GPR_RF[RS2])) {
+    if(int64_t(hs.rf.GPR[RS1]) >= int64_t(hs.rf.GPR[RS2])) {
         hs.pc = target;
     } else { hs.pc += 4; },
     0)
 B_TYPE(
     rv32i, bltu, 0b1100011, 0b110, uint64_t target = IMM_B_TYPE_SEXT64 + hs.pc;
-    if(uint64_t(hs.GPR_RF[RS1]) < uint64_t(hs.GPR_RF[RS2])) {
+    if(uint64_t(hs.rf.GPR[RS1]) < uint64_t(hs.rf.GPR[RS2])) {
         hs.pc = target;
     } else { hs.pc += 4; },
     0)
 B_TYPE(
     rv32i, bgeu, 0b1100011, 0b111, uint64_t target = IMM_B_TYPE_SEXT64 + hs.pc;
-    if(uint64_t(hs.GPR_RF[RS1]) >= uint64_t(hs.GPR_RF[RS2])) {
+    if(uint64_t(hs.rf.GPR[RS1]) >= uint64_t(hs.rf.GPR[RS2])) {
         hs.pc = target;
     } else { hs.pc += 4; },
     0)
@@ -55,71 +55,71 @@ I_TYPE(rv32i,
        lb,
        0b0000011,
        0b000,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs.GPR_RF[RS1];
-       hs.GPR_RF[RD] = SIGNEXT64(hs.memimg.byte(address), 8);
+       uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1];
+       hs.rf.GPR[RD] = SIGNEXT64(hs.memimg.byte(address), 8);
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
        lh,
        0b0000011,
        0b001,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs.GPR_RF[RS1];
-       hs.GPR_RF[RD] = SIGNEXT64(hs.memimg.halfword(address), 16);
+       uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1];
+       hs.rf.GPR[RD] = SIGNEXT64(hs.memimg.halfword(address), 16);
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
        lw,
        0b0000011,
        0b010,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs.GPR_RF[RS1];
-       hs.GPR_RF[RD] = SIGNEXT64(hs.memimg.word(address), 32);
+       uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1];
+       hs.rf.GPR[RD] = SIGNEXT64(hs.memimg.word(address), 32);
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
        lbu,
        0b0000011,
        0b100,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs.GPR_RF[RS1];
-       hs.GPR_RF[RD] = hs.memimg.byte(address);
+       uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1];
+       hs.rf.GPR[RD] = hs.memimg.byte(address);
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
        lhu,
        0b0000011,
        0b101,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs.GPR_RF[RS1];
-       hs.GPR_RF[RD] = hs.memimg.halfword(address);
+       uint64_t address = IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1];
+       hs.rf.GPR[RD] = hs.memimg.halfword(address);
        hs.pc += 4;
        , 0)
 S_TYPE(rv32i,
        sb,
        0b0100011,
        0b000,
-       uint64_t address = IMM_S_TYPE_SEXT64 + hs.GPR_RF[RS1];
-       hs.memimg.byte(address) = hs.GPR_RF[RS2] & 0xFF;
+       uint64_t address = IMM_S_TYPE_SEXT64 + hs.rf.GPR[RS1];
+       hs.memimg.byte(address) = hs.rf.GPR[RS2] & 0xFF;
        hs.pc += 4;
        , 0)
 S_TYPE(rv32i,
        sh,
        0b0100011,
        0b001,
-       uint64_t address = IMM_S_TYPE_SEXT64 + hs.GPR_RF[RS1];
-       hs.memimg.halfword(address) = hs.GPR_RF[RS2] & 0xFFFF;
+       uint64_t address = IMM_S_TYPE_SEXT64 + hs.rf.GPR[RS1];
+       hs.memimg.halfword(address) = hs.rf.GPR[RS2] & 0xFFFF;
        hs.pc += 4;
        , 0)
 S_TYPE(rv32i,
        sw,
        0b0100011,
        0b010,
-       uint64_t address = IMM_S_TYPE_SEXT64 + hs.GPR_RF[RS1];
-       hs.memimg.word(address) = hs.GPR_RF[RS2] & 0xFFFFFFFF;
+       uint64_t address = IMM_S_TYPE_SEXT64 + hs.rf.GPR[RS1];
+       hs.memimg.word(address) = hs.rf.GPR[RS2] & 0xFFFFFFFF;
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
        addi,
        0b0010011,
        0b000,
-       hs.GPR_RF[RD] = IMM_I_TYPE_SEXT64 + hs.GPR_RF[RS1];
+       hs.rf.GPR[RD] = IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1];
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i, slti, 0b0010011, 0b000, std::cout << "UNIMPLEMENTED\n";
@@ -132,21 +132,21 @@ I_TYPE(rv32i,
        xori,
        0b0010011,
        0b100,
-       hs.GPR_RF[RD] = IMM_I_TYPE_SEXT64 ^ hs.GPR_RF[RS1];
+       hs.rf.GPR[RD] = IMM_I_TYPE_SEXT64 ^ hs.rf.GPR[RS1];
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
        ori,
        0b0010011,
        0b110,
-       hs.GPR_RF[RD] = IMM_I_TYPE_SEXT64 | hs.GPR_RF[RS1];
+       hs.rf.GPR[RD] = IMM_I_TYPE_SEXT64 | hs.rf.GPR[RS1];
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
        andi,
        0b0010011,
        0b111,
-       hs.GPR_RF[RD] = IMM_I_TYPE_SEXT64 & hs.GPR_RF[RS1];
+       hs.rf.GPR[RD] = IMM_I_TYPE_SEXT64 & hs.rf.GPR[RS1];
        hs.pc += 4;
        , 0)
 R_TYPE(rv32i,
@@ -154,7 +154,7 @@ R_TYPE(rv32i,
        0b0010011,
        0b001,
        0b0000000,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] << SHAMT5;
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] << SHAMT5;
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i,
@@ -162,7 +162,7 @@ R_TYPE(rv32i,
        0b0010011,
        0b101,
        0b0000000,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] >> SHAMT5;
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> SHAMT5;
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i,
@@ -170,7 +170,7 @@ R_TYPE(rv32i,
        0b0010011,
        0b101,
        0b0100000,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] >> SHAMT5;
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> SHAMT5;
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i,
@@ -178,7 +178,7 @@ R_TYPE(rv32i,
        0b0110011,
        0b0000000,
        0b000,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] + hs.GPR_RF[RS2];
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] + hs.rf.GPR[RS2];
        hs.pc += 4;
        , 0)
 R_TYPE(rv32i,
@@ -186,7 +186,7 @@ R_TYPE(rv32i,
        0b0110011,
        0b0100000,
        0b000,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] - hs.GPR_RF[RS2];
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] - hs.rf.GPR[RS2];
        hs.pc += 4;
        , 0)
 R_TYPE(rv32i,
@@ -194,7 +194,7 @@ R_TYPE(rv32i,
        0b0110011,
        0b0000000,
        0b001,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] << (hs.GPR_RF[RS2] & 0x1F);
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] << (hs.rf.GPR[RS2] & 0x1F);
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i, slt, 0b0110011, 0b0000000, 0b010, std::cout << "UNIMPLEMENTED\n";
        hs.pc += 4;
@@ -207,7 +207,7 @@ R_TYPE(rv32i,
        0b0110011,
        0b0000000,
        0b100,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] ^ hs.GPR_RF[RS2];
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] ^ hs.rf.GPR[RS2];
        hs.pc += 4;
        , 0)
 R_TYPE(rv32i,
@@ -215,7 +215,7 @@ R_TYPE(rv32i,
        0b0110011,
        0b0000000,
        0b101,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] >> (hs.GPR_RF[RS2] & 0x1F);
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> (hs.rf.GPR[RS2] & 0x1F);
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i,
@@ -223,7 +223,7 @@ R_TYPE(rv32i,
        0b0110011,
        0b0100000,
        0b101,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] >> (hs.GPR_RF[RS2] & 0x1F);
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> (hs.rf.GPR[RS2] & 0x1F);
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i,
@@ -232,7 +232,7 @@ R_TYPE(rv32i,
        0b0110011,
        0b0000000,
        0b110,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] | hs.GPR_RF[RS2];
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] | hs.rf.GPR[RS2];
        hs.pc += 4;
        , 0)
 R_TYPE(rv32i,
@@ -240,7 +240,7 @@ R_TYPE(rv32i,
        0b0110011,
        0b0000000,
        0b111,
-       hs.GPR_RF[RD] = hs.GPR_RF[RS1] & hs.GPR_RF[RS2];
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] & hs.rf.GPR[RS2];
        hs.pc += 4;
        , 0)
 CUSTOM(rv32i,

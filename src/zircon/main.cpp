@@ -106,7 +106,7 @@ int main(int argc, const char** argv) {
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 
-    cpu::Hart64 hart(memimg, args.traces);
+    cpu::Hart hart(memimg, args.traces);
     hart.init();
     hart.execute(start);
 
