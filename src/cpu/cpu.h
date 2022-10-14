@@ -32,6 +32,7 @@ class Hart {
     HartState hs;
     TraceMode trace_mode;
     Trace trace_inst;
+    bool shouldHalt();
 
   public:
     Hart(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE);

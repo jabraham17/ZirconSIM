@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "isa/inst.h"
+#include "isa/instruction_match.h"
 #include "isa/rf.h"
 #include <iomanip>
 #include <iostream>
@@ -20,6 +21,15 @@ Hart::Hart(mem::MemoryImage& m, TraceMode tm)
     trace_inst.setState((trace_mode & TraceMode::INSTRUCTION));
 }
 
+bool Hart::shouldHalt() {
+    // if the current inst is a jump to itself, halt
+    uint32_t inst = hs.getInstWord();
+    auto op = isa::inst::decodeInstruction(inst);
+    auto jmp_target =
+        instruction::signext64<20>(instruction::getJTypeImm(inst)) + hs.pc;
+    return (op == isa::inst::Opcode::rv32i_jal && jmp_target == hs.pc);
+}
+
 void Hart::init() {
     // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
     hs.rf.GPR[2] = 0x7fffffff00010000;
@@ -35,9 +45,9 @@ void Hart::execute(uint64_t start_address) {
             trace_inst << Trace::word << inst;
             trace_inst << "; " << isa::inst::disassemble(inst, hs.pc);
             trace_inst << std::endl;
+
+            if(shouldHalt()) break;
             isa::inst::executeInstruction(inst, hs);
-            // if(trace_mode)
-            //     std::cout << std::setfill('-') << std::setw(80) << "\n";
         } catch(const std::exception& e) {
             std::cerr << e.what() << std::endl;
             break;
