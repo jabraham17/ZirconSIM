@@ -5,6 +5,7 @@
 #include "isa/rf.h"
 #include "mem/memory-image.h"
 #include "trace/trace.h"
+#include "trace/stats.h"
 
 namespace cpu {
 
@@ -15,7 +16,7 @@ class HartState {
     // address in memory of current instruction
     uint64_t pc;
     // use raw(addr) so we don't log mem access
-    uint32_t getInstWord();
+    uint32_t getInstWord() const;
 
     HartState(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE);
 };
@@ -32,10 +33,11 @@ class Hart {
     HartState hs;
     TraceMode trace_mode;
     Trace trace_inst;
+    Stats stats;
     bool shouldHalt();
 
   public:
-    Hart(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE);
+    Hart(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE, bool useStats = false);
     void init();
     void execute(uint64_t start_address);
 };

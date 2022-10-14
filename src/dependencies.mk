@@ -1,8 +1,8 @@
 
-cpu=
+cpu= 
 elf= mem
 mem= 
-zircon= cpu elf mem
+zircon= cpu elf mem trace
 
 define make_depen
 $(eval $1: $($1))

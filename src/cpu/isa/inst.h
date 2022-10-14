@@ -34,6 +34,14 @@ struct Opcode {
 
     static const std::string& getName(Opcode op);
     static constexpr size_t size();
+
+    bool isRType() const;
+    bool isIType() const;
+    bool isSType() const;
+    bool isBType() const;
+    bool isUType() const;
+    bool isJType() const;
+    bool isCustomType() const;
 };
 
 Opcode decodeInstruction(uint32_t bits);

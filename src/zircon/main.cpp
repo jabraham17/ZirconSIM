@@ -14,13 +14,11 @@ struct zircon_args {
     char* logfile; // unimplemented
     TraceMode traces;
     bool separate_files; // unimplemented
+    int stats;
 
     zircon_args()
-        : file(), logfile(), traces(TraceMode::INSTRUCTION),
-          separate_files(false) {
-        file = strdup("a.out");
-        logfile = strdup("log.txt");
-    }
+        : file(strdup("a.out")), logfile(strdup("log.txt")),
+          traces(TraceMode::INSTRUCTION), separate_files(false), stats(false) {}
 };
 
 int main(int argc, const char** argv) {
@@ -79,6 +77,13 @@ int main(int argc, const char** argv) {
          TraceMode::REGISTER,
          "trace registers",
          "TRACE"},
+        {"stats",
+         'S',
+         POPT_ARG_NONE,
+         &args.stats,
+         0,
+         "log statistics",
+         0},
         POPT_AUTOHELP POPT_TABLEEND};
 
     poptContext optCon = poptGetContext(argv[0], argc, argv, options, 0);
@@ -106,7 +111,7 @@ int main(int argc, const char** argv) {
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 
-    cpu::Hart hart(memimg, args.traces);
+    cpu::Hart hart(memimg, args.traces, args.stats);
     hart.init();
     hart.execute(start);
 

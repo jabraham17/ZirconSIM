@@ -4,31 +4,6 @@
 
 namespace isa {
 namespace inst {
-// namespace internal {
-// static Opcode::ValueType op_counter = Opcode::UNKNOWN;
-// }
-// #define R_TYPE(prefix, name, ...) \
-//     const Opcode::ValueType Opcode::prefix##_##name =                   \
-//         ++internal::op_counter;
-// #define I_TYPE(prefix, name, ...) \
-//     const Opcode::ValueType Opcode::prefix##_##name =                   \
-//         ++internal::op_counter;
-// #define S_TYPE(prefix, name, ...) \
-//     const Opcode::ValueType Opcode::prefix##_##name =                   \
-//         ++internal::op_counter;
-// #define B_TYPE(prefix, name, ...) \
-//     const Opcode::ValueType Opcode::prefix##_##name =                   \
-//         ++internal::op_counter;
-// #define U_TYPE(prefix, name, ...) \
-//     const Opcode::ValueType Opcode::prefix##_##name =                   \
-//         ++internal::op_counter;
-// #define J_TYPE(prefix, name, ...) \
-//     const Opcode::ValueType Opcode::prefix##_##name =                   \
-//         ++internal::op_counter;
-// #define CUSTOM(prefix, name, ...) \
-//     const Opcode::ValueType Opcode::prefix##_##name =                   \
-//         ++internal::op_counter;
-// #include "defs/instructions.inc"
 constexpr size_t Opcode::size() {
     return 1
 #define R_TYPE(prefix, name, ...) +1
@@ -40,7 +15,63 @@ constexpr size_t Opcode::size() {
 #define CUSTOM(prefix, name, ...) +1
 #include "defs/instructions.inc"
         ;
-    // return internal::op_counter;
+}
+
+bool Opcode::isRType() const {
+    switch(this->_value) {
+        default: return false;
+#define R_TYPE(prefix, name, ...)                                              \
+    case Opcode::prefix##_##name: return true;
+#include "defs/instructions.inc"
+    }
+}
+bool Opcode::isIType() const {
+    switch(this->_value) {
+        default: return false;
+#define I_TYPE(prefix, name, ...)                                              \
+    case Opcode::prefix##_##name: return true;
+#include "defs/instructions.inc"
+    }
+}
+bool Opcode::isSType() const {
+    switch(this->_value) {
+        default: return false;
+#define S_TYPE(prefix, name, ...)                                              \
+    case Opcode::prefix##_##name: return true;
+#include "defs/instructions.inc"
+    }
+}
+bool Opcode::isBType() const {
+    switch(this->_value) {
+        default: return false;
+#define B_TYPE(prefix, name, ...)                                              \
+    case Opcode::prefix##_##name: return true;
+#include "defs/instructions.inc"
+    }
+}
+bool Opcode::isUType() const {
+    switch(this->_value) {
+        default: return false;
+#define U_TYPE(prefix, name, ...)                                              \
+    case Opcode::prefix##_##name: return true;
+#include "defs/instructions.inc"
+    }
+}
+bool Opcode::isJType() const {
+    switch(this->_value) {
+        default: return false;
+#define J_TYPE(prefix, name, ...)                                              \
+    case Opcode::prefix##_##name: return true;
+#include "defs/instructions.inc"
+    }
+}
+bool Opcode::isCustomType() const {
+    switch(this->_value) {
+        default: return false;
+#define CUSTOM(prefix, name, ...)                                              \
+    case Opcode::prefix##_##name: return true;
+#include "defs/instructions.inc"
+    }
 }
 
 namespace internal {

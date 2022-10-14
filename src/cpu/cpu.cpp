@@ -10,15 +10,16 @@
 namespace cpu {
 
 // use raw(addr) so we don't log mem access
-uint32_t HartState::getInstWord() { return *((uint32_t*)memimg.raw(pc)); }
+uint32_t HartState::getInstWord() const { return *((uint32_t*)memimg.raw(pc)); }
 
 HartState::HartState(mem::MemoryImage& m, TraceMode tm) : memimg(m) {
     rf.setTraceMode(tm);
 }
 
-Hart::Hart(mem::MemoryImage& m, TraceMode tm)
+Hart::Hart(mem::MemoryImage& m, TraceMode tm, bool useStats)
     : hs(m, tm), trace_mode(tm), trace_inst("INSTRUCTION TRACE") {
     trace_inst.setState((trace_mode & TraceMode::INSTRUCTION));
+    stats.setState(useStats);
 }
 
 bool Hart::shouldHalt() {
@@ -45,6 +46,7 @@ void Hart::execute(uint64_t start_address) {
             trace_inst << Trace::word << inst;
             trace_inst << "; " << isa::inst::disassemble(inst, hs.pc);
             trace_inst << std::endl;
+            stats.count(hs);
 
             if(shouldHalt()) break;
             isa::inst::executeInstruction(inst, hs);
@@ -53,6 +55,7 @@ void Hart::execute(uint64_t start_address) {
             break;
         }
     }
+    if(stats.isEnabled()) std::cout << stats.dump() << std::endl;
 }
 
 } // namespace cpu

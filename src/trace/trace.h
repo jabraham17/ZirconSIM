@@ -35,24 +35,6 @@ struct TraceMode {
         }
         return o;
     }
-
-    // operator bool() const { return bool(this->_value); }
-
-    // friend TraceMode operator|(const TraceMode& lhs, const TraceMode& rhs) {
-    //     return TraceMode(lhs._value | rhs._value);
-    // }
-    // friend TraceMode operator|=(TraceMode lhs, const TraceMode& rhs) {
-    //     return lhs | rhs;
-    // }
-    // friend TraceMode operator&(TraceMode lhs, TraceMode rhs) {
-    //     return TraceMode(lhs._value & rhs._value);
-    // }
-    // friend TraceMode operator&=(TraceMode lhs, const TraceMode& rhs) {
-    //     return lhs & rhs;
-    // }
-    // friend TraceMode operator~(const TraceMode& a) {
-    //     return TraceMode(a._value);
-    // }
 };
 
 class Trace {
