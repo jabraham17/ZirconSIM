@@ -70,7 +70,7 @@ R_TYPE(rv64i,
 R_TYPE(rv64i,
        srliw,
        0b0011011,
-       0b0100000,
+       0b0000000,
        0b101,
        hs.rf.GPR[RD] = SIGNEXT32(hs.rf.GPR[RS1], 32) >> SHAMT5;
        hs.pc += 4;
@@ -141,6 +141,7 @@ R_TYPE(rv64i,
        0b0000000,
        0b001,
        hs.rf.GPR[RD] = hs.rf.GPR[RS1] << (hs.rf.GPR[RS2] & 0x3F);
+       hs.pc += 4;
        , 0)
 R_TYPE(rv64i,
        srl,

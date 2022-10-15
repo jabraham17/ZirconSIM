@@ -122,10 +122,10 @@ I_TYPE(rv32i,
        hs.rf.GPR[RD] = IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1];
        hs.pc += 4;
        , 0)
-I_TYPE(rv32i, slti, 0b0010011, 0b000, std::cout << "UNIMPLEMENTED\n";
+I_TYPE(rv32i, slti, 0b0010011, 0b010, std::cout << "UNIMPLEMENTED\n";
        hs.pc += 4;
        , 0)
-I_TYPE(rv32i, sltiu, 0b0010011, 0b010, std::cout << "UNIMPLEMENTED\n";
+I_TYPE(rv32i, sltiu, 0b0010011, 0b011, std::cout << "UNIMPLEMENTED\n";
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
@@ -152,24 +152,24 @@ I_TYPE(rv32i,
 R_TYPE(rv32i,
        slli,
        0b0010011,
-       0b001,
        0b0000000,
+       0b001,
        hs.rf.GPR[RD] = hs.rf.GPR[RS1] << SHAMT5;
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i,
        srli,
        0b0010011,
-       0b101,
        0b0000000,
+       0b101,
        hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> SHAMT5;
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i,
        srai,
        0b0010011,
-       0b101,
        0b0100000,
+       0b101,
        hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> SHAMT5;
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
@@ -195,6 +195,7 @@ R_TYPE(rv32i,
        0b0000000,
        0b001,
        hs.rf.GPR[RD] = hs.rf.GPR[RS1] << (hs.rf.GPR[RS2] & 0x1F);
+       hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
 R_TYPE(rv32i, slt, 0b0110011, 0b0000000, 0b010, std::cout << "UNIMPLEMENTED\n";
        hs.pc += 4;
@@ -256,7 +257,7 @@ CUSTOM(rv32i,
        0b1110011,
        return instruction::getOpcode(bits) == 0b1110011 &&
               instruction::getBitRange<31 COMMA 7>(bits) == 0;
-       , std::cout << "UNIMPLEMENTED\n";
+       , syscall::emulate(hs);
        hs.pc += 4;
        , 0)
 CUSTOM(rv32i,
