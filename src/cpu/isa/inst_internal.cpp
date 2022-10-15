@@ -1,3 +1,4 @@
+#include "cpu/syscall/syscall.h"
 #include "inst.h"
 #include "instruction_match.h"
 #include <sstream>

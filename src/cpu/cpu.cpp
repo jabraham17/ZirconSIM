@@ -2,6 +2,7 @@
 #include "isa/inst.h"
 #include "isa/instruction_match.h"
 #include "isa/rf.h"
+#include "syscall/syscall.h"
 #include <iomanip>
 #include <iostream>
 #include <sstream>
