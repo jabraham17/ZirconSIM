@@ -18,7 +18,7 @@ struct zircon_args {
 
     zircon_args()
         : file(strdup("a.out")), logfile(strdup("log.txt")),
-          traces(TraceMode::INSTRUCTION), separate_files(false), stats(false) {}
+          traces(TraceMode::NONE), separate_files(false), stats(false) {}
 };
 
 int main(int argc, const char** argv) {
@@ -56,13 +56,6 @@ int main(int argc, const char** argv) {
          TraceMode::INSTRUCTION,
          "trace instructions",
          "TRACE"},
-        {"no-trace-inst",
-         0,
-         POPT_ARG_VAL | POPT_ARGFLAG_AND,
-         &args.traces,
-         ~TraceMode::INSTRUCTION,
-         "do not trace instructions",
-         "TRACE"},
         {"trace-mem",
          'M',
          POPT_ARG_VAL | POPT_ARGFLAG_OR,
@@ -77,13 +70,7 @@ int main(int argc, const char** argv) {
          TraceMode::REGISTER,
          "trace registers",
          "TRACE"},
-        {"stats",
-         'S',
-         POPT_ARG_NONE,
-         &args.stats,
-         0,
-         "log statistics",
-         0},
+        {"stats", 'S', POPT_ARG_NONE, &args.stats, 0, "log statistics", 0},
         POPT_AUTOHELP POPT_TABLEEND};
 
     poptContext optCon = poptGetContext(argv[0], argc, argv, options, 0);
