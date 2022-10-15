@@ -42,6 +42,7 @@
 #define IMM_B_TYPE (instruction::getBTypeImm(bits))
 #define IMM_U_TYPE (instruction::getUTypeImm(bits))
 #define IMM_J_TYPE (instruction::getJTypeImm(bits))
+#define SIGNEXT128(x, B) (instruction::signext128<B>(x))
 #define SIGNEXT64(x, B) (instruction::signext64<B>(x))
 #define SIGNEXT32(x, B) (instruction::signext32<B>(x))
 #define IMM_I_TYPE_SEXT64                                                      \

@@ -31,6 +31,11 @@ template <std::size_t N, std::size_t M> constexpr Word getBitRange(Word bits) {
     static_assert(N < sizeof(Word) * 8 && N >= M, "Invalid Indexes");
     return (bits >> M) & getMask<N - M + 1>();
 }
+template <std::size_t B> constexpr __int128_t signext128(uint64_t value) {
+    static_assert(B <= 128 && B >= 0, "Invalid Size");
+    return __int128_t(value);
+    // return __int128_t(value << (128 - B)) >> (128 - B);
+}
 template <std::size_t B> constexpr int64_t signext64(uint64_t value) {
     static_assert(B <= 64 && B >= 0, "Invalid Size");
     return int64_t(value << (64 - B)) >> (64 - B);
