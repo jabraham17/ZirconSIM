@@ -1,10 +1,13 @@
 #include "syscall.h"
 
-namespace syscall {
+#include <unistd.h>
+#include <sys/stat.h>
+
+namespace sys {
 
 namespace internal {
 
-int64_t getMappedSyscallNumber(int64_t riscv64_syscall_number) {
+int64_t getMappedSyscallNumber([[maybe_unused]] int64_t riscv64_syscall_number) {
 #define MAP_SYSCALL(name, x86_64, riscv64, ...)                                \
     if(riscv64_syscall_number == riscv64) return x86_64;
 #include "syscall.inc"
@@ -65,4 +68,4 @@ void emulate(cpu::HartState& hs) {
     hs.rf.GPR[10] = result;
 }
 
-} // namespace syscall
+} // namespace sys

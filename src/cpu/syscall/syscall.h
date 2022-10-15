@@ -7,7 +7,7 @@
 #include <exception>
 #include <string>
 
-namespace syscall {
+namespace sys {
 
 namespace internal {
 
@@ -28,6 +28,6 @@ struct SyscallUnimplementedException : public std::exception {
 
 void emulate(cpu::HartState& hs);
 
-} // namespace syscall
+} // namespace sys
 
 #endif
