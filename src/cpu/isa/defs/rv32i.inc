@@ -122,10 +122,19 @@ I_TYPE(rv32i,
        hs.rf.GPR[RD] = IMM_I_TYPE_SEXT64 + hs.rf.GPR[RS1];
        hs.pc += 4;
        , 0)
-I_TYPE(rv32i, slti, 0b0010011, 0b010, std::cout << "UNIMPLEMENTED\n";
+I_TYPE(rv32i,
+       slti,
+       0b0010011,
+       0b010,
+       hs.rf.GPR[RD] = SIGNEXT64(hs.rf.GPR[RS1], 64) < IMM_I_TYPE_SEXT64 ? 1
+                                                                         : 0;
        hs.pc += 4;
        , 0)
-I_TYPE(rv32i, sltiu, 0b0010011, 0b011, std::cout << "UNIMPLEMENTED\n";
+I_TYPE(rv32i,
+       sltiu,
+       0b0010011,
+       0b011,
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] < uint64_t(IMM_I_TYPE_SEXT64) ? 1 : 0;
        hs.pc += 4;
        , 0)
 I_TYPE(rv32i,
@@ -197,10 +206,23 @@ R_TYPE(rv32i,
        hs.rf.GPR[RD] = hs.rf.GPR[RS1] << (hs.rf.GPR[RS2] & 0x1F);
        hs.pc += 4;
        , 1 /*RV64I version takes precedence*/)
-R_TYPE(rv32i, slt, 0b0110011, 0b0000000, 0b010, std::cout << "UNIMPLEMENTED\n";
+R_TYPE(rv32i,
+       slt,
+       0b0110011,
+       0b0000000,
+       0b010,
+       hs.rf.GPR[RD] = SIGNEXT64(hs.rf.GPR[RS1], 64) <
+                               SIGNEXT64(hs.rf.GPR[RS2], 64)
+                           ? 1
+                           : 0;
        hs.pc += 4;
        , 0)
-R_TYPE(rv32i, sltu, 0b0110011, 0b0000000, 0b011, std::cout << "UNIMPLEMENTED\n";
+R_TYPE(rv32i,
+       sltu,
+       0b0110011,
+       0b0000000,
+       0b011,
+       hs.rf.GPR[RD] = hs.rf.GPR[RS1] < hs.rf.GPR[RS2] ? 1 : 0;
        hs.pc += 4;
        , 0)
 R_TYPE(rv32i,
@@ -249,15 +271,14 @@ CUSTOM(rv32i,
        0b0001111,
        return instruction::getOpcode(bits) == 0b0001111 &&
               instruction::getFunct3(bits) == 0b000;
-       , std::cout << "UNIMPLEMENTED\n";
-       hs.pc += 4;
+       , hs.pc += 4;
        , 0)
 CUSTOM(rv32i,
        ecall,
        0b1110011,
        return instruction::getOpcode(bits) == 0b1110011 &&
               instruction::getBitRange<31 COMMA 7>(bits) == 0;
-       , syscall::emulate(hs);
+       , sys::emulate(hs);
        hs.pc += 4;
        , 0)
 CUSTOM(rv32i,
@@ -267,7 +288,5 @@ CUSTOM(rv32i,
               instruction::getBitRange<19 COMMA 7>(bits) == 0b0 &&
               instruction::getBitRange<31 COMMA 21>(bits) == 0b0 &&
               instruction::getBit<20>(bits) == 0b1;
-
-       , std::cout << "UNIMPLEMENTED\n";
-       hs.pc += 4;
+       , hs.pc += 4;
        , 0)
