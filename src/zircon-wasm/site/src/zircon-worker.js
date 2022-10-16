@@ -1,9 +1,5 @@
 importScripts("/src/zircon.js")
 
-// let buffer = ""
-// let Module = {
-//     print: (s) => buffer += s
-// }
 let modFactory = Mod()
 
 function emulateFile(data) {
@@ -13,12 +9,13 @@ function emulateFile(data) {
             mod.stderrBuffer = "";
             mod.FS.createDataFile("/", "upload.elf", data, true, false, false);
             mod.emulate("/upload.elf");
-            self.postMessage({ command: "emulateFileResults", arguments: [mod.stdoutBuffer, mod.stderrBuffer] });
-            mod.FS.unlink("/upload.elf");
         }
         catch (e) {
             let exception_str = e;
             mod.stderrBuffer += "&#10;" + exception_str;
+        }
+        finally {
+            mod.FS.unlink("/upload.elf");
             self.postMessage({ command: "emulateFileResults", arguments: [mod.stdoutBuffer, mod.stderrBuffer] });
         }
     });

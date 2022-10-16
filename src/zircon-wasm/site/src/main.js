@@ -3,6 +3,7 @@ let dom = {}
 
 dom.stdout = document.querySelector("#stdout textarea");
 dom.stderr = document.querySelector("#stderr textarea");
+dom.runningIndicator = document.querySelector("#running-indicator")
 
 
 const image_dom = document.querySelector("#fileupload")
@@ -10,13 +11,18 @@ document.querySelector("#run-button").addEventListener("click", ev => {
     const files = image_dom.files;
     if (files.length != 1) return;
     let file = files[0];
+    runOnFile(file);
+})
+
+let runOnFile = (file) => {
+    dom.runningIndicator.classList.remove("hidden")
     let fr = new FileReader();
     fr.onload = function () {
         let data = new Uint8Array(fr.result);
         worker.postMessage({ command: "emulateFile", arguments: [data] });
     };
     fr.readAsArrayBuffer(file);
-})
+}
 
 const worker = new Worker('/src/zircon-worker.js');
 worker.addEventListener("message", (msg) => {
@@ -26,6 +32,7 @@ worker.addEventListener("message", (msg) => {
         dom.stderr.innerHTML = msg.data.arguments[1];
         scrollTextAreaToBottom(dom.stdout);
         scrollTextAreaToBottom(dom.stderr);
+        dom.runningIndicator.classList.add("hidden")
     }
 });
 

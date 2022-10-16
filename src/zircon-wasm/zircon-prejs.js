@@ -40,7 +40,7 @@ Module["preRun"] = () => {
 }
 
 
-Module["onAbort"]  = (s) => {
+Module["onAbort"] = (s) => {
     Module["stderrBuffer"] += "ABORTED: " + s + "&#10;";
 }
 Module["printErr"] = (s) => {

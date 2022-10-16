@@ -18,7 +18,7 @@ void emulate_impl(std::string filename) {
         return;
     }
 
-    TraceMode traces = TraceMode::INSTRUCTION | TraceMode::REGISTER | TraceMode::MEMORY;
+    TraceMode traces = TraceMode::NONE;
     bool stats = false;
 
     elf::File f(std::move(is));
