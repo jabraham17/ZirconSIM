@@ -6,6 +6,15 @@
 
 - load any instructions, not just ELF64 executable
 - add cmd line args and env args
+- improve elf support
+  - better error checking
+  - elf symbols
+- add permissions to memory, RWX
+  - stack should be RW
+  - code should be RX
+  - heap should be RW
+- support threading
+  - BIG effort
 
 ## refactor
 
