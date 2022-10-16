@@ -33,6 +33,7 @@ struct Opcode {
     }
 
     static const std::string& getName(Opcode op);
+    static const std::string& getNiceName(Opcode op);
     static constexpr size_t size();
 
     bool isRType() const;
