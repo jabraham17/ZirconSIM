@@ -5,6 +5,7 @@
 ## core features
 
 - load any instructions, not just ELF64 executable
+- add cmd line args and env args
 
 ## refactor
 
@@ -34,6 +35,7 @@
 - add single stepping
 - add pause and resume
 - add memory explorer
+- 
 
 ## instruction sets
 
