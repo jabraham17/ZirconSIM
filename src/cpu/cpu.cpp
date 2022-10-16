@@ -34,8 +34,8 @@ bool Hart::shouldHalt() {
 
 void Hart::init() {
     // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
-    hs.rf.GPR[2] = 0x7fffffff00010000;
-    hs.memimg.allocate(0x7fffffff00000000, 0x10008);
+    hs.rf.GPR[2] = 0x7fffffff0000f000;
+    hs.memimg.allocate(0x7fffffff00000000, 0x10000);
 }
 
 void Hart::execute(uint64_t start_address) {
