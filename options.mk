@@ -74,7 +74,7 @@ else
 COMPILE_FLAGS+= -O3
 endif
 ifeq ($(WASM),1)
-COMPILE_FLAGS+= -DWASM=1
+COMPILE_FLAGS+= -DWASM=1 -fwasm-exceptions
 else
 COMPILE_FLAGS+= -masm=intel
 endif

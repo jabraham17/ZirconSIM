@@ -1,0 +1,35 @@
+.layout-horizontal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.layout-vertical {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.leftalign {
+    align-items: flex-start;
+}
+
+.centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nospace {
+    padding: 0;
+    inset: 0;
+    margin: 0;
+}
+
+.bottom {
+    vertical-align: bottom;
+}
+
+

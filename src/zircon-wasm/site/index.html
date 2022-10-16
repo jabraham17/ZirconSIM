@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Zircon RISC-V Simulator</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div id="main-view" class="centered grid-layout">
+        <div id="header" class="grid-item centered layout-vertical">
+            <h1 class="nospace">
+                Zircon RISC-V Simulator
+            </h1>
+        </div>
+        <fieldset id="configure" class="grid-item box-rounded">
+            <legend>Configure</legend>
+            <div class="layout-vertical leftalign" style="height:100%;">
+                <div style="flex-grow: 1;">
+                    <form id="form">
+                        <fieldset class="box-rounded">
+                            <legend>ELF Executable</legend>
+                            <input id="fileupload" name="exefile" type="file" />
+                        </fieldset>
+                    </form>
+                </div>
+                <div style="align-self: flex-end">
+                    <button id="run-button">RUN!</button>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset id="env-args" class="grid-item box-rounded">
+            <legend>ENV ARGS</legend>
+        </fieldset>
+        <fieldset id="cli-args" class="grid-item box-rounded">
+            <legend>CLI ARGS</legend>
+        </fieldset>
+        <fieldset id="stdin" class="grid-item box-rounded">
+            <legend>STDIN</legend>
+            <textarea rows="5" cols="33">
+            </textarea>
+        </fieldset>
+        <fieldset id="stdout" class="grid-item box-rounded">
+            <legend>STDOUT</legend>
+            <textarea rows="5" cols="33" readonly>
+            </textarea>
+        </fieldset>
+        <fieldset id="stderr" class="grid-item box-rounded">
+            <legend>STDERR</legend>
+            <textarea rows="5" cols="33" readonly>
+            </textarea>
+        </fieldset>
+        <fieldset id="inst_trace" class="grid-item box-rounded">
+            <legend>Instructions</legend>
+        </fieldset>
+        <fieldset id="reg_explore" class="grid-item box-rounded">
+            <legend>Registers</legend>
+        </fieldset>
+        <fieldset id="mem_explore" class="grid-item box-rounded">
+            <legend>Memory Explorer</legend>
+        </fieldset>
+        <div id="footer" class="grid-item centered layout-vertical" style="margin-top: 10vh;">
+            <p class="nospace">
+                Created by J Abraham as a passion project
+            </p>
+            <p class="nospace">
+                This is an entirely open source project, the source code can be found <a
+                    href="https://github.com/jacob-abraham/ZirconSIM">here</a>
+            </p>
+        </div>
+    </div>
+
+
+    <!-- <div>
+        <h2>Zircon RISC-V Simulator</h2>
+        <form id="form">
+            <input id="fileupload" name="file" type="file" />
+            <input type="button" value="Submit" id="submit" />
+        </form>
+        <div id="log" style="border: 1px solid white; min-height: 30%; overflow-y: auto;">
+            <fieldset id="stdin">
+                <legend>stderr</legend>
+                <p></p>
+            </fieldset>
+            <fieldset id="stdout">
+                <legend>STDOUT</legend>
+                <p></p>
+            </fieldset>
+            <fieldset id="stderr">
+                <legend>stderr</legend>
+                <p></p>
+            </fieldset>
+        </div>
+    </div> -->
+    <script src="./src/layout.js">
+    </script>
+    <script type="module" src="./src/main.js">
+    </script>
+</body>
+
+</html>

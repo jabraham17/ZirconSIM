@@ -52,7 +52,7 @@ void Hart::execute(uint64_t start_address) {
             if(shouldHalt()) break;
             isa::inst::executeInstruction(inst, hs);
         } catch(const std::exception& e) {
-            std::cerr << e.what() << std::endl;
+            std::cerr << "Exception Occurred: " << e.what() << std::endl;
             break;
         }
     }

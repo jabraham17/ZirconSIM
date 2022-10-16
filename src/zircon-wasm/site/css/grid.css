@@ -1,0 +1,97 @@
+@import "colors.css";
+
+html {
+    height: 100%;
+}
+
+body {
+    min-height: 100%;
+}
+
+.grid-layout#main-view {
+    min-height: 100%;
+    width: 95vw;
+    height: 95vh;
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-areas:
+        "header header header header"
+        "configure env_args inst_trace inst_trace"
+        "configure cli_args inst_trace inst_trace"
+        "configure stdin inst_trace inst_trace"
+        "stdout stdout reg_explore mem_explore"
+        "stderr stderr reg_explore mem_explore"
+        "footer footer footer footer";
+    grid-template-columns: repeat(4, minmax(0, 24vw));
+    grid-template-rows: minmax(0, 2vh) minmax(0, 12vh) minmax(0, 12vh) minmax(0, 12vh) minmax(0, 25vh) minmax(0, 20vh) minmax(0, 2vh);
+    gap: 1.5vh;
+    margin: 1.5vh;
+}
+
+.grid-layout#main-view>.grid-item#header {
+    grid-area: header;
+}
+
+.grid-layout#main-view>.grid-item#configure {
+    grid-area: configure;
+}
+
+.grid-layout#main-view>.grid-item#env-args {
+    grid-area: env_args;
+}
+
+.grid-layout#main-view>.grid-item#cli-args {
+    grid-area: cli_args;
+}
+
+.grid-layout#main-view>.grid-item#stdin {
+    grid-area: stdin;
+}
+
+.grid-layout#main-view>.grid-item#stdout {
+    grid-area: stdout;
+}
+
+.grid-layout#main-view>.grid-item#stderr {
+    grid-area: stderr;
+}
+
+.grid-layout#main-view>.grid-item#output {
+    grid-area: output;
+}
+
+.grid-layout#main-view>.grid-item#inst_trace {
+    grid-area: inst_trace;
+}
+
+.grid-layout#main-view>.grid-item#reg_explore {
+    grid-area: reg_explore;
+}
+
+.grid-layout#main-view>.grid-item#mem_explore {
+    grid-area: mem_explore;
+}
+
+.grid-layout#main-view>.grid-item#footer {
+    grid-area: footer;
+}
+
+.grid-layout#main-view>.grid-item {
+    height: calc(100% - 1vh);
+    width: calc(100% - 1vh);
+}
+.grid-layout#main-view>.grid-item textarea {
+    height: calc(100% - 1vh);
+    width: calc(100% - 1vh);
+    resize: none;
+    autosc
+}
+
+/* for layout debug */
+/* .grid-layout#main-view>.grid-item {
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 3px;
+    background-color: rgba(100, 100, 100, .5);
+} */
