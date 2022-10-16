@@ -5,3 +5,5 @@
 *.out
 *.bin
 build/
+rv64ima-linux-toolchain/
+rv64ima-linux-toolchain-build/
