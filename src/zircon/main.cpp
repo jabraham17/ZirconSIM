@@ -94,7 +94,7 @@ int main(int argc, const char** argv) {
     }
 
     elf::File f(std::move(is));
-    mem::MemoryImage memimg(0x80000, args.traces);
+    mem::MemoryImage memimg(0x800000, args.traces);
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 

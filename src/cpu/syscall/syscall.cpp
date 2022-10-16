@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 
 namespace sys {
 
@@ -41,6 +42,7 @@ void emulate(cpu::HartState& hs) {
         else throw SyscallUnimplementedException(riscv64_syscall_number);
     }
 
+        #ifdef __x86_64
     uint64_t arg0 = hs.rf.GPR[10];
     uint64_t arg1 = hs.rf.GPR[11];
     uint64_t arg2 = hs.rf.GPR[12];
@@ -65,6 +67,9 @@ void emulate(cpu::HartState& hs) {
                    [arg5] "r"(arg5),
                    [sys] "r"(x86_64_syscall_number)
                  : "rax", "rdi", "rsi", "rdx", "r10", "r8", "r9");
+    #else
+    assert(0 && "Not supported\n");
+    #endif
     hs.rf.GPR[10] = result;
 }
 
