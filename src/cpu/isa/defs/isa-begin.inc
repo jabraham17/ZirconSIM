@@ -23,7 +23,7 @@
 #endif
 
 #ifndef CUSTOM
-#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)
 #endif
 
 #ifndef ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_

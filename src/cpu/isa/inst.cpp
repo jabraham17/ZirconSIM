@@ -8,6 +8,7 @@ namespace inst {
 
 namespace internal {
 const std::string& getOpcodeNameFromTable(Opcode op);
+const std::string& getOpcodeNiceNameFromTable(Opcode op);
 extern Opcode decodeInstruction(uint32_t bits);
 extern void executeInstruction(uint32_t bits, cpu::HartState& hs);
 extern std::string disassemble(uint32_t bits, uint32_t pc);
@@ -19,6 +20,11 @@ const std::string& Opcode::getName(Opcode op) {
         default: break;
     }
     return internal::getOpcodeNameFromTable(op);
+}const std::string& Opcode::getNiceName(Opcode op) {
+    switch(op) {
+        default: break;
+    }
+    return internal::getOpcodeNiceNameFromTable(op);
 }
 
 Opcode decodeInstruction(uint32_t bits) {
@@ -69,6 +75,19 @@ std::string disassemble(uint32_t bits, uint32_t pc) {
     Opcode op = decodeInstruction(bits);
     switch(op) {
         default: break;
+        case Opcode::rv32i_lb:
+        case Opcode::rv32i_lh:
+        case Opcode::rv32i_lw:
+        case Opcode::rv32i_lbu:
+        case Opcode::rv32i_lhu:
+        case Opcode::rv64i_lwu:
+        case Opcode::rv64i_ld: {
+            std::stringstream ss;
+            ss << Opcode::getNiceName(op) << " x" << instruction::getRd(bits) << ", "
+               << instruction::signext64<12>(instruction::getITypeImm(bits))
+               << "(x" << instruction::getRs1(bits) << ")";
+            return ss.str();
+        }
     }
     return internal::disassemble(bits, pc);
 }

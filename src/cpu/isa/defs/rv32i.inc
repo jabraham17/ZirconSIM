@@ -271,6 +271,7 @@ CUSTOM(rv32i,
        0b0001111,
        return instruction::getOpcode(bits) == 0b0001111 &&
               instruction::getFunct3(bits) == 0b000;
+       , return "fence";
        , hs.pc += 4;
        , 0)
 CUSTOM(rv32i,
@@ -278,6 +279,7 @@ CUSTOM(rv32i,
        0b1110011,
        return instruction::getOpcode(bits) == 0b1110011 &&
               instruction::getBitRange<31 COMMA 7>(bits) == 0;
+       , return "ecall";
        , sys::emulate(hs);
        hs.pc += 4;
        , 0)
@@ -288,5 +290,6 @@ CUSTOM(rv32i,
               instruction::getBitRange<19 COMMA 7>(bits) == 0b0 &&
               instruction::getBitRange<31 COMMA 21>(bits) == 0b0 &&
               instruction::getBit<20>(bits) == 0b1;
+       , return "ebreak";
        , hs.pc += 4;
        , 0)

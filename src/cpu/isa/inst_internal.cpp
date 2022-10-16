@@ -39,7 +39,7 @@ bool Opcode::isSType() const {
         default: return false;
 #define S_TYPE(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-#include "defs/instructions.inc"
+        #include "defs/instructions.inc"
     }
 }
 bool Opcode::isBType() const {
@@ -47,7 +47,7 @@ bool Opcode::isBType() const {
         default: return false;
 #define B_TYPE(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-#include "defs/instructions.inc"
+        #include "defs/instructions.inc"
     }
 }
 bool Opcode::isUType() const {
@@ -55,7 +55,7 @@ bool Opcode::isUType() const {
         default: return false;
 #define U_TYPE(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-#include "defs/instructions.inc"
+        #include "defs/instructions.inc"
     }
 }
 bool Opcode::isJType() const {
@@ -63,7 +63,7 @@ bool Opcode::isJType() const {
         default: return false;
 #define J_TYPE(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-#include "defs/instructions.inc"
+        #include "defs/instructions.inc"
     }
 }
 bool Opcode::isCustomType() const {
@@ -71,7 +71,7 @@ bool Opcode::isCustomType() const {
         default: return false;
 #define CUSTOM(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-#include "defs/instructions.inc"
+        #include "defs/instructions.inc"
     }
 }
 
@@ -88,9 +88,23 @@ std::string OPCODE_NAME_TABLE[] = {
 #define CUSTOM(prefix, name, ...) #prefix "_" #name,
 #include "defs/instructions.inc"
 };
+std::string OPCODE_NICE_NAME_TABLE[] = {
+    "UNKNOWN",
+#define R_TYPE(prefix, name, ...) #name,
+#define I_TYPE(prefix, name, ...) #name,
+#define S_TYPE(prefix, name, ...) #name,
+#define B_TYPE(prefix, name, ...) #name,
+#define U_TYPE(prefix, name, ...) #name,
+#define J_TYPE(prefix, name, ...) #name,
+#define CUSTOM(prefix, name, ...) #name,
+#include "defs/instructions.inc"
+};
 
 const std::string& getOpcodeNameFromTable(Opcode op) {
     return OPCODE_NAME_TABLE[op];
+}
+const std::string& getOpcodeNiceNameFromTable(Opcode op) {
+    return OPCODE_NICE_NAME_TABLE[op];
 }
 
 uint64_t OPCODE_PRECEDENCE[] = {
@@ -102,7 +116,8 @@ uint64_t OPCODE_PRECEDENCE[] = {
 #define B_TYPE(prefix, name, opcode, funct3, execution, precedence) precedence,
 #define U_TYPE(prefix, name, opcode, execution, precedence) precedence,
 #define J_TYPE(prefix, name, opcode, execution, precedence) precedence,
-#define CUSTOM(prefix, name, opcode, matcher, execution, precedence) precedence,
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
+    precedence,
 #include "defs/instructions.inc"
 };
 
@@ -110,7 +125,7 @@ uint64_t getOpcodePrecedence(Opcode op) {
     return OPCODE_PRECEDENCE[uint64_t(op)];
 }
 
-#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
     bool prefix##_##name##_matcher_func([[maybe_unused]] uint32_t bits) {      \
         do {                                                                   \
             matcher;                                                           \
@@ -161,7 +176,7 @@ Opcode decodeInstruction(uint32_t bits) {
         precedence < getOpcodePrecedence(matched))) {                          \
         matched = Opcode::prefix##_##name;                                     \
     }
-#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
     if(prefix##_##name##_matcher_func(bits)) matched = Opcode::prefix##_##name;
 #include "defs/instructions.inc"
 
@@ -189,11 +204,20 @@ void executeInstruction(uint32_t bits, cpu::HartState& hs) {
     SIMPLE_EXECUTION(prefix, name, execution)
 #define J_TYPE(prefix, name, opcode, execution, precedence)                    \
     SIMPLE_EXECUTION(prefix, name, execution)
-#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
     SIMPLE_EXECUTION(prefix, name, execution)
 #include "defs/instructions.inc"
     }
 }
+
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
+    std::string prefix##_##name##_printer_func(                                \
+        [[maybe_unused]] uint32_t bits) {                                      \
+        do {                                                                   \
+            printer;                                                           \
+        } while(0);                                                            \
+    }
+#include "defs/instructions.inc"
 
 std::string disassemble(uint32_t bits, uint32_t pc = 0) {
     Opcode op = decodeInstruction(bits);
@@ -237,8 +261,10 @@ std::string disassemble(uint32_t bits, uint32_t pc = 0) {
            << (instruction::signext32<20>(instruction::getJTypeImm(bits)) +    \
                pc);                                                            \
         break;
-#define CUSTOM(prefix, name, opcode, matcher, execution, precedence)           \
-    case Opcode::prefix##_##name: ss << "custom_" #name; break;
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
+    case Opcode::prefix##_##name:                                              \
+        ss << prefix##_##name##_printer_func(bits);                            \
+        break;
 #include "defs/instructions.inc"
     }
     return ss.str();

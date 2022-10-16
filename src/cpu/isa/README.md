@@ -6,7 +6,7 @@ S_TYPE(name, opcode, funct3, execution code, precedence)
 B_TYPE(name, opcode, funct3, execution code, precedence)
 U_TYPE(name, opcode, execution code, precedence)
 J_TYPE(name, opcode, execution code, precedence)
-CUSTOM(name, opcode, matcher code, execution code, precedence)
+CUSTOM(name, opcode, matcher code, printer code, execution code, precedence)
 
 FOR PRECEDENCE
 lower value is of higher precedence.

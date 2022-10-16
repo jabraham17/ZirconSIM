@@ -30,6 +30,11 @@ CUSTOM(rv64i,
        return instruction::getOpcode(bits) == 0b0010011 &&
               instruction::getFunct3(bits) == 0b001 &&
               instruction::getBitsFromMSB<31 COMMA 6>(bits) == 0b000000;
+       , std::stringstream ss;
+       ss << "slli x" << instruction::getRd(bits) << ", x"
+          << instruction::getRs1(bits) << ", "
+          << instruction::signext64<12>(instruction::getITypeImm(bits));
+       return ss.str();
        , hs.rf.GPR[RD] = hs.rf.GPR[RS1] << SHAMT6;
        hs.pc += 4;
        , 0)
@@ -39,6 +44,11 @@ CUSTOM(rv64i,
        return instruction::getOpcode(bits) == 0b0010011 &&
               instruction::getFunct3(bits) == 0b101 &&
               instruction::getBitsFromMSB<31 COMMA 6>(bits) == 0b000000;
+       , std::stringstream ss;
+       ss << "srli x" << instruction::getRd(bits) << ", x"
+          << instruction::getRs1(bits) << ", "
+          << instruction::signext64<12>(instruction::getITypeImm(bits));
+       return ss.str();
        , hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> SHAMT6;
        hs.pc += 4;
        , 0)
@@ -48,6 +58,11 @@ CUSTOM(rv64i,
        return instruction::getOpcode(bits) == 0b0010011 &&
               instruction::getFunct3(bits) == 0b101 &&
               instruction::getBitsFromMSB<31 COMMA 6>(bits) == 0b010000;
+       , std::stringstream ss;
+       ss << "srai x" << instruction::getRd(bits) << ", x"
+          << instruction::getRs1(bits) << ", "
+          << instruction::signext64<12>(instruction::getITypeImm(bits));
+       return ss.str();
        , hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> SHAMT6;
        hs.pc += 4;
        , 0)
