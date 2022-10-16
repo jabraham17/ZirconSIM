@@ -1,12 +1,13 @@
 
 /*
-clang --target=riscv64 -march=rv64i -I/opt/riscv-ima/riscv64-unknown-elf/include
-test/main.c -c -o test/main.o && /opt/riscv-ima/bin/riscv64-unknown-elf-gcc
--static test/main.o -o test/main.out
+./rv64ima-linux-toolchain/bin/riscv64-unknown-linux-gnu-gcc -static test/main.c -o test/main.out
 */
+
 #include <stdio.h>
-int global = -2;
+#include <stdlib.h>
+// #include <time.h>
 int main() {
-    printf("hello, world\n");
+    // srand(time(0));
+    printf("hello, world %d\n", 1);
     return 0;
 }
