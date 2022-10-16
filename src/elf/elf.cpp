@@ -134,3 +134,15 @@ void elf::File::buildMemoryImage(mem::MemoryImage& m) {
         }
     }
 }
+
+
+// std::map<uint64_t, std::string> elf::File::getSymbolTable() {
+//     for(auto sh: shs) {
+//         if(sh.sh_type != 2 /*SHT_SYMTABLE*/) continue;
+//         auto n_entries = (sh.sh_size / sh.sh_entsize) - 1;
+//         SymbolTableEntry* entries = new SymbolTableEntry[n_entries];
+//         ifs.seekg(sh.sh_offset + sh.sh_entsize); // skip first entry
+//         ifs.read(entries, n_entries * sh.sh_entsize);
+//         std::cout << "section has " << sh.sh_size << " " << sh.sh_entsize << "\n";
+//     }
+// }

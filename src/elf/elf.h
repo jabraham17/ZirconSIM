@@ -68,14 +68,26 @@ struct __attribute__((packed)) SectionHeader {
     uint64_t sh_size;
     uint32_t sh_link;
     uint32_t sh_info;
-    uint64_t p_addralign;
-    uint64_t p_entsize;
+    uint64_t sh_addralign;
+    uint64_t sh_entsize;
 };
 static_assert(
     sizeof(SectionHeader) == 0x40,
     "SectionHeader must be 0x40 bytes");
 ssize_t parseSectionHeader(std::ifstream&, SectionHeader&);
 bool validateSectionHeader(SectionHeader&);
+
+// struct SymbolTableEntry {
+//     uint32_t st_name;
+//     uint8_t st_info;
+//     uint8_t st_other;
+//     uint16_t st_shndx;
+//     uint64_t st_value;
+//     uint64_t st_size;
+// };
+// static_assert(
+//     sizeof(SectionHeader) == 0x18,
+//     "SectionHeader must be 0x40 bytes");
 
 class File {
   private:
@@ -100,6 +112,8 @@ class File {
 
     void buildMemoryImage(mem::MemoryImage&);
     uint64_t getStartAddress();
+
+    void getSymbolTable();
 };
 
 } // namespace elf
