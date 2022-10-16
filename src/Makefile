@@ -9,6 +9,7 @@ ifeq ($(WASM), 1)
 SUBDIRS:=$(filter-out zircon,$(SUBDIRS))
 else
 # remove wasm only
+SUBDIRS:=$(filter-out zircon-wasm,$(SUBDIRS))
 endif
 
 .DEFAULT_GOAL: all
