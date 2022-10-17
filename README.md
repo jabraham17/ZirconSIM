@@ -1,3 +1,3 @@
 # README
 
-A RISC-V ISA simulator. Runs baremetal ELF RISC-V executables.
+A RISC-V ISA simulator. Runs ELF64 RISC-V executables.
