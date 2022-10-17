@@ -1,6 +1,6 @@
 
 /*
-./rv64ima-linux-toolchain/bin/riscv64-unknown-linux-gnu-gcc -static test/main.c -o test/main.out
+./toolchains/rv64ima/bin/riscv64-unknown-elf-gcc -g -static test/main.c -o test/main.out
 */
 
 #include <stdio.h>
