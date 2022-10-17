@@ -6,6 +6,7 @@
 #include "mem/memory-image.h"
 #include "trace/stats.h"
 #include "trace/trace.h"
+#include <map>
 
 namespace cpu {
 
@@ -13,6 +14,9 @@ class HartState {
   public:
     isa::rf::RegisterFile rf;
     mem::MemoryImage& memimg;
+
+    std::map<std::string, uint64_t> memory_locations;
+
     // address in memory of current instruction
     uint64_t pc;
     // use raw(addr) so we don't log mem access

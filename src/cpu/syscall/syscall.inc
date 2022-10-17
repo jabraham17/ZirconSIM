@@ -39,16 +39,23 @@ EMULATE_SYSCALL(write, 64, uint64_t fd = hs.rf.GPR[10];
                 hs.rf.GPR[10] = write(fd, real_addr, count);)
 
 EMULATE_SYSCALL(
-    gettimeofday,
-    169,
-    uint64_t addr = hs.rf.GPR[10];
+    gettimeofday, 169, uint64_t addr = hs.rf.GPR[10];
     struct timeval* tv = addr ? (struct timeval*)hs.memimg.raw(addr) : 0;
     addr = hs.rf.GPR[11];
     struct timezone* tz = addr ? (struct timezone*)hs.memimg.raw(addr) : 0;
     hs.rf.GPR[10] = gettimeofday(tv, tz);)
 
 EMULATE_SYSCALL(exit, 93, DO_NOTHING;)
-EMULATE_SYSCALL(brk, 214, hs.rf.GPR[10] = -12;)
+
+// brk called with 0 returns the end of the heap
+EMULATE_SYSCALL(
+    brk, 214, uint64_t addr = uint64_t(hs.rf.GPR[10]); if(addr != 0) {
+        uint64_t allocation_size = addr - hs.memory_locations["heap_end"];
+        hs.memimg.allocate(hs.memory_locations["heap_end"], allocation_size);
+        hs.memory_locations["heap_end"] = addr;
+    } hs.rf.GPR[10] = hs.memory_locations["heap_end"];
+
+)
 // EMULATE_SYSCALL(close, 57, hs.rf.GPR[10] = -1;)
 
 #undef MAP_SYSCALL

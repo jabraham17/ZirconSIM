@@ -10,17 +10,38 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <iomanip>
+#include <sstream>
+#include <cstring>
 
 namespace mem {
 
 struct MemoryException : public std::exception {
-    const char* what() const throw() { return "Memory Exception"; }
+    const char* what() const noexcept { return "Memory Exception"; }
 };
 struct OutOfMemoryException : public MemoryException {
-    const char* what() const throw() { return "Out of Memory"; }
+    const char* what() const noexcept { return "Out of Memory"; }
 };
 struct OutOfBoundsException : public MemoryException {
-    const char* what() const throw() { return "Out of Bounds Access"; }
+    uint64_t addr;
+    uint64_t range_lower;
+    uint64_t range_upper;
+    OutOfBoundsException(
+        uint64_t addr,
+        uint64_t range_lower = 0,
+        uint64_t range_upper = 0)
+        : addr(addr), range_lower(range_lower), range_upper(range_upper) {}
+    const char* what() const noexcept {
+        std::stringstream ss;
+        ss << "Out of Bounds Access: ";
+        if(range_lower == 0 && range_upper == 0) {
+            ss << "unknown addr 0x" << std::hex << addr;
+        } else {
+            ss << "addr 0x" << std::hex << addr << " no in range [0x" << std::hex
+               << range_lower << "-0x" << std::hex << range_upper << "]";
+        }
+        return strdup(ss.str().c_str());
+    }
 };
 
 class MemoryImage {
@@ -36,7 +57,7 @@ class MemoryImage {
         uint8_t* raw(uint64_t addr) {
             if(addr >= address && addr < address + size)
                 return buffer + (addr - address);
-            else throw OutOfBoundsException();
+            else throw OutOfBoundsException(addr, address, address+size);
         }
         // uint8_t& at(uint64_t addr) { return *((uint8_t*)this->get(addr)); }
         uint8_t& byte(uint64_t addr) { return *((uint8_t*)this->raw(addr)); }
@@ -74,7 +95,7 @@ class MemoryImage {
                 return mr;
             }
         }
-        throw OutOfBoundsException();
+        throw OutOfBoundsException(addr);
     }
 
     template <typename T> struct MemoryCellProxy {

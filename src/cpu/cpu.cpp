@@ -34,8 +34,19 @@ bool Hart::shouldHalt() {
 
 void Hart::init() {
     // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
-    hs.rf.GPR[2] = 0x7fffffff0000f000;
-    hs.memimg.allocate(0x7fffffff00000000, 0x10000);
+    hs.memory_locations["start_start"] = 0x7fffffff00000000;
+    uint64_t stack_size = 0x10000;
+    hs.memory_locations["stack_end"] = hs.memory_locations["start_start"] + stack_size;
+    hs.memimg.allocate(hs.memory_locations["start_start"], stack_size);
+    // start stack pointer somewhere inside the stack, near the end, 128 bit aligned
+    hs.rf.GPR[2] = hs.memory_locations["stack_end"] - 0x100; 
+
+    // initial heap size is 0
+    uint64_t SPACING = 0x10000;
+    hs.memory_locations["heap_start"] = hs.memory_locations["stack_end"] + SPACING;
+    uint64_t heap_size = 0;
+    hs.memory_locations["heap_end"] = hs.memory_locations["heap_start"] + heap_size;
+    hs.memimg.allocate(hs.memory_locations["heap_start"], heap_size);
 }
 
 void Hart::execute(uint64_t start_address) {
