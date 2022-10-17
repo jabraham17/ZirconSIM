@@ -13,6 +13,8 @@
   - stack should be RW
   - code should be RX
   - heap should be RW
+- optimize memory
+  - if allocations are next to one another, merge them, similar to optimizing UnionFind
 - support threading
   - BIG effort
 
