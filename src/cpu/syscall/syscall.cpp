@@ -49,7 +49,13 @@ void emulate(cpu::HartState& hs) {
     uint64_t arg3 = hs.rf.GPR[13];
     uint64_t arg4 = hs.rf.GPR[14];
     uint64_t arg5 = hs.rf.GPR[15];
-    asm volatile("mov rax, %[sys]\n\t"
+    asm volatile(
+                // FIXME: this asm block is broken for clang < 14.0.0
+                // works for gcc and clang>=14
+                // #if __clang__ != 1 || __clang_major__ < 14
+                // ".intel_syntax\n\t"
+                // #endif
+                "mov rax, %[sys]\n\t"
                  "mov rdi, %[arg0]\n\t"
                  "mov rsi, %[arg1]\n\t"
                  "mov rdx, %[arg2]\n\t"
@@ -58,6 +64,9 @@ void emulate(cpu::HartState& hs) {
                  "mov r9, %[arg5]\n\t"
                  "syscall\n\t"
                  "mov %[result], rax\n\t"
+                //  #if __clang__ != 1 || __clang_major__ < 14
+                // ".att_syntax\n\t"
+                // #endif
                  : [result] "=r"(result)
                  : [arg0] "r"(arg0),
                    [arg1] "r"(arg1),
