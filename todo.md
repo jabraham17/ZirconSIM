@@ -29,7 +29,7 @@
   - allows us to things like single step, etcetera.
   - maybe we want to have the single execute, but allow users to register callbacks
   - this also simplifies stuff that has to be done on the wasm end of things
-  - add controller that takes the place of tracing, controller enables tracing, controls formatting
+- add controller that takes the place of tracing, controller enables tracing, controls formatting
 
 ## refactor
 
