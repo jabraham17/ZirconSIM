@@ -13,7 +13,7 @@ namespace cpu {
 // use raw(addr) so we don't log mem access
 uint32_t HartState::getInstWord() const { return *((uint32_t*)memimg.raw(pc)); }
 
-HartState::HartState(mem::MemoryImage& m, TraceMode tm) : memimg(m) {
+HartState::HartState(mem::MemoryImage& m, TraceMode tm) : memimg(m), executing(true) {
     rf.setTraceMode(tm);
 }
 
@@ -24,12 +24,14 @@ Hart::Hart(mem::MemoryImage& m, TraceMode tm, bool useStats)
 }
 
 bool Hart::shouldHalt() {
-    // if the current inst is a jump to itself, halt
+    // halt if no longer executing
+    if(!hs.executing) return true;
+    // if the instruction just executed was a jmp to itself, halt
     uint32_t inst = hs.getInstWord();
     auto op = isa::inst::decodeInstruction(inst);
     auto jmp_target =
         instruction::signext64<20>(instruction::getJTypeImm(inst)) + hs.pc;
-    return (op == isa::inst::Opcode::rv32i_jal && jmp_target == hs.pc);
+    return (op == isa::inst::Opcode::rv32i_jal && jmp_target == hs.pc.previous());
 }
 
 void Hart::init() {
@@ -60,8 +62,8 @@ void Hart::execute(uint64_t start_address) {
             trace_inst << std::endl;
             stats.count(hs);
 
-            if(shouldHalt()) break;
             isa::inst::executeInstruction(inst, hs);
+            if(shouldHalt()) break;
         } catch(const std::exception& e) {
             std::cerr << "Exception Occurred: " << e.what() << std::endl;
             break;

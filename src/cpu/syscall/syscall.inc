@@ -27,16 +27,52 @@ MAP_SYSCALL(getgid, 104, 176)
 MAP_SYSCALL(geteuid, 107, 175)
 MAP_SYSCALL(getuid, 102, 174)
 
+MAP_SYSCALL(ioctl, 54, 29)
+
 EMULATE_SYSCALL(fstat, 80, uint64_t fildes = hs.rf.GPR[10];
                 uint64_t addr = hs.rf.GPR[11];
-                struct stat* real_addr = (struct stat*)hs.memimg.raw(addr);
+                struct stat* real_addr = addr
+                                             ? (struct stat*)hs.memimg.raw(addr)
+                                             : 0;
                 hs.rf.GPR[10] = fstat(fildes, real_addr);)
 
 EMULATE_SYSCALL(write, 64, uint64_t fd = hs.rf.GPR[10];
                 uint64_t addr = hs.rf.GPR[11];
-                void* real_addr = (void*)hs.memimg.raw(addr);
+                void* real_addr = addr ? (void*)hs.memimg.raw(addr) : 0;
                 uint64_t count = hs.rf.GPR[12];
                 hs.rf.GPR[10] = write(fd, real_addr, count);)
+
+EMULATE_SYSCALL(
+    writev, 66, uint64_t fildes = hs.rf.GPR[10]; uint64_t addr = hs.rf.GPR[11];
+    struct iovec* iov = addr ? (struct iovec*)hs.memimg.raw(addr) : 0;
+    uint64_t iovcnt = hs.rf.GPR[12];
+    // need to rewrite the address inside of iov
+    for(uint64_t idx = 0; idx < iovcnt; idx++) {
+        if(iov) {
+            uint64_t orig_buffer = (uint64_t)iov[idx].iov_base;
+            iov[idx].iov_base = orig_buffer ? hs.memimg.raw(orig_buffer) : 0;
+        }
+    } hs.rf.GPR[10] = writev(fildes, iov, iovcnt);)
+
+EMULATE_SYSCALL(clock_settime, 112, 
+    clockid_t clockid = (clockid_t)hs.rf.GPR[10];
+    uint64_t addr = hs.rf.GPR[11];
+    struct timespec* tp = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
+    hs.rf.GPR[10] = clock_settime(clockid, tp);
+    )
+EMULATE_SYSCALL(clock_gettime, 113, 
+    clockid_t clockid = (clockid_t)hs.rf.GPR[10];
+    uint64_t addr = hs.rf.GPR[11];
+    struct timespec* tp = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
+    hs.rf.GPR[10] = clock_gettime(clockid, tp);
+)
+EMULATE_SYSCALL(
+    clock_getres, 114,
+    clockid_t clockid = (clockid_t)hs.rf.GPR[10];
+    uint64_t addr = hs.rf.GPR[11];
+    struct timespec* res = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
+    hs.rf.GPR[10] = clock_getres(clockid, res);
+    )
 
 EMULATE_SYSCALL(
     gettimeofday, 169, uint64_t addr = hs.rf.GPR[10];
@@ -45,7 +81,12 @@ EMULATE_SYSCALL(
     struct timezone* tz = addr ? (struct timezone*)hs.memimg.raw(addr) : 0;
     hs.rf.GPR[10] = gettimeofday(tv, tz);)
 
-EMULATE_SYSCALL(exit, 93, DO_NOTHING;)
+EMULATE_SYSCALL(exit, 93, hs.executing = false;)
+EMULATE_SYSCALL(exit, 94, hs.executing = false;)
+
+EMULATE_SYSCALL(set_tid_address, 96, uint64_t addr = hs.rf.GPR[10];
+                int* tidptr = addr ? (int*)hs.memimg.raw(addr) : 0;
+                hs.rf.GPR[10] = syscall(SYS_set_tid_address, tidptr);)
 
 // brk called with 0 returns the end of the heap
 EMULATE_SYSCALL(

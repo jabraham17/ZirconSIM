@@ -17,10 +17,43 @@ class HartState {
 
     std::map<std::string, uint64_t> memory_locations;
 
+    struct PCProxy {
+        using T = uint64_t;
+
+      private:
+        T current_pc;
+        T previous_pc;
+
+      public:
+        T read() { return current_pc; }
+        T read() const { return current_pc; }
+        void write(T v) {
+            previous_pc = current_pc;
+            current_pc = v;
+        }
+        T previous() { return previous_pc; }
+        operator T() { return read(); }
+        operator T() const { return read(); }
+        PCProxy operator=(T v) {
+            write(v);
+            return *this;
+        }
+        PCProxy operator+=(T v) {
+            write(current_pc + v);
+            return *this;
+        }
+        friend std::ostream& operator<<(std::ostream& os, PCProxy pc) {
+            os << pc.current_pc;
+            return os;
+        }
+    };
+
     // address in memory of current instruction
-    uint64_t pc;
+    PCProxy pc;
     // use raw(addr) so we don't log mem access
     uint32_t getInstWord() const;
+
+    bool executing;
 
     HartState(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE);
 };

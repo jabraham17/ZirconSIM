@@ -1,8 +1,11 @@
 #include "syscall.h"
 
+#include <sys/syscall.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/uio.h>
+#include <time.h>
 
 namespace sys {
 
@@ -15,8 +18,7 @@ int64_t getMappedSyscallNumber([[maybe_unused]] int64_t riscv64_syscall_number) 
     return -1;
 }
 
-bool emulateSyscall([[maybe_unused]] cpu::HartState& hs) {
-    auto sys = hs.rf.GPR[17];
+bool emulateSyscall([[maybe_unused]] uint64_t sys, [[maybe_unused]] cpu::HartState& hs) {
 #define EMULATE_SYSCALL(name, riscv64, execution, ...)                         \
     if(sys == riscv64) {                                                       \
         do {                                                                   \
@@ -38,7 +40,7 @@ void emulate(cpu::HartState& hs) {
         internal::getMappedSyscallNumber(riscv64_syscall_number);
 
     if(x86_64_syscall_number == -1) {
-        if(internal::emulateSyscall(hs)) return;
+        if(internal::emulateSyscall(riscv64_syscall_number, hs)) return;
         else throw SyscallUnimplementedException(riscv64_syscall_number);
     }
 
