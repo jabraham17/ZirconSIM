@@ -46,9 +46,15 @@ build_gnu() {
 }
 
 SOURCE=$1
+if [ -z $SOURCE ]; then
+    echo "No Source Direcrty Given"
+    echo "Correct Usage: $SCRIPT_NAME <gnu-source>"
+    exit 1
+fi
 
 build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima" $SCRIPT_DIR/"toolchains/rv64ima"
 build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-musl" $SCRIPT_DIR/"toolchains/rv64ima-musl" musl
+build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-linux" $SCRIPT_DIR/"toolchains/rv64ima-linux" linux
 
 
 
