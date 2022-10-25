@@ -2,8 +2,9 @@
 cpu= 
 elf= mem
 mem= 
-zircon= cpu elf mem trace
-zircon-wasm= cpu elf mem trace
+controller= cpu
+zircon= cpu elf mem trace controller
+zircon-wasm= cpu elf mem trace controller
 
 define make_depen
 $(eval $1: $($1))
