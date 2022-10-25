@@ -5,14 +5,14 @@
 
 #include "trace/trace.h"
 #include <cstdint>
+#include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <vector>
-#include <iomanip>
-#include <sstream>
-#include <cstring>
 
 namespace mem {
 
@@ -37,8 +37,9 @@ struct OutOfBoundsException : public MemoryException {
         if(range_lower == 0 && range_upper == 0) {
             ss << "unknown addr 0x" << std::hex << addr;
         } else {
-            ss << "addr 0x" << std::hex << addr << " no in range [0x" << std::hex
-               << range_lower << "-0x" << std::hex << range_upper << "]";
+            ss << "addr 0x" << std::hex << addr << " no in range [0x"
+               << std::hex << range_lower << "-0x" << std::hex << range_upper
+               << "]";
         }
         return strdup(ss.str().c_str());
     }
@@ -57,7 +58,7 @@ class MemoryImage {
         uint8_t* raw(uint64_t addr) {
             if(addr >= address && addr < address + size)
                 return buffer + (addr - address);
-            else throw OutOfBoundsException(addr, address, address+size);
+            else throw OutOfBoundsException(addr, address, address + size);
         }
         // uint8_t& at(uint64_t addr) { return *((uint8_t*)this->get(addr)); }
         uint8_t& byte(uint64_t addr) { return *((uint8_t*)this->raw(addr)); }

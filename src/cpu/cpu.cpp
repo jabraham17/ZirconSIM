@@ -13,7 +13,8 @@ namespace cpu {
 // use raw(addr) so we don't log mem access
 uint32_t HartState::getInstWord() const { return *((uint32_t*)memimg.raw(pc)); }
 
-HartState::HartState(mem::MemoryImage& m, TraceMode tm) : memimg(m), executing(true) {
+HartState::HartState(mem::MemoryImage& m, TraceMode tm)
+    : memimg(m), executing(true) {
     rf.setTraceMode(tm);
 }
 
@@ -31,23 +32,28 @@ bool Hart::shouldHalt() {
     auto op = isa::inst::decodeInstruction(inst);
     auto jmp_target =
         instruction::signext64<20>(instruction::getJTypeImm(inst)) + hs.pc;
-    return (op == isa::inst::Opcode::rv32i_jal && jmp_target == hs.pc.previous());
+    return (
+        op == isa::inst::Opcode::rv32i_jal && jmp_target == hs.pc.previous());
 }
 
 void Hart::init() {
     // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
     hs.memory_locations["start_start"] = 0x7fffffff00000000;
     uint64_t stack_size = 0x10000;
-    hs.memory_locations["stack_end"] = hs.memory_locations["start_start"] + stack_size;
+    hs.memory_locations["stack_end"] =
+        hs.memory_locations["start_start"] + stack_size;
     hs.memimg.allocate(hs.memory_locations["start_start"], stack_size);
-    // start stack pointer somewhere inside the stack, near the end, 128 bit aligned
-    hs.rf.GPR[2] = hs.memory_locations["stack_end"] - 0x100; 
+    // start stack pointer somewhere inside the stack, near the end, 128 bit
+    // aligned
+    hs.rf.GPR[2] = hs.memory_locations["stack_end"] - 0x100;
 
     // initial heap size is 0
     uint64_t SPACING = 0x10000;
-    hs.memory_locations["heap_start"] = hs.memory_locations["stack_end"] + SPACING;
+    hs.memory_locations["heap_start"] =
+        hs.memory_locations["stack_end"] + SPACING;
     uint64_t heap_size = 0;
-    hs.memory_locations["heap_end"] = hs.memory_locations["heap_start"] + heap_size;
+    hs.memory_locations["heap_end"] =
+        hs.memory_locations["heap_start"] + heap_size;
     hs.memimg.allocate(hs.memory_locations["heap_start"], heap_size);
 }
 

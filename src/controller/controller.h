@@ -11,7 +11,6 @@ namespace controller {
 using GeneralCallback = void (*)(cpu::HartState&);
 using LoggingCallback = void (*)(cpu::HartState&, std::ostream&);
 
-
 } // namespace controller
 
 #endif

@@ -20,7 +20,8 @@ const std::string& Opcode::getName(Opcode op) {
         default: break;
     }
     return internal::getOpcodeNameFromTable(op);
-}const std::string& Opcode::getNiceName(Opcode op) {
+}
+const std::string& Opcode::getNiceName(Opcode op) {
     switch(op) {
         default: break;
     }
@@ -83,7 +84,8 @@ std::string disassemble(uint32_t bits, uint32_t pc) {
         case Opcode::rv64i_lwu:
         case Opcode::rv64i_ld: {
             std::stringstream ss;
-            ss << Opcode::getNiceName(op) << " x" << instruction::getRd(bits) << ", "
+            ss << Opcode::getNiceName(op) << " x" << instruction::getRd(bits)
+               << ", "
                << instruction::signext64<12>(instruction::getITypeImm(bits))
                << "(x" << instruction::getRs1(bits) << ")";
             return ss.str();

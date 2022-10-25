@@ -39,7 +39,7 @@ bool Opcode::isSType() const {
         default: return false;
 #define S_TYPE(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-        #include "defs/instructions.inc"
+#include "defs/instructions.inc"
     }
 }
 bool Opcode::isBType() const {
@@ -47,7 +47,7 @@ bool Opcode::isBType() const {
         default: return false;
 #define B_TYPE(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-        #include "defs/instructions.inc"
+#include "defs/instructions.inc"
     }
 }
 bool Opcode::isUType() const {
@@ -55,7 +55,7 @@ bool Opcode::isUType() const {
         default: return false;
 #define U_TYPE(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-        #include "defs/instructions.inc"
+#include "defs/instructions.inc"
     }
 }
 bool Opcode::isJType() const {
@@ -63,7 +63,7 @@ bool Opcode::isJType() const {
         default: return false;
 #define J_TYPE(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-        #include "defs/instructions.inc"
+#include "defs/instructions.inc"
     }
 }
 bool Opcode::isCustomType() const {
@@ -71,7 +71,7 @@ bool Opcode::isCustomType() const {
         default: return false;
 #define CUSTOM(prefix, name, ...)                                              \
     case Opcode::prefix##_##name: return true;
-        #include "defs/instructions.inc"
+#include "defs/instructions.inc"
     }
 }
 

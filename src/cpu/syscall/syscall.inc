@@ -54,25 +54,21 @@ EMULATE_SYSCALL(
         }
     } hs.rf.GPR[10] = writev(fildes, iov, iovcnt);)
 
-EMULATE_SYSCALL(clock_settime, 112, 
-    clockid_t clockid = (clockid_t)hs.rf.GPR[10];
-    uint64_t addr = hs.rf.GPR[11];
-    struct timespec* tp = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
-    hs.rf.GPR[10] = clock_settime(clockid, tp);
-    )
-EMULATE_SYSCALL(clock_gettime, 113, 
-    clockid_t clockid = (clockid_t)hs.rf.GPR[10];
-    uint64_t addr = hs.rf.GPR[11];
-    struct timespec* tp = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
-    hs.rf.GPR[10] = clock_gettime(clockid, tp);
-)
 EMULATE_SYSCALL(
-    clock_getres, 114,
-    clockid_t clockid = (clockid_t)hs.rf.GPR[10];
+    clock_settime, 112, clockid_t clockid = (clockid_t)hs.rf.GPR[10];
+    uint64_t addr = hs.rf.GPR[11];
+    struct timespec* tp = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
+    hs.rf.GPR[10] = clock_settime(clockid, tp);)
+EMULATE_SYSCALL(
+    clock_gettime, 113, clockid_t clockid = (clockid_t)hs.rf.GPR[10];
+    uint64_t addr = hs.rf.GPR[11];
+    struct timespec* tp = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
+    hs.rf.GPR[10] = clock_gettime(clockid, tp);)
+EMULATE_SYSCALL(
+    clock_getres, 114, clockid_t clockid = (clockid_t)hs.rf.GPR[10];
     uint64_t addr = hs.rf.GPR[11];
     struct timespec* res = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
-    hs.rf.GPR[10] = clock_getres(clockid, res);
-    )
+    hs.rf.GPR[10] = clock_getres(clockid, res);)
 
 EMULATE_SYSCALL(
     gettimeofday, 169, uint64_t addr = hs.rf.GPR[10];
