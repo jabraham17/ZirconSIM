@@ -27,8 +27,9 @@
   - method 3: conversion, transpile everything and write out a new executable that will run natively. this isnt really JIT, more like a transpiler.
 - convert main "execute" function into a CPU interface class that has more control over how the execution occurs
   - allows us to things like single step, excetra.
-  - maybe we want to have the single execute, but allow users to register callbacks? similar to what I did in evo?
+  - maybe we want to have the single execute, but allow users to register callbacks
   - this also simplifies stuff that has to be done on the wasm end of things
+  - add controller that takes the place of tracing, controller enables tracing, controlls formatting
 
 ## refactor
 
