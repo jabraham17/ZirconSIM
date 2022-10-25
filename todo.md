@@ -19,17 +19,17 @@
   - BIG effort
 - support dynamic linking
   - method 1: load libs in elf loader then emulate as normal
-  - method 2: for known libraries (libc), just call into the native x86 library if it exists, if not, fall back to method 1. but this should be prefered as it will be much much faster. even in wasm this is better
-- add JIT compiter
+  - method 2: for known libraries (libc), just call into the native x86 library if it exists, if not, fall back to method 1. but this should be preferred as it will be much much faster. even in wasm this is better
+- add JIT compiler
   - three versions of JIT both work for static and dynamic
-  - method 1: lazy JIT, everytime we jump to a new section of code compile, transpile to x86, then do the jump to the native x86 code. save that transpiled x86 code so we dont have to recompile it. this is essentially an optimizign compiler. we can then add heursitcs of WHEN to do this. do we do it immeditaly or wait a couple of times to see if it is hot code?
+  - method 1: lazy JIT, every time we jump to a new section of code compile, transpile to x86, then do the jump to the native x86 code. save that transpiled x86 code so we dont have to recompile it. this is essentially an optimizing compiler. we can then add heuristics of WHEN to do this. do we do it immediately or wait a couple of times to see if it is hot code?
   - method 2: eager JIT, transpile everything, then jump to start and just execute
-  - method 3: conversion, transpile everything and write out a new executable that will run natively. this isnt really JIT, more like a transpiler.
+  - method 3: conversion, transpile everything and write out a new executable that will run natively. this isn't really JIT, more like a transpiler.
 - convert main "execute" function into a CPU interface class that has more control over how the execution occurs
-  - allows us to things like single step, excetra.
+  - allows us to things like single step, etcetera.
   - maybe we want to have the single execute, but allow users to register callbacks
   - this also simplifies stuff that has to be done on the wasm end of things
-  - add controller that takes the place of tracing, controller enables tracing, controlls formatting
+  - add controller that takes the place of tracing, controller enables tracing, controls formatting
 
 ## refactor
 
@@ -68,7 +68,7 @@
 - xBGAS extension
   - this will require some memory system rewrites
 - Zicsr extension
-  - implement the csrs
+  - implement csrs
 - F extension
 - D extension
 - Zifencei extension
