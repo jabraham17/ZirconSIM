@@ -6,6 +6,7 @@
 #include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 namespace sys {
 

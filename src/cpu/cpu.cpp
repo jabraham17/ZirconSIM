@@ -49,8 +49,9 @@ void Hart::init() {
 
     // initial heap size is 0
     uint64_t SPACING = 0x10000;
-    hs.memory_locations["heap_start"] =
-        hs.memory_locations["stack_end"] + SPACING;
+    hs.memory_locations["heap_start"] = 0x1000;
+        
+        //hs.memory_locations["stack_end"] + SPACING;
     uint64_t heap_size = 0;
     hs.memory_locations["heap_end"] =
         hs.memory_locations["heap_start"] + heap_size;

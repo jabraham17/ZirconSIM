@@ -95,5 +95,33 @@ EMULATE_SYSCALL(
 )
 // EMULATE_SYSCALL(close, 57, hs.rf.GPR[10] = -1;)
 
+EMULATE_SYSCALL(
+    mmap, 222, 
+    uint64_t addr = uint64_t(hs.rf.GPR[10]);
+    if(addr == 0) {
+        size_t length = size_t(hs.rf.GPR[11]);
+        if(length == 0) {
+            hs.rf.GPR[10] = -1;
+        } else {
+            int prot = int(hs.rf.GPR[12]);
+            int flags = int(hs.rf.GPR[13]);
+            int fd = uint64_t(hs.rf.GPR[14]);
+            off_t offset = off_t(hs.rf.GPR[15]);
+
+            addr = hs.memory_locations["heap_end"];
+            hs.memimg.allocate(addr, length);
+            hs.memory_locations["heap_end"] += length;
+
+            // hs.rf.GPR[10] = uint64_t(mmap(addr, length, prot, flags, fd,
+            // offset));
+            if(!(flags & MAP_ANONYMOUS)) {
+                // init with fd
+                lseek(fd, offset, SEEK_SET);
+                read(fd, (void*)addr, length);
+            }
+            hs.rf.GPR[10] = addr;
+        }
+    } else { throw SyscallUnimplementedException(222); })
+
 #undef MAP_SYSCALL
 #undef EMULATE_SYSCALL
