@@ -31,6 +31,9 @@
   - maybe we want to have the single execute, but allow users to register callbacks
   - this also simplifies stuff that has to be done on the wasm end of things
 - add controller that takes the place of tracing, controller enables tracing, controls formatting
+- cleanup and improve stack setup
+- factor out a memory allocation func
+- colorize logs
 
 ## refactor
 
