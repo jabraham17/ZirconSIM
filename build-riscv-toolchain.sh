@@ -30,6 +30,7 @@ build_gnu() {
     BUILD=$2
     INSTALL=$3
     TARGET=$4
+    FLAGS=$5
     PARALLEL=`nproc`
 
     mkdir -p $BUILD
@@ -41,6 +42,7 @@ build_gnu() {
         --with-arch=rv64ima \
         --with-abi=lp64 \
         --with-cmodel=medany \
+        $FLAGS \
         && PATH=$NEWPATH make $TARGET -j $PARALLEL)
 
 }
@@ -55,7 +57,7 @@ fi
 build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima" $SCRIPT_DIR/"toolchains/rv64ima"
 build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-musl" $SCRIPT_DIR/"toolchains/rv64ima-musl" musl
 build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-linux" $SCRIPT_DIR/"toolchains/rv64ima-linux" linux
-
+build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-musl-debug" $SCRIPT_DIR/"toolchains/rv64ima-musl-debug" "musl" "--with-target-cflags=\"-g\" --with-target-cxxflags=\"-g\""
 
 
 
