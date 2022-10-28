@@ -17,6 +17,7 @@
   - if allocations are next to one another, merge them, similar to optimizing UnionFind
 - support threading
   - BIG effort
+  - make hart state have a pointer to a single memory image. we can also allocate thread local memory. the shared pointer to memory image controlled via a lock.
 - support dynamic linking
   - method 1: load libs in elf loader then emulate as normal
   - method 2: for known libraries (libc), just call into the native x86 library if it exists, if not, fall back to method 1. but this should be preferred as it will be much much faster. even in wasm this is better
