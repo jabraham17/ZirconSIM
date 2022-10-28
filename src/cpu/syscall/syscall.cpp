@@ -1,12 +1,14 @@
 #include "syscall.h"
 
+#include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/time.h>
 #include <sys/uio.h>
+#include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/mman.h>
 
 namespace sys {
 

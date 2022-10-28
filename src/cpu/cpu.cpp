@@ -50,7 +50,14 @@ uint64_t write_str(HartState& hs, char* s) {
     return ptr;
 }
 
-enum class AUXVecType: uint64_t {
+uint64_t alloc(HartState& hs, uint64_t n) {
+    auto ptr = hs.memory_locations["heap_start"];
+    hs.memimg.allocate(hs.memory_locations["heap_start"], n);
+    hs.memory_locations["heap_start"] += n;
+    return ptr;
+}
+
+enum class AUXVecType : uint64_t {
     AT_NULL = 0,    /* End of vector */
     AT_IGNORE = 1,  /* Entry should be ignored */
     AT_EXECFD = 2,  /* File descriptor of program */
@@ -141,8 +148,16 @@ void Hart::init_stack() {
     // abpve sp goes all the stack crap, main starts at sp
 
     // put auxvec
-    hs.memimg.doubleword(sp+64) = 0;
-    hs.memimg.doubleword(sp+56) = uint64_t(AUXVecType::AT_NULL);
+    hs.memimg.doubleword(sp + 80) = 0;
+    hs.memimg.doubleword(sp + 72) = uint64_t(AUXVecType::AT_NULL);
+
+    auto rand_addr = alloc(hs, 16);
+    hs.memimg.doubleword(sp + 64) = rand_addr;
+    hs.memimg.doubleword(sp + 56) = uint64_t(AUXVecType::AT_RANDOM);
+    for(auto i = 0; i < 16; i++) {
+        hs.memimg.byte(rand_addr + i) = uint8_t(rand());
+    }
+
     hs.memimg.doubleword(sp + 48) = 4096;
     hs.memimg.doubleword(sp + 40) = uint64_t(AUXVecType::AT_PAGESZ);
 

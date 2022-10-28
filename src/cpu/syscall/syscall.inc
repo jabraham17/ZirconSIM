@@ -70,6 +70,27 @@ EMULATE_SYSCALL(
     struct timespec* res = addr ? (struct timespec*)hs.memimg.raw(addr) : 0;
     hs.rf.GPR[10] = clock_getres(clockid, res);)
 
+EMULATE_SYSCALL(uname, 160, uint64_t addr = hs.rf.GPR[10];
+                struct utsname* buf = addr
+                                          ? (struct utsname*)hs.memimg.raw(addr)
+                                          : 0;
+                hs.rf.GPR[10] = uname(buf);)
+
+EMULATE_SYSCALL(getrlimit, 163, uint64_t resource = hs.rf.GPR[10];
+                uint64_t addr = hs.rf.GPR[11];
+                struct rlimit* rlp = addr ? (struct rlimit*)hs.memimg.raw(addr)
+                                          : 0;
+                hs.rf.GPR[10] = getrlimit(resource, rlp);)
+
+EMULATE_SYSCALL(setrlimit, 164, uint64_t resource = hs.rf.GPR[10];
+                uint64_t addr = hs.rf.GPR[11];
+                struct rlimit* rlp = addr ? (struct rlimit*)hs.memimg.raw(addr)
+                                          : 0;
+                hs.rf.GPR[10] = setrlimit(resource, rlp);)
+
+EMULATE_SYSCALL(umask, 166, uint64_t mode = hs.rf.GPR[10];
+                hs.rf.GPR[10] = umask(mode);)
+
 EMULATE_SYSCALL(
     gettimeofday, 169, uint64_t addr = hs.rf.GPR[10];
     struct timeval* tv = addr ? (struct timeval*)hs.memimg.raw(addr) : 0;
@@ -86,9 +107,7 @@ EMULATE_SYSCALL(set_tid_address, 96, uint64_t addr = hs.rf.GPR[10];
 
 // brk called with 0 returns the end of the heap
 EMULATE_SYSCALL(
-    brk, 214,
-    uint64_t addr = uint64_t(hs.rf.GPR[10]);
-    if(addr != 0) {
+    brk, 214, uint64_t addr = uint64_t(hs.rf.GPR[10]); if(addr != 0) {
         uint64_t allocation_size = addr - hs.memory_locations["heap_end"];
         hs.memimg.allocate(hs.memory_locations["heap_end"], allocation_size);
         hs.memory_locations["heap_end"] = addr;
@@ -98,12 +117,11 @@ EMULATE_SYSCALL(
 // EMULATE_SYSCALL(close, 57, hs.rf.GPR[10] = -1;)
 
 EMULATE_SYSCALL(
-    mmap, 222, 
-    uint64_t addr = uint64_t(hs.rf.GPR[10]);
-    if(addr == 0) {
+    mmap, 222, uint64_t addr = uint64_t(hs.rf.GPR[10]); if(addr == 0) {
         size_t length = size_t(hs.rf.GPR[11]);
         if(length == 0) {
-            hs.rf.GPR[10] = -EINVAL;;
+            hs.rf.GPR[10] = -EINVAL;
+            ;
         } else {
             int prot = int(hs.rf.GPR[12]);
             int flags = int(hs.rf.GPR[13]);
@@ -123,8 +141,7 @@ EMULATE_SYSCALL(
             }
             hs.rf.GPR[10] = addr;
         }
-    } else { throw SyscallUnimplementedException(222); }
-    )
+    } else { throw SyscallUnimplementedException(222); })
 
 #undef MAP_SYSCALL
 #undef EMULATE_SYSCALL
