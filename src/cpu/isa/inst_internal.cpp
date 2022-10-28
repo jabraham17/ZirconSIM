@@ -1,3 +1,4 @@
+#include "color/color.h"
 #include "cpu/syscall/syscall.h"
 #include "inst.h"
 #include "instruction_match.h"
@@ -76,6 +77,22 @@ bool Opcode::isCustomType() const {
 }
 
 namespace internal {
+
+std::string colorReset(bool doColor) {
+    return doColor ? ::color::getReset() : "";
+}
+std::string colorError(bool doColor) {
+    return doColor ? ::color::getColor({::color::ColorCode::RED}) : "";
+}
+std::string colorOpcode(bool doColor) {
+    return doColor ? ::color::getColor({::color::ColorCode::ORANGE}) : "";
+}
+std::string colorReg(bool doColor) {
+    return doColor ? ::color::getColor({::color::ColorCode::BLUE}) : "";
+}
+std::string colorNumber(bool doColor) {
+    return doColor ? ::color::getColor({::color::ColorCode::PURPLE}) : "";
+}
 
 std::string OPCODE_NAME_TABLE[] = {
     "UNKNOWN",
@@ -212,63 +229,88 @@ void executeInstruction(uint32_t bits, cpu::HartState& hs) {
 
 #define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
     std::string prefix##_##name##_printer_func(                                \
-        [[maybe_unused]] uint32_t bits) {                                      \
+        [[maybe_unused]] uint32_t bits,                                        \
+        [[maybe_unused]] bool color = false) {                                 \
         do {                                                                   \
             printer;                                                           \
         } while(0);                                                            \
     }
 #include "defs/instructions.inc"
 
-std::string disassemble(uint32_t bits, uint32_t pc = 0) {
+std::string disassemble(uint32_t bits, uint32_t pc = 0, bool color = false) {
     Opcode op = decodeInstruction(bits);
     std::stringstream ss;
+
     switch(op) {
-        default: ss << "UNKNOWN[" << Opcode::getName(op) << "]"; break;
+        default:
+            ss << colorError(color) << "UNKNOWN[" << Opcode::getName(op) << "]"
+               << colorReset(color);
+            break;
 #define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
     case Opcode::prefix##_##name:                                              \
-        ss << #name << " x" << instruction::getRd(bits) << ", x"               \
-           << instruction::getRs1(bits) << ", x" << instruction::getRs2(bits); \
+        ss << colorOpcode(color) << #name << colorReset(color) << " "          \
+           << colorReg(color) << "x" << instruction::getRd(bits)               \
+           << colorReset(color) << ", " << colorReg(color) << "x"              \
+           << instruction::getRs1(bits) << colorReset(color) << ", "           \
+           << colorReg(color) << "x" << instruction::getRs2(bits)              \
+           << colorReset(color);                                               \
         break;
 #define I_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
     case Opcode::prefix##_##name:                                              \
-        ss << #name << " x" << instruction::getRd(bits) << ", x"               \
-           << instruction::getRs1(bits) << ", "                                \
-           << instruction::signext64<12>(instruction::getITypeImm(bits));      \
+        ss << colorOpcode(color) << #name << colorReset(color) << " "          \
+           << colorReg(color) << "x" << instruction::getRd(bits)               \
+           << colorReset(color) << ", " << colorReg(color) << "x"              \
+           << instruction::getRs1(bits) << colorReset(color) << ", "           \
+           << colorNumber(color)                                               \
+           << instruction::signext64<12>(instruction::getITypeImm(bits))       \
+           << colorReset(color);                                               \
         break;
 #define S_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
     case Opcode::prefix##_##name:                                              \
-        ss << #name << " x" << instruction::getRs2(bits) << ", "               \
+        ss << colorOpcode(color) << #name << colorReset(color) << " "          \
+           << colorReg(color) << "x" << instruction::getRs2(bits)              \
+           << colorReset(color) << ", " << colorNumber(color)                  \
            << instruction::signext64<12>(instruction::getSTypeImm(bits))       \
-           << "(x" << instruction::getRs1(bits) << ")";                        \
+           << colorReset(color) << "(" << colorReg(color) << "x"               \
+           << instruction::getRs1(bits) << colorReset(color) << ")";           \
         break;
 #define B_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
     case Opcode::prefix##_##name:                                              \
-        ss << #name << " x" << instruction::getRs1(bits) << ", x"              \
-           << instruction::getRs2(bits) << ", "                                \
-           << "0x" << std::hex                                                 \
+        ss << colorOpcode(color) << #name << colorReset(color) << " "          \
+           << colorReg(color) << "x" << instruction::getRs1(bits)              \
+           << colorReset(color) << ", " << colorReg(color) << "x"              \
+           << instruction::getRs2(bits) << colorReset(color) << ", "           \
+           << colorNumber(color) << "0x" << std::hex                           \
            << (instruction::signext64<12>(instruction::getBTypeImm(bits)) +    \
-               pc);                                                            \
+               pc)                                                             \
+           << colorReset(color);                                               \
         break;
 #define U_TYPE(prefix, name, opcode, execution, precedence)                    \
     case Opcode::prefix##_##name:                                              \
-        ss << #name << " x" << instruction::getRd(bits) << ", "                \
-           << (instruction::getUTypeImm(bits) >> 12);                          \
+        ss << colorOpcode(color) << #name << colorReset(color) << " "          \
+           << colorReg(color) << "x" << instruction::getRd(bits)               \
+           << colorReset(color) << ", " << colorNumber(color)                  \
+           << (instruction::getUTypeImm(bits) >> 12) << colorReset(color);     \
         break;
 #define J_TYPE(prefix, name, opcode, execution, precedence)                    \
     case Opcode::prefix##_##name:                                              \
-        ss << #name << " x" << instruction::getRd(bits) << ", "                \
-           << "0x" << std::hex                                                 \
+        ss << colorOpcode(color) << #name << colorReset(color) << " "          \
+           << colorReg(color) << "x" << instruction::getRd(bits)               \
+           << colorReset(color) << ", " << colorNumber(color) << "0x"          \
+           << std::hex                                                         \
            << (instruction::signext32<20>(instruction::getJTypeImm(bits)) +    \
-               pc);                                                            \
+               pc)                                                             \
+           << colorReset(color);                                               \
         break;
 #define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
     case Opcode::prefix##_##name:                                              \
-        ss << prefix##_##name##_printer_func(bits);                            \
+        ss << prefix##_##name##_printer_func(bits, color);                     \
         break;
 #include "defs/instructions.inc"
     }
     return ss.str();
 }
+
 } // namespace internal
 
 } // namespace inst

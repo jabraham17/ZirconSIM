@@ -31,9 +31,14 @@ CUSTOM(rv64i,
               instruction::getFunct3(bits) == 0b001 &&
               instruction::getBitsFromMSB<31 COMMA 6>(bits) == 0b000000;
        , std::stringstream ss;
-       ss << "slli x" << instruction::getRd(bits) << ", x"
-          << instruction::getRs1(bits) << ", "
-          << instruction::signext64<12>(instruction::getITypeImm(bits));
+       ss << internal::colorOpcode(color) << "slli"
+          << internal::colorReset(color) << " " << internal::colorReg(color)
+          << "x" << instruction::getRd(bits) << internal::colorReset(color)
+          << ", " << internal::colorReg(color) << "x"
+          << instruction::getRs1(bits) << internal::colorReset(color) << ", "
+          << internal::colorNumber(color)
+          << instruction::signext64<12>(instruction::getITypeImm(bits))
+          << internal::colorReset(color);
        return ss.str();
        , hs.rf.GPR[RD] = hs.rf.GPR[RS1] << SHAMT6;
        hs.pc += 4;
@@ -45,9 +50,14 @@ CUSTOM(rv64i,
               instruction::getFunct3(bits) == 0b101 &&
               instruction::getBitsFromMSB<31 COMMA 6>(bits) == 0b000000;
        , std::stringstream ss;
-       ss << "srli x" << instruction::getRd(bits) << ", x"
-          << instruction::getRs1(bits) << ", "
-          << instruction::signext64<12>(instruction::getITypeImm(bits));
+       ss << internal::colorOpcode(color) << "srli"
+          << internal::colorReset(color) << " " << internal::colorReg(color)
+          << "x" << instruction::getRd(bits) << internal::colorReset(color)
+          << ", " << internal::colorReg(color) << "x"
+          << instruction::getRs1(bits) << internal::colorReset(color) << ", "
+          << internal::colorNumber(color)
+          << instruction::signext64<12>(instruction::getITypeImm(bits))
+          << internal::colorReset(color);
        return ss.str();
        , hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> SHAMT6;
        hs.pc += 4;
@@ -59,9 +69,14 @@ CUSTOM(rv64i,
               instruction::getFunct3(bits) == 0b101 &&
               instruction::getBitsFromMSB<31 COMMA 6>(bits) == 0b010000;
        , std::stringstream ss;
-       ss << "srai x" << instruction::getRd(bits) << ", x"
-          << instruction::getRs1(bits) << ", "
-          << instruction::signext64<12>(instruction::getITypeImm(bits));
+       ss << internal::colorOpcode(color) << "srai"
+          << internal::colorReset(color) << " " << internal::colorReg(color)
+          << "x" << instruction::getRd(bits) << internal::colorReset(color)
+          << ", " << internal::colorReg(color) << "x"
+          << instruction::getRs1(bits) << internal::colorReset(color) << ", "
+          << internal::colorNumber(color)
+          << instruction::signext64<12>(instruction::getITypeImm(bits))
+          << internal::colorReset(color);
        return ss.str();
        , hs.rf.GPR[RD] = hs.rf.GPR[RS1] >> SHAMT6;
        hs.pc += 4;

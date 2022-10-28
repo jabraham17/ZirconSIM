@@ -7,11 +7,17 @@ namespace isa {
 namespace inst {
 
 namespace internal {
-const std::string& getOpcodeNameFromTable(Opcode op);
-const std::string& getOpcodeNiceNameFromTable(Opcode op);
+extern const std::string& getOpcodeNameFromTable(Opcode op);
+extern const std::string& getOpcodeNiceNameFromTable(Opcode op);
 extern Opcode decodeInstruction(uint32_t bits);
 extern void executeInstruction(uint32_t bits, cpu::HartState& hs);
-extern std::string disassemble(uint32_t bits, uint32_t pc);
+extern std::string disassemble(uint32_t bits, uint32_t pc, bool color);
+
+extern std::string colorReset(bool doColor);
+extern std::string colorError(bool doColor);
+extern std::string colorOpcode(bool doColor);
+extern std::string colorReg(bool doColor);
+extern std::string colorNumber(bool doColor);
 
 } // namespace internal
 
@@ -72,7 +78,7 @@ void executeInstruction(uint32_t bits, cpu::HartState& hs) {
     internal::executeInstruction(bits, hs);
 }
 
-std::string disassemble(uint32_t bits, uint32_t pc) {
+std::string disassemble(uint32_t bits, uint32_t pc, bool color) {
     Opcode op = decodeInstruction(bits);
     switch(op) {
         default: break;
@@ -84,14 +90,19 @@ std::string disassemble(uint32_t bits, uint32_t pc) {
         case Opcode::rv64i_lwu:
         case Opcode::rv64i_ld: {
             std::stringstream ss;
-            ss << Opcode::getNiceName(op) << " x" << instruction::getRd(bits)
-               << ", "
+            ss << internal::colorOpcode(color) << Opcode::getNiceName(op)
+               << internal::colorReset(color) << " "
+               << internal::colorReg(color) << "x" << instruction::getRd(bits)
+               << internal::colorReset(color) << ", "
+               << internal::colorNumber(color)
                << instruction::signext64<12>(instruction::getITypeImm(bits))
-               << "(x" << instruction::getRs1(bits) << ")";
+               << internal::colorReset(color) << "("
+               << internal::colorReg(color) << "x" << instruction::getRs1(bits)
+               << internal::colorReset(color) << ")";
             return ss.str();
         }
     }
-    return internal::disassemble(bits, pc);
+    return internal::disassemble(bits, pc, color);
 }
 
 }; // namespace inst

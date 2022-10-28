@@ -18,8 +18,9 @@ HartState::HartState(mem::MemoryImage& m, TraceMode tm)
     rf.setTraceMode(tm);
 }
 
-Hart::Hart(mem::MemoryImage& m, TraceMode tm, bool useStats)
-    : hs(m, tm), trace_mode(tm), trace_inst("INSTRUCTION TRACE") {
+Hart::Hart(mem::MemoryImage& m, TraceMode tm, bool useStats, bool doColor)
+    : hs(m, tm), trace_mode(tm), trace_inst("INSTRUCTION TRACE"),
+      doColor(doColor) {
     trace_inst.setState((trace_mode & TraceMode::INSTRUCTION));
     stats.setState(useStats);
 }
@@ -187,7 +188,7 @@ void Hart::execute(uint64_t start_address) {
             auto inst = hs.getInstWord();
             trace_inst << "PC[" << Trace::doubleword << hs.pc << "] = ";
             trace_inst << Trace::word << inst;
-            trace_inst << "; " << isa::inst::disassemble(inst, hs.pc);
+            trace_inst << "; " << isa::inst::disassemble(inst, hs.pc, doColor);
             trace_inst << std::endl;
             stats.count(hs);
 

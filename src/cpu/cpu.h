@@ -71,13 +71,15 @@ class Hart {
     TraceMode trace_mode;
     Trace trace_inst;
     Stats stats;
+    bool doColor;
     bool shouldHalt();
 
   public:
     Hart(
         mem::MemoryImage& m,
         TraceMode tm = TraceMode::NONE,
-        bool useStats = false);
+        bool useStats = false,
+        bool doColor = false);
     void init_heap();
     void init_stack();
     void init();

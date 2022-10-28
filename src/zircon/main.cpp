@@ -15,10 +15,12 @@ struct zircon_args {
     TraceMode traces;
     bool separate_files; // unimplemented
     int stats;
+    int color;
 
     zircon_args()
         : file(strdup("a.out")), logfile(strdup("log.txt")),
-          traces(TraceMode::NONE), separate_files(false), stats(false) {}
+          traces(TraceMode::NONE), separate_files(false), stats(false),
+          color(false) {}
 };
 
 int main(int argc, const char** argv) {
@@ -42,6 +44,7 @@ int main(int argc, const char** argv) {
          0,
          "elf64 file execute read from",
          "FILE"},
+        {"color", 'c', POPT_ARG_NONE, &args.color, 0, "colorize output", 0},
         {"output",
          'o',
          POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
@@ -98,7 +101,7 @@ int main(int argc, const char** argv) {
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 
-    cpu::Hart hart(memimg, args.traces, args.stats);
+    cpu::Hart hart(memimg, args.traces, args.stats, args.color);
     hart.init();
     hart.execute(start);
 

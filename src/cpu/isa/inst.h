@@ -48,7 +48,7 @@ struct Opcode {
 Opcode decodeInstruction(uint32_t bits);
 std::string fields(uint32_t bits);
 void executeInstruction(uint32_t bits, cpu::HartState& hs);
-std::string disassemble(uint32_t bits, uint32_t pc = 0);
+std::string disassemble(uint32_t bits, uint32_t pc = 0, bool color = false);
 
 }; // namespace inst
 }; // namespace isa
