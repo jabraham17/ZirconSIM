@@ -78,6 +78,8 @@ class Hart {
         mem::MemoryImage& m,
         TraceMode tm = TraceMode::NONE,
         bool useStats = false);
+    void init_heap();
+    void init_stack();
     void init();
     void execute(uint64_t start_address);
 };

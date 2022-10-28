@@ -86,7 +86,9 @@ EMULATE_SYSCALL(set_tid_address, 96, uint64_t addr = hs.rf.GPR[10];
 
 // brk called with 0 returns the end of the heap
 EMULATE_SYSCALL(
-    brk, 214, uint64_t addr = uint64_t(hs.rf.GPR[10]); if(addr != 0) {
+    brk, 214,
+    uint64_t addr = uint64_t(hs.rf.GPR[10]);
+    if(addr != 0) {
         uint64_t allocation_size = addr - hs.memory_locations["heap_end"];
         hs.memimg.allocate(hs.memory_locations["heap_end"], allocation_size);
         hs.memory_locations["heap_end"] = addr;
@@ -101,7 +103,7 @@ EMULATE_SYSCALL(
     if(addr == 0) {
         size_t length = size_t(hs.rf.GPR[11]);
         if(length == 0) {
-            hs.rf.GPR[10] = -1;
+            hs.rf.GPR[10] = -EINVAL;;
         } else {
             int prot = int(hs.rf.GPR[12]);
             int flags = int(hs.rf.GPR[13]);
@@ -121,7 +123,8 @@ EMULATE_SYSCALL(
             }
             hs.rf.GPR[10] = addr;
         }
-    } else { throw SyscallUnimplementedException(222); })
+    } else { throw SyscallUnimplementedException(222); }
+    )
 
 #undef MAP_SYSCALL
 #undef EMULATE_SYSCALL
