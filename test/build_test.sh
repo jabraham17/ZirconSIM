@@ -31,9 +31,15 @@ OUTNAME=$SCRIPT_DIR/$(basename $MAIN | sed 's/\(.*\)\..*/\1/')
 if [[ $TOOLCHAIN == "elf" ]]; then
     PREFIX=$RV64IMA_ELF/bin/riscv64-unknown-elf
     OUTNAME+="-elf.out"
+elif [[ $TOOLCHAIN == "elf-debug" ]]; then
+    PREFIX=$RV64IMA_ELF_DEBUG/bin/riscv64-unknown-elf
+    OUTNAME+="-elf-debug.out"
 elif [[ $TOOLCHAIN == "linux" ]]; then
     PREFIX=$RV64IMA_LINUX/bin/riscv64-unknown-linux-gnu
     OUTNAME+="-linux.out"
+elif [[ $TOOLCHAIN == "linux-debug" ]]; then
+    PREFIX=$RV64IMA_LINUX_DEBUG/bin/riscv64-unknown-linux-gnu
+    OUTNAME+="-linux-debug.out"
 elif [[ $TOOLCHAIN == "musl" ]]; then
     PREFIX=$RV64IMA_MUSL/bin/riscv64-unknown-linux-musl
     OUTNAME+="-musl.out"

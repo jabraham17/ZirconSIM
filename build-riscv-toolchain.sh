@@ -55,9 +55,15 @@ if [ -z $SOURCE ]; then
 fi
 
 build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima" $SCRIPT_DIR/"toolchains/rv64ima"
-build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-musl" $SCRIPT_DIR/"toolchains/rv64ima-musl" musl
+build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-debug" $SCRIPT_DIR/"toolchains/rv64ima-debug" "" "--with-target-cflags=\"-g\" --with-target-cxxflags=\"-g\""
+
+
 build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-linux" $SCRIPT_DIR/"toolchains/rv64ima-linux" linux
+build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-linux-debug" $SCRIPT_DIR/"toolchains/rv64ima-linux-debug" "linux" "--with-target-cflags=\"-g\" --with-target-cxxflags=\"-g\""
+
+build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-musl" $SCRIPT_DIR/"toolchains/rv64ima-musl" musl
 build_gnu $SOURCE $SCRIPT_DIR/"build-toolchain/rv64ima-musl-debug" $SCRIPT_DIR/"toolchains/rv64ima-musl-debug" "musl" "--with-target-cflags=\"-g\" --with-target-cxxflags=\"-g\""
+
 
 
 
