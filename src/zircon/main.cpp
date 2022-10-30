@@ -2,6 +2,7 @@
 
 #include "cpu/cpu.h"
 #include "elf/elf.h"
+#include "event/event.h"
 #include "mem/memory-image.h"
 #include "trace/trace.h"
 #include <fstream>
@@ -24,7 +25,6 @@ struct zircon_args {
 };
 
 int main(int argc, const char** argv) {
-
     // https://linux.die.net/man/3/popt
     //  struct poptOption {
     //    const char* longName;
@@ -102,6 +102,11 @@ int main(int argc, const char** argv) {
     auto start = f.getStartAddress();
 
     cpu::Hart hart(memimg, args.traces, args.stats, args.color);
+
+    // event::getEvent("instruction execute before")
+    //     .registerCallback((
+    //         [](event::state s) { std::cout << "before\n"; }));
+
     hart.init();
     hart.execute(start);
 

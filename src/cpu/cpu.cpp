@@ -8,6 +8,11 @@
 #include <sstream>
 #include <string>
 
+
+
+#include "event/event.h"
+#include <fstream>
+
 namespace cpu {
 
 // use raw(addr) so we don't log mem access
@@ -198,9 +203,30 @@ void Hart::init() {
 
 void Hart::execute(uint64_t start_address) {
     hs.pc = start_address;
+
+    // event::Event e;
+    // std::ofstream of("out.txt");
+    // std::ofstream of2("out2.txt");
+    // e.registerCallback( std::make_unique<event::Callback>([](cpu::HartState&){
+    //     std::cout << "callback called\n";
+    // }));
+    // e.registerCallback(std::make_unique<event::Logger>(of, [](std::ostream& o, cpu::HartState&){
+    //     o << "log1 called\n";
+    //     std::cout << "2 ca;lled\n";
+    // }));
+    //     e.registerCallback(std::make_unique<event::Logger>(of2, [](std::ostream& o, cpu::HartState&){
+    //     o << "log2 called\n";
+    // }));
+    //     e.registerCallback(std::make_unique<event::Logger>(of2, [](std::ostream& o, cpu::HartState&){
+    //     o << "log2 called again\n";
+    // }));
+
+
+
     while(1) {
         try {
             auto inst = hs.getInstWord();
+            event::getEvent("instruction execute before")(hs);
             trace_inst << "PC[" << Trace::doubleword << hs.pc << "] = ";
             trace_inst << Trace::word << inst;
             trace_inst << "; " << isa::inst::disassemble(inst, hs.pc, doColor);
@@ -208,6 +234,7 @@ void Hart::execute(uint64_t start_address) {
             stats.count(hs);
 
             isa::inst::executeInstruction(inst, hs);
+            event::getEvent("instruction execute after")(hs);
             if(shouldHalt()) break;
         } catch(const std::exception& e) {
             std::cerr << "Exception Occurred: " << e.what() << std::endl;
