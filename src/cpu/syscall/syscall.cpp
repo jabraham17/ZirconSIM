@@ -10,6 +10,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __EMSCRIPTEN__
+#include <syscall_arch.h>
+#endif
+
 namespace sys {
 
 namespace internal {
@@ -85,17 +89,18 @@ void emulate(cpu::HartState& hs) {
           [sys] "r"(x86_64_syscall_number)
         : "rax", "rdi", "rsi", "rdx", "r10", "r8", "r9");
 #else
-    // #ifdef __EMSCRIPTEN__
-    //     uint64_t arg0 = hs.rf.GPR[10];
-    // uint64_t arg1 = hs.rf.GPR[11];
-    // uint64_t arg2 = hs.rf.GPR[12];
-    // uint64_t arg3 = hs.rf.GPR[13];
-    // uint64_t arg4 = hs.rf.GPR[14];
-    // uint64_t arg5 = hs.rf.GPR[15];
-    // result = syscall(x86_64_syscall_number, arg0, arg1, arg2, arg3, arg4,
-    // arg5); #else
+//     #ifdef __EMSCRIPTEN__
+//     uint64_t arg0 = hs.rf.GPR[10];
+//     uint64_t arg1 = hs.rf.GPR[11];
+//     uint64_t arg2 = hs.rf.GPR[12];
+//     uint64_t arg3 = hs.rf.GPR[13];
+//     uint64_t arg4 = hs.rf.GPR[14];
+//     uint64_t arg5 = hs.rf.GPR[15];
+
+//     result = __syscall_emscripten(x86_64_syscall_number, arg0, arg1, arg2, arg3, arg4,
+//     arg5);
+//     #else
     throw SyscallUnimplementedException(riscv64_syscall_number);
-// assert(0 && "Not supported\n");
 // #endif
 #endif
     hs.rf.GPR[10] = result;

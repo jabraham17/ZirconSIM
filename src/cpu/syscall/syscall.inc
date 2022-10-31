@@ -27,7 +27,13 @@ MAP_SYSCALL(getgid, 104, 176)
 MAP_SYSCALL(geteuid, 107, 175)
 MAP_SYSCALL(getuid, 102, 174)
 
+#ifndef __EMSCRIPTEN__
 MAP_SYSCALL(ioctl, 54, 29)
+#else
+EMULATE_SYSCALL(ioctl, 29,
+hs.rf.GPR[10] = __syscall_ioctl(hs.rf.GPR[10], hs.rf.GPR[11], hs.rf.GPR[12], hs.rf.GPR[13], hs.rf.GPR[14], hs.rf.GPR[15]);
+)
+#endif
 
 EMULATE_SYSCALL(fstat, 80, uint64_t fildes = hs.rf.GPR[10];
                 uint64_t addr = hs.rf.GPR[11];
@@ -48,7 +54,7 @@ EMULATE_SYSCALL(
     uint64_t iovcnt = hs.rf.GPR[12];
     // need to rewrite the address inside of iov
     for(uint64_t idx = 0; idx < iovcnt; idx++) {
-        if(iov) {
+        if(iov && iov[idx].iov_len) {
             uint64_t orig_buffer = (uint64_t)iov[idx].iov_base;
             iov[idx].iov_base = orig_buffer ? hs.memimg.raw(orig_buffer) : 0;
         }
@@ -99,12 +105,17 @@ EMULATE_SYSCALL(
     hs.rf.GPR[10] = gettimeofday(tv, tz);)
 
 EMULATE_SYSCALL(exit, 93, hs.executing = false;)
-EMULATE_SYSCALL(exit, 94, hs.executing = false;)
+EMULATE_SYSCALL(exit_group, 94, hs.executing = false;)
 
+#ifndef __EMSCRIPTEN__
 EMULATE_SYSCALL(set_tid_address, 96, uint64_t addr = hs.rf.GPR[10];
                 int* tidptr = addr ? (int*)hs.memimg.raw(addr) : 0;
                 hs.rf.GPR[10] = syscall(SYS_set_tid_address, tidptr);)
-
+#else
+// FIXME: no concept of set_tid_address in emscripten, whats the better translation here
+EMULATE_SYSCALL(set_tid_address, 96,
+                hs.rf.GPR[10] = gettid())
+#endif
 // brk called with 0 returns the end of the heap
 EMULATE_SYSCALL(
     brk, 214, uint64_t addr = uint64_t(hs.rf.GPR[10]); if(addr != 0) {
