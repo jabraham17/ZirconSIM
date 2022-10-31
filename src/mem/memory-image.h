@@ -3,7 +3,7 @@
 #ifndef ZIRCON_MEM_MEMORY_IMAGE_H_
 #define ZIRCON_MEM_MEMORY_IMAGE_H_
 
-#include "trace/trace.h"
+#include "event/event.h"
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
@@ -37,7 +37,7 @@ struct OutOfBoundsException : public MemoryException {
         if(range_lower == 0 && range_upper == 0) {
             ss << "unknown addr 0x" << std::hex << addr;
         } else {
-            ss << "addr 0x" << std::hex << addr << " no in range [0x"
+            ss << "addr 0x" << std::hex << addr << " not in range [0x"
                << std::hex << range_lower << "-0x" << std::hex << range_upper
                << "]";
         }
@@ -76,8 +76,6 @@ class MemoryImage {
     uint8_t* memory_ptr;
     size_t mem_size;
 
-    Trace trace_mem;
-
     MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
         if(memory_ptr - memory.get() + size >= mem_size) {
             throw OutOfMemoryException();
@@ -104,12 +102,12 @@ class MemoryImage {
         MemoryImage* mi;
         uint64_t addr;
         friend MemoryImage;
-        auto constexpr getPrintFormatter() {
-            if(std::is_same<T, uint8_t>::value) return Trace::byte;
-            else if(std::is_same<T, uint16_t>::value) return Trace::halfword;
-            else if(std::is_same<T, uint32_t>::value) return Trace::word;
-            else if(std::is_same<T, uint64_t>::value) return Trace::doubleword;
-            return Trace::doubleword;
+        auto constexpr getSize() {
+            if(std::is_same<T, uint8_t>::value) return 1;
+            else if(std::is_same<T, uint16_t>::value) return 2;
+            else if(std::is_same<T, uint32_t>::value) return 4;
+            else if(std::is_same<T, uint64_t>::value) return 8;
+            return 8;
         }
         MemoryRegion& mr() { return mi->getMemoryRegion(addr); }
 
@@ -118,37 +116,26 @@ class MemoryImage {
         void write(T v);
         MemoryCellProxy(MemoryImage* mi, uint64_t addr) : mi(mi), addr(addr) {}
         operator T() {
-            mi->trace_mem << "RD MEM[" << Trace::doubleword << addr << "]"
-                          << Trace::flush;
             T v = read();
-            mi->trace_mem << " = " << getPrintFormatter() << (uint64_t)v
-                          << std::endl;
+            mi->event_read(addr, v, getSize());
             return v;
         }
         MemoryCellProxy<T>& operator=(T v) {
-            mi->trace_mem << "WR MEM[" << Trace::doubleword << addr << "]"
-                          << Trace::flush;
             T old_value = read();
             write(v);
-            mi->trace_mem << " = " << getPrintFormatter() << (uint64_t)v
-                          << "; OLD VALUE = " << getPrintFormatter()
-                          << (uint64_t)old_value << std::endl;
+            mi->event_write(addr, v, old_value, getSize());
             return *this;
         }
     };
 
   public:
-    MemoryImage(size_t size = 0x1000, TraceMode tm = TraceMode::NONE)
-        : mem_size(size), trace_mem("MEMORY TRACE") {
+    MemoryImage(size_t size = 0x1000) : mem_size(size) {
         memory = std::make_unique<uint8_t[]>(mem_size);
         memory_ptr = memory.get();
-        trace_mem.setState(tm & TraceMode::MEMORY);
     }
 
     void allocate(uint64_t addr, uint64_t size) {
-        trace_mem << "ALLOCATE[" << Trace::doubleword << addr << " - ";
-        trace_mem << Trace::doubleword << addr + size << "]";
-        trace_mem << std::endl;
+        event_allocation(addr, size);
         allocateMemoryRegion(addr, size);
     }
 
@@ -168,6 +155,11 @@ class MemoryImage {
         auto mr = getMemoryRegion(addr);
         return mr.raw(addr);
     }
+
+    event::Event<uint64_t, uint64_t, size_t> event_read;
+    event::Event<uint64_t, uint64_t, uint64_t, size_t> event_write;
+    event::Event<uint64_t, uint64_t> event_exception; // TODO: unused currently
+    event::Event<uint64_t, uint64_t> event_allocation;
 };
 
 } // namespace mem

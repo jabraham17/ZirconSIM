@@ -2,10 +2,9 @@
 #ifndef ZIRCON_CPU_CPU_H_
 #define ZIRCON_CPU_CPU_H_
 
+#include "event/event.h"
 #include "isa/rf.h"
 #include "mem/memory-image.h"
-#include "trace/stats.h"
-#include "trace/trace.h"
 #include <map>
 
 namespace cpu {
@@ -55,7 +54,7 @@ class HartState {
 
     bool executing;
 
-    HartState(mem::MemoryImage& m, TraceMode tm = TraceMode::NONE);
+    HartState(mem::MemoryImage& m);
 };
 
 struct CPUException : public std::exception {
@@ -68,22 +67,23 @@ struct IllegalInstructionException : public CPUException {
 class Hart {
   private:
     HartState hs;
-    TraceMode trace_mode;
-    Trace trace_inst;
-    Stats stats;
-    bool doColor;
     bool shouldHalt();
 
   public:
-    Hart(
-        mem::MemoryImage& m,
-        TraceMode tm = TraceMode::NONE,
-        bool useStats = false,
-        bool doColor = false);
+    Hart(mem::MemoryImage& m);
     void init_heap();
     void init_stack();
     void init();
     void execute(uint64_t start_address);
+
+    event::Event<HartState&> event_before_execute;
+    event::Event<HartState&> event_after_execute;
+    template <typename T> void addRegisterReadListener(T&& arg) {
+        hs.rf.addReadListener(std::forward<T>(arg));
+    }
+    template <typename T> void addRegisterWriteListener(T&& arg) {
+        hs.rf.addWriteListener(std::forward<T>(arg));
+    }
 };
 
 } // namespace cpu

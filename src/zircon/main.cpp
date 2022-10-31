@@ -1,10 +1,12 @@
 
 
+#include "common/format.h"
 #include "cpu/cpu.h"
+#include "cpu/isa/inst.h"
 #include "elf/elf.h"
 #include "event/event.h"
 #include "mem/memory-image.h"
-#include "trace/trace.h"
+#include "trace/stats.h"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -12,16 +14,18 @@
 
 struct zircon_args {
     char* file;
-    char* logfile; // unimplemented
-    TraceMode traces;
+    char* logfile;       // unimplemented
     bool separate_files; // unimplemented
+    int trace_inst;
+    int trace_mem;
+    int trace_reg;
     int stats;
     int color;
 
     zircon_args()
-        : file(strdup("a.out")), logfile(strdup("log.txt")),
-          traces(TraceMode::NONE), separate_files(false), stats(false),
-          color(false) {}
+        : file(strdup("a.out")), logfile(strdup("log.txt")), separate_files(false), trace_inst(false),
+          trace_mem(false), trace_reg(false),
+          stats(false), color(false) {}
 };
 
 int main(int argc, const char** argv) {
@@ -54,25 +58,25 @@ int main(int argc, const char** argv) {
          "OUTPUT"},
         {"trace-inst",
          'I',
-         POPT_ARG_VAL | POPT_ARGFLAG_OR,
-         &args.traces,
-         TraceMode::INSTRUCTION,
+         POPT_ARG_NONE,
+         &args.trace_inst,
+         0,
          "trace instructions",
-         "TRACE"},
+         0},
         {"trace-mem",
          'M',
-         POPT_ARG_VAL | POPT_ARGFLAG_OR,
-         &args.traces,
-         TraceMode::MEMORY,
+         POPT_ARG_NONE,
+         &args.trace_mem,
+         0,
          "trace memory",
-         "TRACE"},
+         0},
         {"trace-reg",
          'R',
-         POPT_ARG_VAL | POPT_ARGFLAG_OR,
-         &args.traces,
-         TraceMode::REGISTER,
+         POPT_ARG_NONE,
+         &args.trace_reg,
+         0,
          "trace registers",
-         "TRACE"},
+         0},
         {"stats", 'S', POPT_ARG_NONE, &args.stats, 0, "log statistics", 0},
         POPT_AUTOHELP POPT_TABLEEND};
 
@@ -96,19 +100,80 @@ int main(int argc, const char** argv) {
         return 1;
     }
 
+    std::ofstream mem_log("mem.txt");
+    std::ofstream inst_log("inst.txt");
+    std::ofstream reg_log("reg.txt");
+
     elf::File f(std::move(is));
-    mem::MemoryImage memimg(0x800000, args.traces);
+    mem::MemoryImage memimg(0x800000);
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 
-    cpu::Hart hart(memimg, args.traces, args.stats, args.color);
+    memimg.event_allocation.addListener(
+        [&mem_log](uint64_t addr, uint64_t size) {
+            mem_log << "ALLOCATE[" << common::Format::doubleword << addr
+                    << " - " << common::Format::doubleword << addr + size << "]"
+                    << std::endl;
+        });
 
-    // event::getEvent("instruction execute before")
-    //     .registerCallback((
-    //         [](event::state s) { std::cout << "before\n"; }));
+    memimg.event_read.addListener(
+        [&mem_log](uint64_t addr, uint64_t value, size_t size) {
+            mem_log << "RD MEM[" << common::Format::doubleword << addr
+                    << "] = " << common::Format::hexnum(size) << (uint64_t)value
+                    << std::endl;
+        });
+    memimg.event_write.addListener([&mem_log](
+                                       uint64_t addr,
+                                       uint64_t value,
+                                       uint64_t oldvalue,
+                                       size_t size) {
+        mem_log << "WR MEM[" << common::Format::doubleword << addr
+                << "] = " << common::Format::hexnum(size) << (uint64_t)value
+                << "; OLD VALUE = " << common::Format::hexnum(size) << oldvalue
+                << std::endl;
+    });
+
+    cpu::Hart hart(memimg);
+
+    Stats s;
+
+    hart.event_before_execute.addListener(
+        [&inst_log, args](cpu::HartState& hs) {
+            auto inst = hs.getInstWord();
+            inst_log << "PC[" << common::Format::doubleword << hs.pc
+                     << "] = " << common::Format::word << inst << "; "
+                     << isa::inst::disassemble(inst, hs.pc, args.color)
+                     << std::endl;
+        });
+
+    hart.addRegisterReadListener(
+        [&reg_log](std::string classname, uint64_t idx, uint64_t value) {
+            reg_log << "RD " << classname << "[" << common::Format::dec << idx
+                    << "] = " << common::Format::doubleword << (uint64_t)value
+                    << std::endl;
+        });
+    hart.addRegisterWriteListener([&reg_log](
+                                      std::string classname,
+                                      uint64_t idx,
+                                      uint64_t value,
+                                      uint64_t oldvalue) {
+        reg_log << "WR " << classname << "[" << common::Format::dec << idx
+                << "] = " << common::Format::doubleword << (uint64_t)value
+                << "; OLD VALUE = " << common::Format::doubleword << oldvalue
+                << std::endl;
+    });
+
+    if(args.stats) {
+        hart.event_before_execute.addListener(
+            [&s](cpu::HartState& hs) { s.count(hs); });
+    }
 
     hart.init();
     hart.execute(start);
+
+    if(args.stats) {
+        std::cout << s.dump() << std::endl;
+    }
 
     return 0;
 }

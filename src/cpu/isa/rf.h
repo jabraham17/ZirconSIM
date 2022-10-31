@@ -1,8 +1,8 @@
 #ifndef SRC_CPU_ISA_RF_H_
 #define SRC_CPU_ISA_RF_H_
 
+#include "event/event.h"
 #include "register.h"
-#include "trace/trace.h"
 
 namespace isa {
 namespace rf {
@@ -14,14 +14,23 @@ class RegisterFile {
     RegisterClass<number_regs, reg_size> classname = {                         \
         #classname,                                                            \
         #reg_prefix,                                                           \
-        {REGISTER_CLASS_##classname(REG_CASE)}};
+        {REGISTER_CLASS_##classname(REG_CASE)}};                               \
+    template <typename T> void add##classname##ReadListener(T&& arg) {         \
+        classname.addReadListener(std::forward<T>(arg));                       \
+    }                                                                          \
+    template <typename T> void add##classname##WriteListener(T&& arg) {        \
+        classname.addWriteListener(std::forward<T>(arg));                      \
+    }
 #include "defs/registers.inc"
 
-    RegisterFile(TraceMode tm = TraceMode::NONE) { setTraceMode(tm); }
-
-    void setTraceMode(TraceMode tm) {
+    template <typename T> void addReadListener(T&& arg) {
 #define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
-    classname.setTraceMode(tm);
+    add##classname##ReadListener(std::forward<T>(arg));
+#include "defs/registers.inc"
+    }
+    template <typename T> void addWriteListener(T&& arg) {
+#define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
+    add##classname##WriteListener(std::forward<T>(arg));
 #include "defs/registers.inc"
     }
 };

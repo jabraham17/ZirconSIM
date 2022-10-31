@@ -11,7 +11,7 @@
 #include <sstream>
 #include <string>
 
-#include "trace/trace.h"
+#include "event/event.h"
 
 template <size_t SIZE> class Register {
   private:
@@ -62,7 +62,6 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
     std::string classname;
     std::string regprefix;
     std::array<Register<SIZE>, NUM> registers;
-    Trace trace_reg;
 
     struct RegisterProxy {
         using T = uint64_t;
@@ -78,38 +77,28 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
         RegisterProxy(RegisterClass* rc, unsigned reg_idx)
             : rc(rc), reg_idx(reg_idx) {}
         operator T() {
-            rc->trace_reg << "RD " << rc->classname << "[" << Trace::dec
-                          << reg_idx << "]" << Trace::flush;
             T v = read();
-            rc->trace_reg << " = " << Trace::doubleword << v << std::endl;
+            rc->event_read(rc->classname, reg_idx, v);
             return v;
         }
         RegisterProxy& operator=(T v) {
-            rc->trace_reg << "WR " << rc->classname << "[" << Trace::dec
-                          << reg_idx << "]" << Trace::flush;
             T old_value = read();
             write(v);
-            rc->trace_reg << " = " << Trace::doubleword << v
-                          << "; OLD VALUE = " << Trace::doubleword << old_value
-                          << std::endl;
+            rc->event_write(rc->classname, reg_idx, v, old_value);
             return *this;
         }
     };
+
+    event::Event<std::string, uint64_t, uint64_t> event_read;
+    event::Event<std::string, uint64_t, uint64_t, uint64_t> event_write;
 
   public:
     RegisterClass(
         std::string classname,
         std::string regprefix,
-        std::array<Register<SIZE>, NUM> registers = {},
-        TraceMode tm = TraceMode::NONE)
-        : classname(classname), regprefix(regprefix), registers(registers),
-          trace_reg("REGISTER TRACE: " + classname) {
-        trace_reg.setState(tm & TraceMode::REGISTER);
-    }
+        std::array<Register<SIZE>, NUM> registers = {})
+        : classname(classname), regprefix(regprefix), registers(registers) {}
     RegisterClass() = default;
-    void setTraceMode(TraceMode tm) {
-        trace_reg.setState(tm & TraceMode::REGISTER);
-    }
 
     RegisterProxy reg(unsigned idx) {
         assert(idx < NUM);
@@ -128,6 +117,13 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
             o << std::setfill(' ') << std::setw(32);
             reg(half + i).dump(o);
         }
+    }
+
+    void addReadListener(decltype(event_read)::callback_type func) {
+        event_read.addListener(func);
+    }
+    void addWriteListener(decltype(event_write)::callback_type func) {
+        event_write.addListener(func);
     }
 };
 

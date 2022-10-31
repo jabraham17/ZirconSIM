@@ -8,8 +8,6 @@
 #include <sstream>
 #include <string>
 
-
-
 #include "event/event.h"
 #include <fstream>
 
@@ -18,17 +16,9 @@ namespace cpu {
 // use raw(addr) so we don't log mem access
 uint32_t HartState::getInstWord() const { return *((uint32_t*)memimg.raw(pc)); }
 
-HartState::HartState(mem::MemoryImage& m, TraceMode tm)
-    : memimg(m), executing(true) {
-    rf.setTraceMode(tm);
-}
+HartState::HartState(mem::MemoryImage& m) : memimg(m), executing(true) {}
 
-Hart::Hart(mem::MemoryImage& m, TraceMode tm, bool useStats, bool doColor)
-    : hs(m, tm), trace_mode(tm), trace_inst("INSTRUCTION TRACE"),
-      doColor(doColor) {
-    trace_inst.setState((trace_mode & TraceMode::INSTRUCTION));
-    stats.setState(useStats);
-}
+Hart::Hart(mem::MemoryImage& m) : hs(m) {}
 
 bool Hart::shouldHalt() {
     // halt if no longer executing
@@ -203,45 +193,19 @@ void Hart::init() {
 
 void Hart::execute(uint64_t start_address) {
     hs.pc = start_address;
-
-    // event::Event e;
-    // std::ofstream of("out.txt");
-    // std::ofstream of2("out2.txt");
-    // e.registerCallback( std::make_unique<event::Callback>([](cpu::HartState&){
-    //     std::cout << "callback called\n";
-    // }));
-    // e.registerCallback(std::make_unique<event::Logger>(of, [](std::ostream& o, cpu::HartState&){
-    //     o << "log1 called\n";
-    //     std::cout << "2 ca;lled\n";
-    // }));
-    //     e.registerCallback(std::make_unique<event::Logger>(of2, [](std::ostream& o, cpu::HartState&){
-    //     o << "log2 called\n";
-    // }));
-    //     e.registerCallback(std::make_unique<event::Logger>(of2, [](std::ostream& o, cpu::HartState&){
-    //     o << "log2 called again\n";
-    // }));
-
-
-
     while(1) {
         try {
+            event_before_execute(hs);
             auto inst = hs.getInstWord();
-            event::getEvent("instruction execute before")(hs);
-            trace_inst << "PC[" << Trace::doubleword << hs.pc << "] = ";
-            trace_inst << Trace::word << inst;
-            trace_inst << "; " << isa::inst::disassemble(inst, hs.pc, doColor);
-            trace_inst << std::endl;
-            stats.count(hs);
-
             isa::inst::executeInstruction(inst, hs);
-            event::getEvent("instruction execute after")(hs);
+            event_after_execute(hs);
+
             if(shouldHalt()) break;
         } catch(const std::exception& e) {
             std::cerr << "Exception Occurred: " << e.what() << std::endl;
             break;
         }
     }
-    if(stats.isEnabled()) std::cout << stats.dump() << std::endl;
 }
 
 } // namespace cpu

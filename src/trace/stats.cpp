@@ -77,14 +77,12 @@ void initComputedMap(std::map<std::string, float>& m) {
 
 } // namespace internal
 
-Stats::Stats() : enabled(false) {
+Stats::Stats() {
     internal::initCounterMap(counters);
     internal::initComputedMap(computed_counters);
 }
 
 void Stats::count(const cpu::HartState& hs) {
-    if(!enabled) return;
-
     for(size_t idx = 0; idx < internal::number_counters; idx++) {
         const auto& key = internal::counter_names[idx];
         auto& counter_value = counters[key];

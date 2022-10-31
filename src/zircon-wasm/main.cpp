@@ -3,7 +3,6 @@
 #include "cpu/cpu.h"
 #include "elf/elf.h"
 #include "mem/memory-image.h"
-#include "trace/trace.h"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
