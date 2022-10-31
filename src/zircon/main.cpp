@@ -32,21 +32,19 @@ struct zircon_args {
           color(false) {}
 };
 
-
-// FIXME: this function relies upon the fnames for different files being the same, this is not guaranteed to be the same.
-//CONSIDER: ./file.txt and ././file.txt and ../dir/file.txt could all be the same file
-auto
-getFileStreamIfTrue(bool cond, char* fname, std::ostream& alternative) {
+// FIXME: this function relies upon the fnames for different files being the
+// same, this is not guaranteed to be the same.
+// CONSIDER: ./file.txt and ././file.txt and ../dir/file.txt could all be the
+// same file
+auto getFileStreamIfTrue(bool cond, char* fname, std::ostream& alternative) {
     static std::unordered_map<std::string, std::ostream*> file_buffer;
-    auto inst_log =
-        (&alternative);
+    auto inst_log = (&alternative);
     if(cond && fname) {
         auto it = file_buffer.find(fname);
         if(it != file_buffer.end()) {
             // return old file handle
             inst_log = it->second;
-        }
-        else {
+        } else {
             // open new file handle
             auto handle = (new std::ofstream(fname));
             file_buffer[fname] = handle;
