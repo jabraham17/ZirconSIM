@@ -23,9 +23,9 @@ struct zircon_args {
     int color;
 
     zircon_args()
-        : file(strdup("a.out")), logfile(strdup("log.txt")), separate_files(false), trace_inst(false),
-          trace_mem(false), trace_reg(false),
-          stats(false), color(false) {}
+        : file(strdup("a.out")), logfile(strdup("log.txt")),
+          separate_files(false), trace_inst(false), trace_mem(false),
+          trace_reg(false), stats(false), color(false) {}
 };
 
 int main(int argc, const char** argv) {
@@ -109,70 +109,73 @@ int main(int argc, const char** argv) {
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 
-    memimg.event_allocation.addListener(
-        [&mem_log](uint64_t addr, uint64_t size) {
+    if(args.trace_mem) {
+        memimg.addAllocationListener([&mem_log](uint64_t addr, uint64_t size) {
             mem_log << "ALLOCATE[" << common::Format::doubleword << addr
                     << " - " << common::Format::doubleword << addr + size << "]"
                     << std::endl;
         });
 
-    memimg.event_read.addListener(
-        [&mem_log](uint64_t addr, uint64_t value, size_t size) {
-            mem_log << "RD MEM[" << common::Format::doubleword << addr
+        memimg.addReadListener(
+            [&mem_log](uint64_t addr, uint64_t value, size_t size) {
+                mem_log << "RD MEM[" << common::Format::doubleword << addr
+                        << "] = " << common::Format::hexnum(size)
+                        << (uint64_t)value << std::endl;
+            });
+        memimg.addWriteListener([&mem_log](
+                                    uint64_t addr,
+                                    uint64_t value,
+                                    uint64_t oldvalue,
+                                    size_t size) {
+            mem_log << "WR MEM[" << common::Format::doubleword << addr
                     << "] = " << common::Format::hexnum(size) << (uint64_t)value
-                    << std::endl;
+                    << "; OLD VALUE = " << common::Format::hexnum(size)
+                    << oldvalue << std::endl;
         });
-    memimg.event_write.addListener([&mem_log](
-                                       uint64_t addr,
-                                       uint64_t value,
-                                       uint64_t oldvalue,
-                                       size_t size) {
-        mem_log << "WR MEM[" << common::Format::doubleword << addr
-                << "] = " << common::Format::hexnum(size) << (uint64_t)value
-                << "; OLD VALUE = " << common::Format::hexnum(size) << oldvalue
-                << std::endl;
-    });
+    }
 
     cpu::Hart hart(memimg);
 
-    Stats s;
-
-    hart.event_before_execute.addListener(
-        [&inst_log, args](cpu::HartState& hs) {
+    if(args.trace_inst) {
+        hart.addBeforeExecuteListener([&inst_log, args](cpu::HartState& hs) {
             auto inst = hs.getInstWord();
             inst_log << "PC[" << common::Format::doubleword << hs.pc
                      << "] = " << common::Format::word << inst << "; "
                      << isa::inst::disassemble(inst, hs.pc, args.color)
                      << std::endl;
         });
+    }
 
-    hart.addRegisterReadListener(
-        [&reg_log](std::string classname, uint64_t idx, uint64_t value) {
-            reg_log << "RD " << classname << "[" << common::Format::dec << idx
+    if(args.trace_reg) {
+        hart.addRegisterReadListener(
+            [&reg_log](std::string classname, uint64_t idx, uint64_t value) {
+                reg_log << "RD " << classname << "[" << common::Format::dec
+                        << idx << "] = " << common::Format::doubleword
+                        << (uint64_t)value << std::endl;
+            });
+        hart.addRegisterWriteListener([&reg_log](
+                                          std::string classname,
+                                          uint64_t idx,
+                                          uint64_t value,
+                                          uint64_t oldvalue) {
+            reg_log << "WR " << classname << "[" << common::Format::dec << idx
                     << "] = " << common::Format::doubleword << (uint64_t)value
-                    << std::endl;
+                    << "; OLD VALUE = " << common::Format::doubleword
+                    << oldvalue << std::endl;
         });
-    hart.addRegisterWriteListener([&reg_log](
-                                      std::string classname,
-                                      uint64_t idx,
-                                      uint64_t value,
-                                      uint64_t oldvalue) {
-        reg_log << "WR " << classname << "[" << common::Format::dec << idx
-                << "] = " << common::Format::doubleword << (uint64_t)value
-                << "; OLD VALUE = " << common::Format::doubleword << oldvalue
-                << std::endl;
-    });
+    }
 
+    Stats stats;
     if(args.stats) {
-        hart.event_before_execute.addListener(
-            [&s](cpu::HartState& hs) { s.count(hs); });
+        hart.addBeforeExecuteListener(
+            [&stats](cpu::HartState& hs) { stats.count(hs); });
     }
 
     hart.init();
     hart.execute(start);
 
     if(args.stats) {
-        std::cout << s.dump() << std::endl;
+        std::cout << stats.dump() << std::endl;
     }
 
     return 0;

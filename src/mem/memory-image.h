@@ -76,6 +76,11 @@ class MemoryImage {
     uint8_t* memory_ptr;
     size_t mem_size;
 
+    event::Event<uint64_t, uint64_t, size_t> event_read;
+    event::Event<uint64_t, uint64_t, uint64_t, size_t> event_write;
+    event::Event<uint64_t, uint64_t> event_exception; // TODO: unused currently
+    event::Event<uint64_t, uint64_t> event_allocation;
+
     MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
         if(memory_ptr - memory.get() + size >= mem_size) {
             throw OutOfMemoryException();
@@ -156,10 +161,15 @@ class MemoryImage {
         return mr.raw(addr);
     }
 
-    event::Event<uint64_t, uint64_t, size_t> event_read;
-    event::Event<uint64_t, uint64_t, uint64_t, size_t> event_write;
-    event::Event<uint64_t, uint64_t> event_exception; // TODO: unused currently
-    event::Event<uint64_t, uint64_t> event_allocation;
+    template <typename T> void addReadListener(T&& arg) {
+        event_read.addListener(std::forward<T>(arg));
+    }
+    template <typename T> void addWriteListener(T&& arg) {
+        event_write.addListener(std::forward<T>(arg));
+    }
+    template <typename T> void addAllocationListener(T&& arg) {
+        event_allocation.addListener(std::forward<T>(arg));
+    }
 };
 
 } // namespace mem

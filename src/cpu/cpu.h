@@ -68,6 +68,8 @@ class Hart {
   private:
     HartState hs;
     bool shouldHalt();
+    event::Event<HartState&> event_before_execute;
+    event::Event<HartState&> event_after_execute;
 
   public:
     Hart(mem::MemoryImage& m);
@@ -76,8 +78,12 @@ class Hart {
     void init();
     void execute(uint64_t start_address);
 
-    event::Event<HartState&> event_before_execute;
-    event::Event<HartState&> event_after_execute;
+    template <typename T> void addBeforeExecuteListener(T&& arg) {
+        event_before_execute.addListener(std::forward<T>(arg));
+    }
+    template <typename T> void addAfterExecuteListener(T&& arg) {
+        event_after_execute.addListener(std::forward<T>(arg));
+    }
     template <typename T> void addRegisterReadListener(T&& arg) {
         hs.rf.addReadListener(std::forward<T>(arg));
     }
