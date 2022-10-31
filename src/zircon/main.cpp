@@ -1,5 +1,6 @@
 
 
+#include "color/color.h"
 #include "common/format.h"
 #include "cpu/cpu.h"
 #include "cpu/isa/inst.h"
@@ -177,61 +178,106 @@ int main(int argc, const char** argv) {
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 
-    if(args.trace_mem) {
-        memimg.addAllocationListener([mem_log](uint64_t addr, uint64_t size) {
-            *mem_log << "ALLOCATE[" << common::Format::doubleword << addr
-                     << " - " << common::Format::doubleword << addr + size
-                     << "]" << std::endl;
-        });
+    auto colorAddr = [args]() {
+        return args.color ? color::getColor(
+                                {color::ColorCode::LIGHT_CYAN,
+                                 color::ColorCode::FAINT})
+                          : "";
+    };
+    auto colorHex = [args]() {
+        return args.color
+                   ? color::getColor(
+                         {color::ColorCode::CYAN, color::ColorCode::FAINT})
+                   : "";
+    };
+    auto colorNew = [args]() {
+        return args.color
+                   ? color::getColor(
+                         {color::ColorCode::GREEN, color::ColorCode::FAINT})
+                   : "";
+    };
+    auto colorOld = [args]() {
+        return args.color
+                   ? color::getColor(
+                         {color::ColorCode::RED, color::ColorCode::FAINT})
+                   : "";
+    };
+    auto colorReset = [args]() { return args.color ? color::getReset() : ""; };
 
-        memimg.addReadListener(
-            [mem_log](uint64_t addr, uint64_t value, size_t size) {
-                *mem_log << "RD MEM[" << common::Format::doubleword << addr
-                         << "] = " << common::Format::hexnum(size)
-                         << (uint64_t)value << std::endl;
+    if(args.trace_mem) {
+        memimg.addAllocationListener(
+            [mem_log, colorReset, colorAddr](uint64_t addr, uint64_t size) {
+                *mem_log << "ALLOCATE[" << colorAddr()
+                         << common::Format::doubleword << addr << colorReset()
+                         << " - " << colorAddr() << common::Format::doubleword
+                         << addr + size << colorReset() << "]" << std::endl;
             });
-        memimg.addWriteListener([mem_log](
-                                    uint64_t addr,
-                                    uint64_t value,
-                                    uint64_t oldvalue,
-                                    size_t size) {
-            *mem_log << "WR MEM[" << common::Format::doubleword << addr
-                     << "] = " << common::Format::hexnum(size)
-                     << (uint64_t)value
-                     << "; OLD VALUE = " << common::Format::hexnum(size)
-                     << oldvalue << std::endl;
+
+        memimg.addReadListener([mem_log, colorReset, colorAddr, colorNew](
+                                   uint64_t addr,
+                                   uint64_t value,
+                                   size_t size) {
+            *mem_log << "RD MEM[" << colorAddr() << common::Format::doubleword
+                     << addr << colorReset() << "] = " << colorNew()
+                     << common::Format::hexnum(size) << (uint64_t)value
+                     << colorReset() << std::endl;
         });
+        memimg.addWriteListener(
+            [mem_log, colorReset, colorAddr, colorNew, colorOld](
+                uint64_t addr,
+                uint64_t value,
+                uint64_t oldvalue,
+                size_t size) {
+                *mem_log << "WR MEM[" << colorAddr()
+                         << common::Format::doubleword << addr << colorReset()
+                         << "] = " << colorNew() << common::Format::hexnum(size)
+                         << (uint64_t)value << colorReset()
+                         << "; OLD VALUE = " << colorOld()
+                         << common::Format::hexnum(size) << oldvalue
+                         << colorReset() << std::endl;
+            });
     }
 
     cpu::Hart hart(memimg);
 
     if(args.trace_inst) {
-        hart.addBeforeExecuteListener([inst_log, args](cpu::HartState& hs) {
-            auto inst = hs.getInstWord();
-            *inst_log << "PC[" << common::Format::doubleword << hs.pc
-                      << "] = " << common::Format::word << inst << "; "
-                      << isa::inst::disassemble(inst, hs.pc, args.color)
-                      << std::endl;
-        });
+        hart.addBeforeExecuteListener(
+            [inst_log, args, colorReset, colorHex, colorAddr](
+                cpu::HartState& hs) {
+                auto inst = hs.getInstWord();
+                *inst_log << "PC[" << colorAddr() << common::Format::doubleword
+                          << hs.pc << colorReset() << "] = " << colorHex()
+                          << common::Format::word << inst << colorReset()
+                          << "; "
+                          << isa::inst::disassemble(inst, hs.pc, args.color)
+                          << std::endl;
+            });
     }
 
     if(args.trace_reg) {
-        hart.addRegisterReadListener(
-            [reg_log](std::string classname, uint64_t idx, uint64_t value) {
-                *reg_log << "RD " << classname << "[" << common::Format::dec
-                         << idx << "] = " << common::Format::doubleword
-                         << (uint64_t)value << std::endl;
-            });
-        hart.addRegisterWriteListener([reg_log](
-                                          std::string classname,
-                                          uint64_t idx,
-                                          uint64_t value,
-                                          uint64_t oldvalue) {
-            *reg_log << "WR " << classname << "[" << common::Format::dec << idx
-                     << "] = " << common::Format::doubleword << (uint64_t)value
-                     << "; OLD VALUE = " << common::Format::doubleword
-                     << oldvalue << std::endl;
+        hart.addRegisterReadListener([reg_log, colorReset, colorAddr, colorNew](
+                                         std::string classname,
+                                         uint64_t idx,
+                                         uint64_t value) {
+            *reg_log << "RD " << classname << "[" << colorAddr()
+                     << common::Format::dec << idx << colorReset()
+                     << "] = " << colorNew() << common::Format::doubleword
+                     << (uint64_t)value << colorReset() << std::endl;
         });
+        hart.addRegisterWriteListener(
+            [reg_log, colorReset, colorAddr, colorNew, colorOld](
+                std::string classname,
+                uint64_t idx,
+                uint64_t value,
+                uint64_t oldvalue) {
+                *reg_log << "WR " << classname << "[" << colorAddr()
+                         << common::Format::dec << idx << colorReset()
+                         << "] = " << colorNew() << common::Format::doubleword
+                         << (uint64_t)value << colorReset()
+                         << "; OLD VALUE = " << colorOld()
+                         << common::Format::doubleword << oldvalue
+                         << colorReset() << std::endl;
+            });
     }
 
     Stats stats;

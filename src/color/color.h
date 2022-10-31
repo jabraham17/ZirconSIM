@@ -5,9 +5,12 @@
 #include <string>
 
 namespace color {
+// TODO: finish fully implemention
+// https://chrisyeh96.github.io/2020/03/28/terminal-colors.html
+// https://robotmoon.com/256-colors/
 
-std::string ESCAPE = "\033[";
-std::string END = "m";
+extern std::string ESCAPE;
+extern std::string END;
 
 enum class ColorCode {
     BLACK = 30,
@@ -48,33 +51,19 @@ enum class ColorCode {
 
     RESET = 0,
     BOLD = 1,
+    FAINT = 2,
     UNDERLINE = 4,
     FLASH = 5,
     REVERSE = 7,
     INVISIBLE = 8,
-
 };
 
-std::string combine(std::initializer_list<ColorCode> codes) {
-    std::string combined = "";
-    std::string sep;
-    for(auto c : codes) {
-        combined += sep + std::to_string(int(c));
-        sep = ";";
-    }
-    return combined;
-}
+std::string combine(std::initializer_list<ColorCode> codes);
 
-std::string getColor(std::initializer_list<ColorCode> codes) {
-    return ESCAPE + combine(codes) + END;
-}
+std::string getColor(std::initializer_list<ColorCode> codes);
+std::string getReset();
 
-std::string getReset() { return getColor({ColorCode::RESET}); }
-
-std::string getWrapped(std::string a, std::initializer_list<ColorCode> codes) {
-    return getColor(codes) + a + getReset();
-}
-
+std::string getWrapped(std::string a, std::initializer_list<ColorCode> codes);
 } // namespace color
 
 #endif
