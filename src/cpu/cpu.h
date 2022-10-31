@@ -68,7 +68,13 @@ class Hart {
   private:
     HartState hs;
     bool shouldHalt();
+    // Subsystem: hart
+    // Description: Fires just before current instruction is executed
+    // Parameters: (Hart State object)
     event::Event<HartState&> event_before_execute;
+    // Subsystem: hart
+    // Description: Fires just after current instruction is executed
+    // Parameters: (Hart State object)
     event::Event<HartState&> event_after_execute;
 
   public:

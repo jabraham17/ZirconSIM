@@ -76,9 +76,21 @@ class MemoryImage {
     uint8_t* memory_ptr;
     size_t mem_size;
 
+    // Subsystem: mem
+    // Description: Fires when memory is read
+    // Parameters: (address, value read, n bytes)
     event::Event<uint64_t, uint64_t, size_t> event_read;
+    // Subsystem: mem
+    // Description: Fires when memory is written
+    // Parameters: (address, value written, old value, n bytes)
     event::Event<uint64_t, uint64_t, uint64_t, size_t> event_write;
-    event::Event<uint64_t, uint64_t> event_exception; // TODO: unused currently
+    // Subsystem: mem
+    // Description: Currently unimplemented
+    // Parameters: 
+    event::Event<uint64_t, uint64_t> event_exception;
+    // Subsystem: mem
+    // Description: Fires when memory is allocated
+    // Parameters: (base address, allocation size)
     event::Event<uint64_t, uint64_t> event_allocation;
 
     MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {

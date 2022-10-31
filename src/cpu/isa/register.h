@@ -89,7 +89,13 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
         }
     };
 
+    // Subsystem: reg_$CLASS
+    // Description: Fires when a register is read
+    // Parameters: (register class, register index, value read)
     event::Event<std::string, uint64_t, uint64_t> event_read;
+    // Subsystem: reg_$CLASS
+    // Description: Fires when a register is written
+    // Parameters: (register class, register index, value written, old value)
     event::Event<std::string, uint64_t, uint64_t, uint64_t> event_write;
 
   public:
