@@ -43,6 +43,7 @@
 - HartState is more accurately described as ThreadState
 - cleanup instruction specification, CUSTOM instructions are getting messy
 - refactor the cpu subdir, inconsistent namespace usage, inconsistent variable naming, better structure
+- fix makefile depens for headers and inc
 
 ## documentation
 
@@ -63,6 +64,7 @@
   - machine readable formats for testing harnesses
 - add full register state tracings
 - add ability to efficiently dump memory
+- add contoller !=
 
 ## wasm
 
