@@ -105,13 +105,13 @@ class MemoryImage {
         return memory_map.back();
     }
 
-    MemoryRegion& getMemoryRegion(uint64_t addr) {
+    MemoryRegion* getMemoryRegion(uint64_t addr) {
         for(auto& mr : memory_map) {
             if(addr >= mr.address && addr < mr.address + mr.size) {
-                return mr;
+                return &mr;
             }
         }
-        throw OutOfBoundsException(addr);
+        return nullptr;
     }
 
     template <typename T> struct MemoryCellProxy {
@@ -126,8 +126,11 @@ class MemoryImage {
             else if(std::is_same<T, uint64_t>::value) return 8;
             return 8;
         }
-        MemoryRegion& mr() { return mi->getMemoryRegion(addr); }
-
+        MemoryRegion& mr() {  
+            auto mr_ptr = mi->getMemoryRegion(addr);
+            if(mr_ptr) return *mr_ptr;
+            else throw OutOfBoundsException(addr);
+            }
       public:
         T read();
         void write(T v);
@@ -170,9 +173,9 @@ class MemoryImage {
     }
     uint8_t* raw(uint64_t addr) {
         auto mr = getMemoryRegion(addr);
-        return mr.raw(addr);
+        if(mr) return mr->raw(addr);
+        else return nullptr;
     }
-
     template <typename T> void addReadListener(T&& arg) {
         event_read.addListener(std::forward<T>(arg));
     }

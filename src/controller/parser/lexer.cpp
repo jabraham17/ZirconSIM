@@ -8,14 +8,6 @@
 namespace controller {
 namespace parser {
 
-// const std::string types[] = {
-//     "END_OF_FILE",
-// #define LEXER_CASE(tt) #tt,
-//     LEXER_TOKENS(LEXER_CASE)
-// #undef LEXER_CASE
-//         "NONE",
-//     "ERROR"};
-
 std::string Token::getString() const {
     std::stringstream str;
     str << "{" << std::string(token_type) << ", \"" << lexeme << "\"}";
@@ -184,15 +176,9 @@ bool Lexer::isSymbol() {
 }
 
 void Lexer::skipWhitespace() {
-
-    // get a new char
-    char c = getChar();
-    // while not eof and c is whitespace
-    while(!endOfInput() && isspace(c)) {
-        c = getChar();
+    while(!endOfInput() && isspace(peekChar())) {
+        getChar();
     }
-    // if we got one too many, put it back
-    if(!endOfInput()) ungetChar(c);
 }
 
 bool Lexer::endOfInput() { return input_buffer.empty(); }

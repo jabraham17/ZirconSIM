@@ -291,21 +291,11 @@ int main(int argc, const char** argv) {
     if(!control_args.empty()) {
         auto parser = controller::parser::Parser(control_args);
         auto parsed_commands = parser.parse();
-        // i have to cast anyways to get this, might be better to remove the
-        // constructor part and just makie it a function call with no
-        // virtuallyness
         for(auto a : parsed_commands.allActions()) {
-            if(a->isa<controller::action::DumpPC>()) {
-                a->cast<controller::action::DumpPC>()->hs = &hart.hs;
-            }
-            if(a->isa<controller::action::DumpRegisterClass>()) {
-                a->cast<controller::action::DumpRegisterClass>()->hs = &hart.hs;
-            }
+            a->hs = &hart.hs;
         }
         for(auto c : parsed_commands.allConditions()) {
-            if(c->isa<controller::condition::PCEquals>()) {
-                c->cast<controller::condition::PCEquals>()->hs = &hart.hs;
-            }
+            c->hs = &hart.hs;
         }
         for(auto c : parsed_commands.commands) {
             switch(c->getEventType()) {
@@ -348,61 +338,9 @@ int main(int argc, const char** argv) {
                 default: std::cerr << "No Event Handler Defined\n";
             }
         }
-        // for(auto c : parsed) {
-
-        // }
     }
-    // size_t control_idx = 0;
 
-    // while(control_idx < control_args.size()) {
-    //     std::string event_str = control_args[control_idx];
-    //     control_idx++;
-    //     auto event = event::parseEventName(event_str);
-    //     switch(event) {
-    //         case event::EventType::INST_AFTER_EXECUTE: {
-    //             // check if we have 2 more args or 1 more arg
-    //             std::string actions = control_idx < control_args.size()
-    //                                       ? control_args[control_idx]
-    //                                       : "";
-    //             std::string cond = control_idx + 1 < control_args.size()
-    //                                    ? control_args[control_idx + 1]
-    //                                    : "";
-
-    //             if(actions != "" && cond != "") {
-    //                 control_idx += 2;
-    //                 std::cerr << "unimp\n";
-    //             } else if(actions != "" && cond == "") {
-    //                 // one arg, actions only
-    //                 control_idx++;
-    //                 auto action_tokens = stringsplit(actions, ",");
-    //                 std::vector<event::ActionType> action_types;
-    //                 std::transform(
-    //                     action_tokens.cbegin(),
-    //                     action_tokens.cend(),
-    //                     std::back_inserter(action_types),
-    //                     [](auto t) { return event::parseActionName(t); });
-    //                 hart.addAfterExecuteListener(
-    //                     [action_types](cpu::HartState& hs) {
-    //                         for(auto a : action_types) {
-    //                             switch(a) {
-    //                                 case event::ActionType::DUMP_REGS:
-    //                                     hs.rf.GPR.dump(std::cout);
-    //                                     std::cout << "\n";
-    //                                     break;
-    //                                 default: break;
-    //                             }
-    //                         }
-    //                     });
-
-    //             } else {
-    //                 std::cerr << "ERRRRRR\n";
-    //             }
-
-    //             break;
-    //         }
-    //         default: break;
-    //     }
-    // }
+   
 
     hart.init();
     hart.execute(start);

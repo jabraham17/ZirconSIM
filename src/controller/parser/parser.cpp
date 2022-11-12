@@ -7,6 +7,7 @@ namespace parser {
 
 Address strToAddress(std::string s) { return std::stoull(s); }
 RegisterIndex strToRegisterIndex(std::string s) { return std::stoull(s); }
+Integer strToInteger(std::string s) { return std::stoull(s); }
 
 Token Parser::expect(TokenType tt) {
     auto t = lexer.getToken();
@@ -97,34 +98,25 @@ Parser::parse_action_list() {
 std::shared_ptr<action::ActionInterface> Parser::parse_action() {
     if(lexer.peek().token_type == TokenType::REGISTER_CLASS) {
         if(lexer.peek(2).token_type == TokenType::LBRACK) {
-            auto reg = parse_register();
-            return nullptr;
-            // TODO:
-            // return std::make_shared<action::DumpRegister>(
-            //     nullptr,
-            //     reg->second);
+            auto [reg_class, idx] = parse_register();
+            return std::make_shared<action::DumpRegister>(reg_class, idx);
         } else {
-            // TODO
             auto reg_class = expect(TokenType::REGISTER_CLASS);
             auto reg_class_type =
                 isa::rf::getRegisterClassType(reg_class.lexeme);
             if(reg_class_type == isa::rf::RegisterClassType::NONE)
                 throw ParseException("Invalid Register Class Type");
-            // return nullptr;
-            return std::make_shared<action::DumpRegisterClass>(
-                nullptr,
-                reg_class_type);
+            return std::make_shared<action::DumpRegisterClass>(reg_class_type);
         }
     } else if(lexer.peek().token_type == TokenType::PC) {
         expect(TokenType::PC);
-        return std::make_shared<action::DumpPC>(nullptr);
+        return std::make_shared<action::DumpPC>();
     } else if(lexer.peek().token_type == TokenType::MEM) {
         auto addr = parse_mem();
-        return std::make_shared<action::DumpMemoryAddress>(nullptr, addr);
-
+        return std::make_shared<action::DumpMemoryAddress>(addr);
     } else if(lexer.peek().token_type == TokenType::STOP) {
         expect(TokenType::STOP);
-        return std::make_shared<action::Stop>(nullptr);
+        return std::make_shared<action::Stop>();
     } else throw ParseException("Unknown Action");
 }
 
@@ -145,27 +137,27 @@ Parser::parse_cond_list() {
 // cond -> register EQUALS NUM | mem EQUALS NUM | PC EQUALS NUM
 std::shared_ptr<condition::ConditionInterface> Parser::parse_cond() {
     if(lexer.peek().token_type == TokenType::REGISTER_CLASS) {
-        auto reg = parse_register();
+        auto [reg_class, reg_idx] = parse_register();
         expect(TokenType::EQUALS);
         auto num = expect(TokenType::NUM);
-        // TODO:
-        return std::make_shared<condition::AlwaysTrue>();
+        return std::make_shared<condition::RegisterEquals>(
+            reg_class,
+            reg_idx,
+            strToInteger(num.lexeme));
 
     } else if(lexer.peek().token_type == TokenType::MEM) {
         auto addr = parse_mem();
         expect(TokenType::EQUALS);
         auto num = expect(TokenType::NUM);
-
-        // TODO:
-        return std::make_shared<condition::AlwaysTrue>();
+        return std::make_shared<condition::MemAddrEquals>(
+            addr,
+            strToInteger(num.lexeme));
 
     } else if(lexer.peek().token_type == TokenType::PC) {
         expect(TokenType::PC);
         expect(TokenType::EQUALS);
         auto num = expect(TokenType::NUM);
-        return std::make_shared<condition::PCEquals>(
-            nullptr,
-            strToAddress(num.lexeme));
+        return std::make_shared<condition::PCEquals>(strToAddress(num.lexeme));
 
     } else throw ParseException("Unknown Condition");
 }
@@ -177,10 +169,10 @@ std::pair<isa::rf::RegisterClassType, RegisterIndex> Parser::parse_register() {
     auto num = expect(TokenType::NUM);
     expect(TokenType::RBRACK);
 
-    // TODO: need to do error checking here
-    return std::make_pair(
-        isa::rf::getRegisterClassType(reg_file.lexeme),
-        strToRegisterIndex(num.lexeme));
+    auto reg_class = isa::rf::getRegisterClassType(reg_file.lexeme);
+    if(reg_class == isa::rf::RegisterClassType::NONE)
+        throw ParseException("Invalid Register Class Type");
+    return std::make_pair(reg_class, strToRegisterIndex(num.lexeme));
 }
 
 // mem -> MEM LBRACK NUM RBRACK

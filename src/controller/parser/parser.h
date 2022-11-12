@@ -22,7 +22,13 @@ class Parser {
     Lexer lexer;
     std::ostream* log;
     Parser(std::vector<std::string> input, std::ostream& log = std::cout)
-        : lexer(input), log(&log) {}
+        : lexer(input), log(&log) {
+        // Token t = lexer.getToken();
+        // while(t.token_type != TokenType::END_OF_FILE) {
+        //     std::cout << t.getString() << "\n";
+        //     t = lexer.getToken();
+        // }
+    }
     CommandList parse();
 
     /*

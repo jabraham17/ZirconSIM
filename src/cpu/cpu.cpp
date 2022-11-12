@@ -14,7 +14,10 @@
 namespace cpu {
 
 // use raw(addr) so we don't log mem access
-uint32_t HartState::getInstWord() const { return *((uint32_t*)memimg.raw(pc)); }
+uint32_t HartState::getInstWord() const {
+    auto ptr = memimg.raw(pc);
+    return *((uint32_t*)ptr);
+}
 
 HartState::HartState(mem::MemoryImage& m) : memimg(m), executing(true) {}
 

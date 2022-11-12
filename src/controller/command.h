@@ -12,6 +12,7 @@ namespace controller {
 
 using Address = uint64_t;
 using RegisterIndex = uint64_t;
+using Integer = uint64_t;
 
 namespace action {
 enum class ActionType {
@@ -25,45 +26,55 @@ enum class ActionType {
 class ActionInterface {
   public:
     ActionType at;
-    ActionInterface(ActionType at = ActionType::NONE) : at(at) {}
+    cpu::HartState* hs;
+
+    ActionInterface(
+        ActionType at = ActionType::NONE,
+        cpu::HartState* hs = nullptr)
+        : at(at), hs(hs) {}
     virtual ~ActionInterface() = default;
+
     void operator()(std::ostream* o = nullptr) { this->action(o); }
     virtual void action(std::ostream* o = nullptr) = 0;
 
     template <typename U> bool isa() { return U::classof(this); }
     template <typename U> U* cast() {
-        assert(isa<U>(this));
+        assert(this->isa<U>());
         return static_cast<U*>(this);
     }
 };
 
-// TODO: make the hs in the actioninterface, we always have it
-
 class DumpRegisterClass : public ActionInterface {
   public:
-    cpu::HartState* hs;
     isa::rf::RegisterClassType regtype;
 
-  public:
+    DumpRegisterClass(isa::rf::RegisterClassType regtype)
+        : DumpRegisterClass(nullptr, regtype) {}
     DumpRegisterClass(cpu::HartState* hs, isa::rf::RegisterClassType regtype)
-        : ActionInterface(ActionType::DUMP_REG_CLASS), hs(hs),
-          regtype(regtype) {}
+        : ActionInterface(ActionType::DUMP_REG_CLASS, hs), regtype(regtype) {}
     virtual ~DumpRegisterClass() = default;
+
     void action(std::ostream* o = nullptr) override;
 
     static bool classof(const ActionInterface* ai) {
         return ai->at == ActionType::DUMP_REG_CLASS;
     }
 };
-template <size_t NUM, size_t SIZE> class DumpRegister : public ActionInterface {
+class DumpRegister : public ActionInterface {
   public:
-    RegisterClass<NUM, SIZE>* rc;
+    isa::rf::RegisterClassType regtype;
     RegisterIndex idx;
 
-  public:
-    DumpRegister(RegisterClass<NUM, SIZE>* rc, RegisterIndex idx)
-        : ActionInterface(ActionType::DUMP_REG), rc(rc), idx(idx) {}
+    DumpRegister(isa::rf::RegisterClassType regtype, RegisterIndex idx)
+        : DumpRegister(nullptr, regtype, idx) {}
+    DumpRegister(
+        cpu::HartState* hs,
+        isa::rf::RegisterClassType regtype,
+        RegisterIndex idx)
+        : ActionInterface(ActionType::DUMP_REG, hs), regtype(regtype),
+          idx(idx) {}
     virtual ~DumpRegister() = default;
+
     void action(std::ostream* o = nullptr) override;
 
     static bool classof(const ActionInterface* ai) {
@@ -72,11 +83,10 @@ template <size_t NUM, size_t SIZE> class DumpRegister : public ActionInterface {
 };
 class DumpPC : public ActionInterface {
   public:
-    cpu::HartState* hs;
-
-  public:
-    DumpPC(cpu::HartState* hs) : ActionInterface(ActionType::DUMP_PC), hs(hs) {}
+    DumpPC() : DumpPC(nullptr) {}
+    DumpPC(cpu::HartState* hs) : ActionInterface(ActionType::DUMP_PC, hs) {}
     virtual ~DumpPC() = default;
+
     void action(std::ostream* o = nullptr) override;
 
     static bool classof(const ActionInterface* ai) {
@@ -85,13 +95,13 @@ class DumpPC : public ActionInterface {
 };
 class DumpMemoryAddress : public ActionInterface {
   public:
-    mem::MemoryImage* mi;
     Address addr;
 
-  public:
-    DumpMemoryAddress(mem::MemoryImage* mi, Address addr)
-        : ActionInterface(ActionType::DUMP_MEM_ADDR), mi(mi), addr(addr) {}
+    DumpMemoryAddress(Address addr) : DumpMemoryAddress(nullptr, addr) {}
+    DumpMemoryAddress(cpu::HartState* hs, Address addr)
+        : ActionInterface(ActionType::DUMP_MEM_ADDR, hs), addr(addr) {}
     virtual ~DumpMemoryAddress() = default;
+
     void action(std::ostream* o = nullptr) override;
 
     static bool classof(const ActionInterface* ai) {
@@ -99,12 +109,11 @@ class DumpMemoryAddress : public ActionInterface {
     }
 };
 class Stop : public ActionInterface {
-  private:
-    cpu::HartState* hs;
-
   public:
-    Stop(cpu::HartState* hs) : ActionInterface(ActionType::STOP), hs(hs) {}
+    Stop() : Stop(nullptr) {}
+    Stop(cpu::HartState* hs) : ActionInterface(ActionType::STOP, hs) {}
     virtual ~Stop() = default;
+
     void action(std::ostream* o = nullptr) override;
 
     static bool classof(const ActionInterface* ai) {
@@ -125,23 +134,85 @@ enum class ConditionType {
 class ConditionInterface {
   public:
     ConditionType ct;
-    ConditionInterface(ConditionType ct = ConditionType::NONE) : ct(ct) {}
+    cpu::HartState* hs;
+
+    ConditionInterface(
+        ConditionType ct = ConditionType::NONE,
+        cpu::HartState* hs = nullptr)
+        : ct(ct), hs(hs) {}
     virtual ~ConditionInterface() = default;
+
     virtual bool check() = 0;
+
     template <typename U> bool isa() { return U::classof(this); }
     template <typename U> U* cast() {
-        assert(isa<U>(this));
+        assert(this->isa<U>());
         return static_cast<U*>(this);
     }
 };
+class MemAddrEquals : public ConditionInterface {
+  public:
+    Address addr;
+    Integer i;
+
+    MemAddrEquals(Address addr, Integer i) : MemAddrEquals(nullptr, addr, i) {}
+    MemAddrEquals(cpu::HartState* hs, Address addr, Integer i)
+        : ConditionInterface(ConditionType::MEM_ADDR_EQ, hs), addr(addr), i(i) {
+    }
+    virtual ~MemAddrEquals() = default;
+
+    bool check() override {
+        return hs && *(uint64_t*)(hs->memimg.raw(addr)) == i;
+    }
+
+    static bool classof(const ConditionInterface* ci) {
+        return ci->ct == ConditionType::MEM_ADDR_EQ;
+    }
+};
+class RegisterEquals : public ConditionInterface {
+  public:
+    isa::rf::RegisterClassType regtype;
+    RegisterIndex idx;
+    Integer i;
+
+    RegisterEquals(
+        isa::rf::RegisterClassType regtype,
+        RegisterIndex idx,
+        Integer i)
+        : RegisterEquals(nullptr, regtype, idx, i) {}
+    RegisterEquals(
+        cpu::HartState* hs,
+        isa::rf::RegisterClassType regtype,
+        RegisterIndex idx,
+        Integer i)
+        : ConditionInterface(ConditionType::REG_EQ, hs), regtype(regtype),
+          idx(idx), i(i) {}
+
+    virtual ~RegisterEquals() = default;
+
+    bool check() override {
+        if(this->regtype == isa::rf::RegisterClassType::GPR) {
+            return hs && this->hs->rf.GPR.rawreg(idx) == i;
+        }
+        return false;
+    }
+
+    static bool classof(const ConditionInterface* ci) {
+        return ci->ct == ConditionType::REG_EQ;
+    }
+};
+
 class PCEquals : public ConditionInterface {
   public:
-    cpu::HartState* hs;
     Address addr;
+
+    PCEquals(Address addr) : PCEquals(nullptr, addr) {}
     PCEquals(cpu::HartState* hs, Address addr)
-        : ConditionInterface(ConditionType::PC_EQ), hs(hs), addr(addr) {}
+        : ConditionInterface(ConditionType::PC_EQ, hs), addr(addr) {}
     virtual ~PCEquals() = default;
+
     bool check() override { return hs && hs->pc == addr; }
+
     static bool classof(const ConditionInterface* ci) {
         return ci->ct == ConditionType::PC_EQ;
     }
@@ -150,7 +221,9 @@ class AlwaysTrue : public ConditionInterface {
   public:
     AlwaysTrue() : ConditionInterface(ConditionType::ALWAYS_TRUE) {}
     virtual ~AlwaysTrue() = default;
+
     bool check() override { return true; }
+
     static bool classof(const ConditionInterface* ci) {
         return ci->ct == ConditionType::ALWAYS_TRUE;
     }
