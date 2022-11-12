@@ -30,16 +30,12 @@ class ActionInterface {
     void operator()(std::ostream* o = nullptr) { this->action(o); }
     virtual void action(std::ostream* o = nullptr) = 0;
 
-    template <typename U> bool isa() {
-        // assert(this && "isa<> used on a null type.");
-        return U::classof(this);
-    }
+    template <typename U> bool isa() { return U::classof(this); }
     template <typename U> U* cast() {
-        // assert(isa<U>());
+        assert(isa<U>(this));
         return static_cast<U*>(this);
     }
 };
-
 
 // TODO: make the hs in the actioninterface, we always have it
 
@@ -50,7 +46,8 @@ class DumpRegisterClass : public ActionInterface {
 
   public:
     DumpRegisterClass(cpu::HartState* hs, isa::rf::RegisterClassType regtype)
-        : ActionInterface(ActionType::DUMP_REG_CLASS), hs(hs), regtype(regtype) {}
+        : ActionInterface(ActionType::DUMP_REG_CLASS), hs(hs),
+          regtype(regtype) {}
     virtual ~DumpRegisterClass() = default;
     void action(std::ostream* o = nullptr) override;
 
@@ -115,9 +112,6 @@ class Stop : public ActionInterface {
     }
 };
 } // namespace action
-// class Action_DUMP_REG : public {
-
-// };
 
 namespace condition {
 enum class ConditionType {
@@ -135,7 +129,10 @@ class ConditionInterface {
     virtual ~ConditionInterface() = default;
     virtual bool check() = 0;
     template <typename U> bool isa() { return U::classof(this); }
-    template <typename U> U* cast() { return static_cast<U*>(this); }
+    template <typename U> U* cast() {
+        assert(isa<U>(this));
+        return static_cast<U*>(this);
+    }
 };
 class PCEquals : public ConditionInterface {
   public:
@@ -219,11 +216,16 @@ struct CommandList {
 
         return actions;
     }
-        std::vector<std::shared_ptr<condition::ConditionInterface>> allConditions() {
+    std::vector<std::shared_ptr<condition::ConditionInterface>>
+    allConditions() {
         std::vector<std::shared_ptr<condition::ConditionInterface>> conditions;
         for(auto c : commands) {
-            if(std::shared_ptr<ConditionalCommand> ci = std::dynamic_pointer_cast<ConditionalCommand>(c)) {
-                conditions.insert(conditions.end(), ci->conditions.begin(), ci->conditions.end());
+            if(std::shared_ptr<ConditionalCommand> ci =
+                   std::dynamic_pointer_cast<ConditionalCommand>(c)) {
+                conditions.insert(
+                    conditions.end(),
+                    ci->conditions.begin(),
+                    ci->conditions.end());
             }
         }
 

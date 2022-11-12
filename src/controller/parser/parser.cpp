@@ -106,10 +106,14 @@ std::shared_ptr<action::ActionInterface> Parser::parse_action() {
         } else {
             // TODO
             auto reg_class = expect(TokenType::REGISTER_CLASS);
-            auto reg_class_type = isa::rf::getRegisterClassType(reg_class.lexeme);
-            if(reg_class_type == isa::rf::RegisterClassType::NONE) throw ParseException("Invalid Register Class Type");
+            auto reg_class_type =
+                isa::rf::getRegisterClassType(reg_class.lexeme);
+            if(reg_class_type == isa::rf::RegisterClassType::NONE)
+                throw ParseException("Invalid Register Class Type");
             // return nullptr;
-            return std::make_shared<action::DumpRegisterClass>(nullptr, reg_class_type);
+            return std::make_shared<action::DumpRegisterClass>(
+                nullptr,
+                reg_class_type);
         }
     } else if(lexer.peek().token_type == TokenType::PC) {
         expect(TokenType::PC);
@@ -159,7 +163,9 @@ std::shared_ptr<condition::ConditionInterface> Parser::parse_cond() {
         expect(TokenType::PC);
         expect(TokenType::EQUALS);
         auto num = expect(TokenType::NUM);
-        return std::make_shared<condition::PCEquals>(nullptr, strToAddress(num.lexeme));
+        return std::make_shared<condition::PCEquals>(
+            nullptr,
+            strToAddress(num.lexeme));
 
     } else throw ParseException("Unknown Condition");
 }

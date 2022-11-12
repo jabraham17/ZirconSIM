@@ -10,7 +10,6 @@ void DumpRegisterClass::action(std::ostream* o) {
             this->hs->rf.GPR.dump(*o);
             *o << std::endl;
         }
-
     }
 }
 template <size_t NUM, size_t SIZE>
