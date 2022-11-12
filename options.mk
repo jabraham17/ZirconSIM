@@ -82,7 +82,7 @@ override COMPILE_FLAGS+= -Wall -Wextra
 
 
 override CFLAGS+= $(COMPILE_FLAGS) -std=c11 -D_XOPEN_SOURCE=700
-override CXXFLAGS+= $(COMPILE_FLAGS) -std=c++14
+override CXXFLAGS+= $(COMPILE_FLAGS) -std=c++17
 override ASFLAGS+=
 override LDFLAGS+= $(LINK_FLAGS)
 override INCLUDE+=

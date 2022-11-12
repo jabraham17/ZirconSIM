@@ -65,8 +65,10 @@ struct IllegalInstructionException : public CPUException {
 };
 
 class Hart {
-  private:
+  public:
     HartState hs;
+
+  private:
     bool shouldHalt();
     // Subsystem: hart
     // Description: Fires just before current instruction is executed

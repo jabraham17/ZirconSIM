@@ -42,6 +42,7 @@
 
 - HartState is more accurately described as ThreadState
 - cleanup instruction specification, CUSTOM instructions are getting messy
+- refactor the cpu subdir, inconsistent namespace usage, inconsistent variable naming, better structure
 
 ## documentation
 

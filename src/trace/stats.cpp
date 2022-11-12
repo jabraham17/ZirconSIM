@@ -1,6 +1,6 @@
 #include "stats.h"
 #include "cpu/cpu.h"
-#include <cpu/isa/inst.h>
+#include "cpu/isa/inst.h"
 #include <functional>
 #include <iomanip>
 #include <sstream>

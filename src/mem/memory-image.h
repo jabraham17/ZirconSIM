@@ -86,7 +86,7 @@ class MemoryImage {
     event::Event<uint64_t, uint64_t, uint64_t, size_t> event_write;
     // Subsystem: mem
     // Description: Currently unimplemented
-    // Parameters: 
+    // Parameters:
     event::Event<uint64_t, uint64_t> event_exception;
     // Subsystem: mem
     // Description: Fires when memory is allocated

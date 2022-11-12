@@ -1,159 +1,141 @@
 
 
 #include "color/color.h"
+#include "common/argparse.hpp"
 #include "common/format.h"
+#include "controller/parser/parser.h"
 #include "cpu/cpu.h"
 #include "cpu/isa/inst.h"
 #include "elf/elf.h"
 #include "event/event.h"
 #include "mem/memory-image.h"
 #include "trace/stats.h"
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <popt.h>
+#include <sys/stat.h>
 #include <unordered_map>
 
-struct zircon_args {
-    char* file;
-    char* logfile;
-    int trace_inst;
-    char* trace_inst_file;
-    int trace_mem;
-    char* trace_mem_file;
-    int trace_reg;
-    char* trace_reg_file;
-    int stats;
-    int color;
-
-    zircon_args()
-        : file(strdup("a.out")), logfile(nullptr), trace_inst(false),
-          trace_inst_file(nullptr), trace_mem(false), trace_mem_file(nullptr),
-          trace_reg(false), trace_reg_file(nullptr), stats(false),
-          color(false) {}
-};
-
-// FIXME: this function relies upon the fnames for different files being the
-// same, this is not guaranteed to be the same.
-// CONSIDER: ./file.txt and ././file.txt and ../dir/file.txt could all be the
-// same file
-auto getFileStreamIfTrue(bool cond, char* fname, std::ostream& alternative) {
+std::ostream* getFileStreamIfTrue(
+    bool cond,
+    std::optional<std::string> fname,
+    std::ostream& alternative) {
     static std::unordered_map<std::string, std::ostream*> file_buffer;
-    auto inst_log = (&alternative);
+    auto inst_log = &alternative;
     if(cond && fname) {
-        auto it = file_buffer.find(fname);
+        // compare existing stats, if file already exists in buffer use that
+        // ostream
+        struct stat fname_info;
+        if(stat(fname->c_str(), &fname_info) != 0) return nullptr;
+        auto it = std::find_if(
+            file_buffer.begin(),
+            file_buffer.end(),
+            [fname_info](auto file_entry) {
+                struct stat file_entry_info;
+                if(stat(file_entry.first.c_str(), &file_entry_info) == 0) {
+                    return fname_info.st_dev == file_entry_info.st_dev &&
+                           fname_info.st_ino == file_entry_info.st_ino;
+                }
+                return false;
+            });
         if(it != file_buffer.end()) {
             // return old file handle
             inst_log = it->second;
         } else {
             // open new file handle
-            auto handle = (new std::ofstream(fname));
-            file_buffer[fname] = handle;
+            auto handle = (new std::ofstream(*fname));
+            file_buffer[*fname] = handle;
             inst_log = handle;
         }
     }
     return inst_log;
 }
 
-int main(int argc, const char** argv) {
-    // https://linux.die.net/man/3/popt
-    //  struct poptOption {
-    //    const char* longName;
-    //    char shortName;
-    //    int argInfo;
-    //    void* arg;
-    //    int val;
-    //    char* descrip;
-    //    char* argDescrip;
-    //  };
-    zircon_args args;
-    struct poptOption options[] = {
-        {"file",
-         'f',
-         POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.file,
-         0,
-         "elf64 file execute read from",
-         "FILE"},
-        {"color",
-         'c',
-         POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.color,
-         0,
-         "colorize output",
-         0},
-        {"output",
-         'o',
-         POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.logfile,
-         0,
-         "output log file",
-         "OUTPUT"},
-        {"trace-inst",
-         'I',
-         POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.trace_inst,
-         0,
-         "trace instructions",
-         0},
-        {"trace-inst-file",
-         0,
-         POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.trace_inst_file,
-         0,
-         "instructions log file",
-         0},
-        {"trace-mem",
-         'M',
-         POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.trace_mem,
-         0,
-         "trace memory",
-         0},
-        {"trace-mem-file",
-         0,
-         POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.trace_mem_file,
-         0,
-         "memory log file",
-         0},
-        {"trace-reg",
-         'R',
-         POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.trace_reg,
-         0,
-         "trace registers",
-         0},
-        {"trace-reg-file",
-         0,
-         POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.trace_reg_file,
-         0,
-         "register log file",
-         0},
-        {"stats",
-         'S',
-         POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,
-         &args.stats,
-         0,
-         "log statistics",
-         0},
-        POPT_AUTOHELP POPT_TABLEEND};
-
-    poptContext optCon = poptGetContext(argv[0], argc, argv, options, 0);
-    char rc;
-    while((rc = poptGetNextOpt(optCon)) >= 0) {
+auto stringsplit(std::string s, std::string delim = ",") {
+    std::vector<std::string> tokens;
+    size_t pos = 0;
+    std::string token;
+    while((pos = s.find(delim)) != std::string::npos) {
+        token = s.substr(0, pos);
+        tokens.push_back(token);
+        s.erase(0, pos + delim.length());
     }
-    if(rc < -1) {
-        fprintf(
-            stderr,
-            "Option Error on '%s': %s\n",
-            poptBadOption(optCon, POPT_BADOPTION_NOALIAS),
-            poptStrerror(rc));
+    tokens.push_back(s);
+    return tokens;
+}
+
+int main(int argc, const char** argv) {
+
+    argparse::ArgumentParser program_args(
+        {},
+        {},
+        argparse::default_arguments::help);
+
+    program_args.add_argument("file").help("elf64 file execute read from");
+
+    program_args.add_argument("-c", "--color")
+        .default_value(false)
+        .implicit_value(true)
+        .help("colorize output");
+
+    program_args.add_argument("-I", "--inst")
+        .default_value(false)
+        .implicit_value(true)
+        .help("trace instructions");
+    program_args.add_argument("--inst-log")
+        .metavar("LOGFILE")
+        .help("instructions log file");
+
+    program_args.add_argument("-R", "--reg")
+        .default_value(false)
+        .implicit_value(true)
+        .help("trace register accesses");
+    program_args.add_argument("--reg-log")
+        .metavar("LOGFILE")
+        .help("register accesses log file");
+
+    program_args.add_argument("-M", "--mem")
+        .default_value(false)
+        .implicit_value(true)
+        .help("trace memory accesses");
+    program_args.add_argument("--mem-log")
+        .metavar("LOGFILE")
+        .help("memory accesses log file");
+
+    program_args.add_argument("-S", "--stats")
+        .default_value(false)
+        .implicit_value(true)
+        .help("dump runtime statistics");
+
+    program_args.add_argument("-control")
+        .nargs(2, 3)
+        .append()
+        .metavar("CONTROL")
+        .help("a control sequence to apply");
+
+    // everything after -- gets shoved into the remaining args
+    std::vector<std::string> remaining_args;
+    int newargc = argc;
+    for(int i = 0; i < argc; i++) {
+        if(argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == '\0') {
+            newargc = i;
+            for(i = i + 1; i < argc; i++) {
+                remaining_args.push_back(argv[i]);
+            }
+            break;
+        }
+    }
+
+    try {
+        program_args.parse_args(newargc, argv);
+    } catch(const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program_args;
         return 1;
     }
 
-    std::string filename = args.file;
+    std::string filename = program_args.get<std::string>("file");
     std::ifstream is(filename, std::ios::binary);
     if(!is) {
         std::cerr << "Failed to open '" << filename << "'" << std::endl;
@@ -161,50 +143,111 @@ int main(int argc, const char** argv) {
     }
 
     auto inst_log = getFileStreamIfTrue(
-        args.trace_inst && args.trace_inst_file,
-        args.trace_inst_file,
+        program_args.get<bool>("--inst") && program_args.present("--inst-log"),
+        program_args.present<std::string>("--inst-log"),
         std::cout);
+    if(!inst_log) {
+        std::cerr << "Failed to open '"
+                  << *program_args.present<std::string>("--inst-log") << "'"
+                  << std::endl;
+        return 1;
+    }
+
     auto mem_log = getFileStreamIfTrue(
-        args.trace_mem && args.trace_mem_file,
-        args.trace_reg_file,
+        program_args.get<bool>("--mem") && program_args.present("--mem-log"),
+        program_args.present<std::string>("--mem-log"),
         std::cout);
+    if(!mem_log) {
+        std::cerr << "Failed to open '"
+                  << *program_args.present<std::string>("--mem-log") << "'"
+                  << std::endl;
+        return 1;
+    }
+
     auto reg_log = getFileStreamIfTrue(
-        args.trace_reg && args.trace_reg_file,
-        args.trace_reg_file,
+        program_args.get<bool>("--reg") && program_args.present("--reg-log"),
+        program_args.present<std::string>("--reg-log"),
         std::cout);
+    if(!reg_log) {
+        std::cerr << "Failed to open '"
+                  << *program_args.present<std::string>("--reg-log") << "'"
+                  << std::endl;
+        return 1;
+    }
 
     elf::File f(std::move(is));
     mem::MemoryImage memimg(0x800000);
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
+    bool useColor = program_args.get<bool>("--color");
+    cpu::Hart hart(memimg);
 
-    auto colorAddr = [args]() {
-        return args.color ? color::getColor(
-                                {color::ColorCode::LIGHT_CYAN,
-                                 color::ColorCode::FAINT})
-                          : "";
+    auto colorAddr = [useColor]() {
+        return useColor ? color::getColor(
+                              {color::ColorCode::LIGHT_CYAN,
+                               color::ColorCode::FAINT})
+                        : "";
     };
-    auto colorHex = [args]() {
-        return args.color
-                   ? color::getColor(
-                         {color::ColorCode::CYAN, color::ColorCode::FAINT})
-                   : "";
+    auto colorHex = [useColor]() {
+        return useColor ? color::getColor(
+                              {color::ColorCode::CYAN, color::ColorCode::FAINT})
+                        : "";
     };
-    auto colorNew = [args]() {
-        return args.color
+    auto colorNew = [useColor]() {
+        return useColor
                    ? color::getColor(
                          {color::ColorCode::GREEN, color::ColorCode::FAINT})
                    : "";
     };
-    auto colorOld = [args]() {
-        return args.color
-                   ? color::getColor(
-                         {color::ColorCode::RED, color::ColorCode::FAINT})
-                   : "";
+    auto colorOld = [useColor]() {
+        return useColor ? color::getColor(
+                              {color::ColorCode::RED, color::ColorCode::FAINT})
+                        : "";
     };
-    auto colorReset = [args]() { return args.color ? color::getReset() : ""; };
+    auto colorReset = [useColor]() {
+        return useColor ? color::getReset() : "";
+    };
 
-    if(args.trace_mem) {
+    if(program_args.get<bool>("--inst")) {
+        hart.addBeforeExecuteListener(
+            [inst_log, useColor, colorReset, colorHex, colorAddr](
+                cpu::HartState& hs) {
+                auto inst = hs.getInstWord();
+                *inst_log << "PC[" << colorAddr() << common::Format::doubleword
+                          << hs.pc << colorReset() << "] = " << colorHex()
+                          << common::Format::word << inst << colorReset()
+                          << "; "
+                          << isa::inst::disassemble(inst, hs.pc, useColor)
+                          << std::endl;
+            });
+    }
+
+    if(program_args.get<bool>("--reg")) {
+        hart.addRegisterReadListener([reg_log, colorReset, colorAddr, colorNew](
+                                         std::string classname,
+                                         uint64_t idx,
+                                         uint64_t value) {
+            *reg_log << "RD " << classname << "[" << colorAddr()
+                     << common::Format::dec << idx << colorReset()
+                     << "] = " << colorNew() << common::Format::doubleword
+                     << (uint64_t)value << colorReset() << std::endl;
+        });
+        hart.addRegisterWriteListener(
+            [reg_log, colorReset, colorAddr, colorNew, colorOld](
+                std::string classname,
+                uint64_t idx,
+                uint64_t value,
+                uint64_t oldvalue) {
+                *reg_log << "WR " << classname << "[" << colorAddr()
+                         << common::Format::dec << idx << colorReset()
+                         << "] = " << colorNew() << common::Format::doubleword
+                         << (uint64_t)value << colorReset()
+                         << "; OLD VALUE = " << colorOld()
+                         << common::Format::doubleword << oldvalue
+                         << colorReset() << std::endl;
+            });
+    }
+    if(program_args.get<bool>("--mem")) {
         memimg.addAllocationListener(
             [mem_log, colorReset, colorAddr](uint64_t addr, uint64_t size) {
                 *mem_log << "ALLOCATE[" << colorAddr()
@@ -237,59 +280,134 @@ int main(int argc, const char** argv) {
                          << colorReset() << std::endl;
             });
     }
-
-    cpu::Hart hart(memimg);
-
-    if(args.trace_inst) {
-        hart.addBeforeExecuteListener(
-            [inst_log, args, colorReset, colorHex, colorAddr](
-                cpu::HartState& hs) {
-                auto inst = hs.getInstWord();
-                *inst_log << "PC[" << colorAddr() << common::Format::doubleword
-                          << hs.pc << colorReset() << "] = " << colorHex()
-                          << common::Format::word << inst << colorReset()
-                          << "; "
-                          << isa::inst::disassemble(inst, hs.pc, args.color)
-                          << std::endl;
-            });
-    }
-
-    if(args.trace_reg) {
-        hart.addRegisterReadListener([reg_log, colorReset, colorAddr, colorNew](
-                                         std::string classname,
-                                         uint64_t idx,
-                                         uint64_t value) {
-            *reg_log << "RD " << classname << "[" << colorAddr()
-                     << common::Format::dec << idx << colorReset()
-                     << "] = " << colorNew() << common::Format::doubleword
-                     << (uint64_t)value << colorReset() << std::endl;
-        });
-        hart.addRegisterWriteListener(
-            [reg_log, colorReset, colorAddr, colorNew, colorOld](
-                std::string classname,
-                uint64_t idx,
-                uint64_t value,
-                uint64_t oldvalue) {
-                *reg_log << "WR " << classname << "[" << colorAddr()
-                         << common::Format::dec << idx << colorReset()
-                         << "] = " << colorNew() << common::Format::doubleword
-                         << (uint64_t)value << colorReset()
-                         << "; OLD VALUE = " << colorOld()
-                         << common::Format::doubleword << oldvalue
-                         << colorReset() << std::endl;
-            });
-    }
-
     Stats stats;
-    if(args.stats) {
+    if(program_args.get<bool>("--stats")) {
         hart.addBeforeExecuteListener(
             [&stats](cpu::HartState& hs) { stats.count(hs); });
     }
 
+    // add commandline args
+    auto control_args = program_args.get<std::vector<std::string>>("-control");
+    if(!control_args.empty()) {
+        auto parser = controller::parser::Parser(control_args);
+        auto parsed_commands = parser.parse();
+        // i have to cast anyways to get this, might be better to remove the
+        // constructor part and just makie it a function call with no
+        // virtuallyness
+        for(auto a : parsed_commands.allActions()) {
+            if(a->isa<controller::action::DumpPC>()) {
+                a->cast<controller::action::DumpPC>()->hs = &hart.hs;
+            }
+            if(a->isa<controller::action::DumpRegisterClass>()) {
+                a->cast<controller::action::DumpRegisterClass>()->hs = &hart.hs;
+            }
+        }
+        for(auto c : parsed_commands.allConditions()) {
+            if(c->isa<controller::condition::PCEquals>()) {
+                c->cast<controller::condition::PCEquals>()->hs = &hart.hs;
+            }
+        }
+        for(auto c : parsed_commands.commands) {
+            switch(c->getEventType()) {
+                case event::EventType::HART_AFTER_EXECUTE:
+                    hart.addAfterExecuteListener(
+                        [c](cpu::HartState& hs) { c->doit(&std::cout); });
+                    break;
+                case event::EventType::HART_BEFORE_EXECUTE:
+                    hart.addBeforeExecuteListener(
+                        [c](cpu::HartState& hs) { c->doit(&std::cout); });
+                    break;
+                case event::EventType::MEM_READ:
+                    hart.hs.memimg.addReadListener(
+                        [c](uint64_t, uint64_t, size_t) {
+                            c->doit(&std::cout);
+                        });
+                    break;
+                case event::EventType::MEM_WRITE:
+                    hart.hs.memimg.addWriteListener(
+                        [c](uint64_t, uint64_t, uint64_t, size_t) {
+                            c->doit(&std::cout);
+                        });
+                    break;
+                case event::EventType::MEM_ALLOCATION:
+                    hart.hs.memimg.addAllocationListener(
+                        [c](uint64_t, uint64_t) { c->doit(&std::cout); });
+                    break;
+                case event::EventType::REG_READ:
+                    hart.hs.rf.addReadListener(
+                        [c](std::string, uint64_t, uint64_t) {
+                            c->doit(&std::cout);
+                        });
+                    break;
+                case event::EventType::REG_WRITE:
+                    hart.hs.rf.addWriteListener(
+                        [c](std::string, uint64_t, uint64_t, uint64_t) {
+                            c->doit(&std::cout);
+                        });
+                    break;
+                default: std::cerr << "No Event Handler Defined\n";
+            }
+        }
+        // for(auto c : parsed) {
+
+        // }
+    }
+    // size_t control_idx = 0;
+
+    // while(control_idx < control_args.size()) {
+    //     std::string event_str = control_args[control_idx];
+    //     control_idx++;
+    //     auto event = event::parseEventName(event_str);
+    //     switch(event) {
+    //         case event::EventType::INST_AFTER_EXECUTE: {
+    //             // check if we have 2 more args or 1 more arg
+    //             std::string actions = control_idx < control_args.size()
+    //                                       ? control_args[control_idx]
+    //                                       : "";
+    //             std::string cond = control_idx + 1 < control_args.size()
+    //                                    ? control_args[control_idx + 1]
+    //                                    : "";
+
+    //             if(actions != "" && cond != "") {
+    //                 control_idx += 2;
+    //                 std::cerr << "unimp\n";
+    //             } else if(actions != "" && cond == "") {
+    //                 // one arg, actions only
+    //                 control_idx++;
+    //                 auto action_tokens = stringsplit(actions, ",");
+    //                 std::vector<event::ActionType> action_types;
+    //                 std::transform(
+    //                     action_tokens.cbegin(),
+    //                     action_tokens.cend(),
+    //                     std::back_inserter(action_types),
+    //                     [](auto t) { return event::parseActionName(t); });
+    //                 hart.addAfterExecuteListener(
+    //                     [action_types](cpu::HartState& hs) {
+    //                         for(auto a : action_types) {
+    //                             switch(a) {
+    //                                 case event::ActionType::DUMP_REGS:
+    //                                     hs.rf.GPR.dump(std::cout);
+    //                                     std::cout << "\n";
+    //                                     break;
+    //                                 default: break;
+    //                             }
+    //                         }
+    //                     });
+
+    //             } else {
+    //                 std::cerr << "ERRRRRR\n";
+    //             }
+
+    //             break;
+    //         }
+    //         default: break;
+    //     }
+    // }
+
     hart.init();
     hart.execute(start);
 
-    if(args.stats) {
+    if(program_args.get<bool>("--stats")) {
         std::cout << stats.dump() << std::endl;
     }
 

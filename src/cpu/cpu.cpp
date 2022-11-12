@@ -32,7 +32,7 @@ bool Hart::shouldHalt() {
         op == isa::inst::Opcode::rv32i_jal && jmp_target == hs.pc.previous());
 }
 
-char* mystr = "hello world";
+std::string mystr = "hello world";
 
 uint64_t write_str(HartState& hs, char* s) {
     int len = strlen(s) + 1; // need to inlcude nullbyte
@@ -162,8 +162,9 @@ void Hart::init_stack() {
 
     // argv
     hs.memimg.doubleword(sp + 24) = 0;
-    hs.memimg.doubleword(sp + 16) = write_str(hs, "testing");
-    hs.memimg.doubleword(sp + 8) = write_str(hs, mystr);
+    std::string t = "testing";
+    hs.memimg.doubleword(sp + 16) = write_str(hs, (char*)t.c_str());
+    hs.memimg.doubleword(sp + 8) = write_str(hs, (char*)mystr.c_str());
 
     // rest of argv
 
@@ -175,7 +176,7 @@ void Hart::init_stack() {
 
 void Hart::init_heap() {
     // initial heap size is 0
-    uint64_t SPACING = 0x10000;
+    // uint64_t SPACING = 0x10000;
     hs.memory_locations["heap_start"] = 0x100000000;
 
     // hs.memory_locations["stack_end"] + SPACING;

@@ -7,6 +7,15 @@
 namespace isa {
 namespace rf {
 
+enum class RegisterClassType {
+#define REGISTER_CLASS(r, ...) r,
+#include "defs/registers.inc"
+    NONE,
+};
+bool isRegisterClassType(std::string s);
+
+RegisterClassType getRegisterClassType(std::string s);
+
 class RegisterFile {
   public:
 #define REG_CASE(...) MAKE_REGISTER(__VA_ARGS__),

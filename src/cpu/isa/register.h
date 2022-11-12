@@ -52,8 +52,9 @@ template <size_t SIZE> class Register {
 
     const std::string& getName() { return name; }
     void dump(std::ostream& o) {
-        o << getName() << " 0x" << std::setfill('0') << std::setw(16)
-          << std::right << std::hex << value;
+        o << std::setfill(' ') << std::setw(4) << getName() << " 0x"
+          << std::setfill('0') << std::setw(16) << std::right << std::hex
+          << value;
     }
 };
 
@@ -106,6 +107,11 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
         : classname(classname), regprefix(regprefix), registers(registers) {}
     RegisterClass() = default;
 
+    Register<SIZE>& rawreg(unsigned idx) {
+        assert(idx < NUM);
+        return registers[idx];
+    }
+
     RegisterProxy reg(unsigned idx) {
         assert(idx < NUM);
         return RegisterProxy(this, idx);
@@ -118,10 +124,9 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
         auto half = NUM / 2;
         for(size_t i = 0; i < half; i++) {
             o << "\n";
-            o << std::setfill(' ') << std::setw(32);
-            reg(i).dump(o);
-            o << std::setfill(' ') << std::setw(32);
-            reg(half + i).dump(o);
+            rawreg(i).dump(o);
+            o << " ";
+            rawreg(half + i).dump(o);
         }
     }
 
