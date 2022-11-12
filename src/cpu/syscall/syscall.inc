@@ -30,9 +30,15 @@ MAP_SYSCALL(getuid, 102, 174)
 #ifndef __EMSCRIPTEN__
 MAP_SYSCALL(ioctl, 54, 29)
 #else
-EMULATE_SYSCALL(ioctl, 29,
-hs.rf.GPR[10] = __syscall_ioctl(hs.rf.GPR[10], hs.rf.GPR[11], hs.rf.GPR[12], hs.rf.GPR[13], hs.rf.GPR[14], hs.rf.GPR[15]);
-)
+EMULATE_SYSCALL(ioctl,
+                29,
+                hs.rf.GPR[10] = __syscall_ioctl(
+                    hs.rf.GPR[10],
+                    hs.rf.GPR[11],
+                    hs.rf.GPR[12],
+                    hs.rf.GPR[13],
+                    hs.rf.GPR[14],
+                    hs.rf.GPR[15]);)
 #endif
 
 EMULATE_SYSCALL(fstat, 80, uint64_t fildes = hs.rf.GPR[10];
@@ -112,9 +118,9 @@ EMULATE_SYSCALL(set_tid_address, 96, uint64_t addr = hs.rf.GPR[10];
                 int* tidptr = addr ? (int*)hs.memimg.raw(addr) : 0;
                 hs.rf.GPR[10] = syscall(SYS_set_tid_address, tidptr);)
 #else
-// FIXME: no concept of set_tid_address in emscripten, whats the better translation here
-EMULATE_SYSCALL(set_tid_address, 96,
-                hs.rf.GPR[10] = gettid())
+// FIXME: no concept of set_tid_address in emscripten, whats the better
+// translation here
+EMULATE_SYSCALL(set_tid_address, 96, hs.rf.GPR[10] = gettid())
 #endif
 // brk called with 0 returns the end of the heap
 EMULATE_SYSCALL(
@@ -134,7 +140,7 @@ EMULATE_SYSCALL(
             hs.rf.GPR[10] = -EINVAL;
             ;
         } else {
-            int prot = int(hs.rf.GPR[12]);
+            // int prot = int(hs.rf.GPR[12]);
             int flags = int(hs.rf.GPR[13]);
             int fd = uint64_t(hs.rf.GPR[14]);
             off_t offset = off_t(hs.rf.GPR[15]);
