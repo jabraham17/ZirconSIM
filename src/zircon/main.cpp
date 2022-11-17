@@ -27,7 +27,10 @@ std::ostream* getFileStreamIfTrue(
         // compare existing stats, if file already exists in buffer use that
         // ostream
         struct stat fname_info;
-        if(stat(fname->c_str(), &fname_info) != 0) return nullptr;
+        auto stat_resno = stat(fname->c_str(), &fname_info);
+        bool exists_in_file_buffer = false;
+        if(stat_resno != 0) exists_in_file_buffer = false;
+        
         auto it = std::find_if(
             file_buffer.begin(),
             file_buffer.end(),
@@ -42,27 +45,18 @@ std::ostream* getFileStreamIfTrue(
         if(it != file_buffer.end()) {
             // return old file handle
             inst_log = it->second;
-        } else {
+            exists_in_file_buffer = true;
+        } 
+        
+        if(!exists_in_file_buffer) {
             // open new file handle
             auto handle = (new std::ofstream(*fname));
             file_buffer[*fname] = handle;
             inst_log = handle;
         }
+        
     }
     return inst_log;
-}
-
-auto stringsplit(std::string s, std::string delim = ",") {
-    std::vector<std::string> tokens;
-    size_t pos = 0;
-    std::string token;
-    while((pos = s.find(delim)) != std::string::npos) {
-        token = s.substr(0, pos);
-        tokens.push_back(token);
-        s.erase(0, pos + delim.length());
-    }
-    tokens.push_back(s);
-    return tokens;
 }
 
 int main(int argc, const char** argv) {
@@ -86,6 +80,12 @@ int main(int argc, const char** argv) {
     program_args.add_argument("--inst-log")
         .metavar("LOGFILE")
         .help("instructions log file");
+
+    program_args.add_argument("--csv")
+        .default_value(false)
+        .implicit_value(true)
+        .help("enable csv output for supported traces (only supported for "
+              "'mem')");
 
     program_args.add_argument("-R", "--reg")
         .default_value(false)
@@ -248,37 +248,62 @@ int main(int argc, const char** argv) {
             });
     }
     if(program_args.get<bool>("--mem")) {
-        memimg.addAllocationListener(
-            [mem_log, colorReset, colorAddr](uint64_t addr, uint64_t size) {
-                *mem_log << "ALLOCATE[" << colorAddr()
-                         << common::Format::doubleword << addr << colorReset()
-                         << " - " << colorAddr() << common::Format::doubleword
-                         << addr + size << colorReset() << "]" << std::endl;
-            });
+        if(!program_args.get<bool>("--csv")) {
+            memimg.addAllocationListener(
+                [mem_log, colorReset, colorAddr](uint64_t addr, uint64_t size) {
+                    *mem_log << "ALLOCATE[" << colorAddr()
+                             << common::Format::doubleword << addr
+                             << colorReset() << " - " << colorAddr()
+                             << common::Format::doubleword << addr + size
+                             << colorReset() << "]" << std::endl;
+                });
 
-        memimg.addReadListener([mem_log, colorReset, colorAddr, colorNew](
-                                   uint64_t addr,
-                                   uint64_t value,
-                                   size_t size) {
-            *mem_log << "RD MEM[" << colorAddr() << common::Format::doubleword
-                     << addr << colorReset() << "] = " << colorNew()
-                     << common::Format::hexnum(size) << (uint64_t)value
-                     << colorReset() << std::endl;
-        });
-        memimg.addWriteListener(
-            [mem_log, colorReset, colorAddr, colorNew, colorOld](
-                uint64_t addr,
-                uint64_t value,
-                uint64_t oldvalue,
-                size_t size) {
-                *mem_log << "WR MEM[" << colorAddr()
+            memimg.addReadListener([mem_log, colorReset, colorAddr, colorNew](
+                                       uint64_t addr,
+                                       uint64_t value,
+                                       size_t size) {
+                *mem_log << "RD MEM[" << colorAddr()
                          << common::Format::doubleword << addr << colorReset()
                          << "] = " << colorNew() << common::Format::hexnum(size)
-                         << (uint64_t)value << colorReset()
-                         << "; OLD VALUE = " << colorOld()
-                         << common::Format::hexnum(size) << oldvalue
-                         << colorReset() << std::endl;
+                         << (uint64_t)value << colorReset() << std::endl;
             });
+            memimg.addWriteListener(
+                [mem_log, colorReset, colorAddr, colorNew, colorOld](
+                    uint64_t addr,
+                    uint64_t value,
+                    uint64_t oldvalue,
+                    size_t size) {
+                    *mem_log << "WR MEM[" << colorAddr()
+                             << common::Format::doubleword << addr
+                             << colorReset() << "] = " << colorNew()
+                             << common::Format::hexnum(size) << (uint64_t)value
+                             << colorReset() << "; OLD VALUE = " << colorOld()
+                             << common::Format::hexnum(size) << oldvalue
+                             << colorReset() << std::endl;
+                });
+        } else {
+            memimg.addReadListener(
+                [mem_log](uint64_t addr, uint64_t value, size_t size) {
+                    *mem_log << "rd-mem," << addr << ",";
+                    if(size == 1) *mem_log << (uint8_t)value;
+                    else if(size == 2) *mem_log << (uint16_t)value;
+                    else if(size == 4) *mem_log << (uint32_t)value;
+                    else *mem_log << value;
+                    *mem_log << std::endl;
+                });
+            memimg.addWriteListener([mem_log](
+                                        uint64_t addr,
+                                        uint64_t value,
+                                        uint64_t oldvalue,
+                                        size_t size) {
+                    *mem_log << "wr-mem," << addr << ",";
+                    if(size == 1) *mem_log << (uint8_t)value;
+                    else if(size == 2) *mem_log << (uint16_t)value;
+                    else if(size == 4) *mem_log << (uint32_t)value;
+                    else *mem_log << value;
+                    *mem_log << std::endl;
+            });
+        }
     }
     Stats stats;
     if(program_args.get<bool>("--stats")) {
@@ -339,8 +364,6 @@ int main(int argc, const char** argv) {
             }
         }
     }
-
-   
 
     hart.init();
     hart.execute(start);
