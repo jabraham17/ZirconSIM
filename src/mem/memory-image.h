@@ -156,6 +156,10 @@ class MemoryImage {
 
     void allocate(uint64_t addr, uint64_t size) {
         event_allocation(addr, size);
+        if(size == 0) return;
+        if(getMemoryRegion(addr)) {
+            throw MemoryException();
+        }
         allocateMemoryRegion(addr, size);
     }
 
