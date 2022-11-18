@@ -17,6 +17,11 @@
     F(COLON)                                                                   \
     F(COMMA)                                                                   \
     F(EQUALS)                                                                  \
+    F(LESSTHAN)                                                                \
+    F(LESSTHAN_EQUALTO)                                                                \
+    F(GREATERTHAN)                                                             \
+    F(GREATERTHAN_EQUALTO)                                                             \
+    F(NOTEQUAL)                                                                \
     F(LBRACK)                                                                  \
     F(RBRACK)                                                                  \
     F(NUM)

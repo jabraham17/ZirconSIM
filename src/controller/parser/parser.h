@@ -41,6 +41,8 @@ class Parser {
     action            -> REGISTER_CLASS | register | PC | mem | STOP
     cond_list         -> cond | cond COMMA cond_list
     cond              -> register EQUALS NUM | mem EQUALS NUM | PC EQUALS NUM
+    cond_op           -> EQUALS | NOTEQUAL
+    cond_op           -> LESSTHAN | LESSTHAN_EQUALTO | GREATERTHAN_EQUALTO
     register          -> REGISTER_CLASS LBRACK NUM RBRACK
     mem               -> MEM LBRACK NUM RBRACK
     */
@@ -58,6 +60,8 @@ class Parser {
     std::vector<std::shared_ptr<condition::ConditionInterface>>
     parse_cond_list();
     std::shared_ptr<condition::ConditionInterface> parse_cond();
+    condition::ComparisonType parse_cond_op();
+    bool is_cond_op(TokenType tt);
     std::pair<isa::rf::RegisterClassType, RegisterIndex> parse_register();
     Address parse_mem();
 };

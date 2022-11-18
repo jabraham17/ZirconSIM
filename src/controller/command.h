@@ -124,11 +124,52 @@ class Stop : public ActionInterface {
 
 namespace condition {
 enum class ConditionType {
-    MEM_ADDR_EQ,
-    REG_EQ,
-    PC_EQ,
+    MEM_ADDR_CMP,
+    REG_CMP,
+    PC_CMP,
     ALWAYS_TRUE,
     NONE,
+};
+class ComparisonType {
+  private:
+    using ValueType = int;
+    ValueType value_;
+
+  public:
+  static const ValueType NONE = 0;
+    static const ValueType EQ = 1;
+    static const ValueType NEQ = 2;
+    static const ValueType LT = 3;
+    static const ValueType GT = 4;
+    static const ValueType LTE = 5;
+    static const ValueType GTE = 6;
+
+  public:
+    ComparisonType(ValueType v) : value_(v) {}
+    ComparisonType() : value_(NONE) {}
+    ComparisonType& operator=(const ValueType& v) {
+        this->value_ = v;
+        return *this;
+    }
+    operator ValueType() const { return this->value_; }
+    template <typename T>
+    bool compare(T a, T b) {
+        switch(this->value_) {
+            case ComparisonType::EQ: return a == b;
+            case ComparisonType::NEQ: return a != b;
+            case ComparisonType::LT: return a < b;
+            case ComparisonType::GT: return a > b;
+            case ComparisonType::LTE: return a <= b;
+            case ComparisonType::GTE: return a >= b;
+            case ComparisonType::NONE:
+            default:
+            return false;
+        }
+    }
+    template <typename T>
+    bool operator()(T a, T b) {
+        return compare<T>(a, b);
+    }
 };
 
 class ConditionInterface {
@@ -150,71 +191,81 @@ class ConditionInterface {
         return static_cast<U*>(this);
     }
 };
-class MemAddrEquals : public ConditionInterface {
+class MemAddrCompare : public ConditionInterface {
   public:
     Address addr;
     Integer i;
+    ComparisonType ct;
 
-    MemAddrEquals(Address addr, Integer i) : MemAddrEquals(nullptr, addr, i) {}
-    MemAddrEquals(cpu::HartState* hs, Address addr, Integer i)
-        : ConditionInterface(ConditionType::MEM_ADDR_EQ, hs), addr(addr), i(i) {
-    }
-    virtual ~MemAddrEquals() = default;
+    MemAddrCompare(Address addr, Integer i, ComparisonType ct)
+        : MemAddrCompare(nullptr, addr, i, ct) {}
+    MemAddrCompare(
+        cpu::HartState* hs,
+        Address addr,
+        Integer i,
+        ComparisonType ct)
+        : ConditionInterface(ConditionType::MEM_ADDR_CMP, hs), addr(addr), i(i),
+          ct(ct) {}
+    virtual ~MemAddrCompare() = default;
 
     bool check() override {
-        return hs && *(uint64_t*)(hs->memimg.raw(addr)) == i;
+        return hs && ct((*(uint64_t*)(hs->memimg.raw(addr))), i);
     }
 
     static bool classof(const ConditionInterface* ci) {
-        return ci->ct == ConditionType::MEM_ADDR_EQ;
+        return ci->ct == ConditionType::MEM_ADDR_CMP;
     }
 };
-class RegisterEquals : public ConditionInterface {
+class RegisterCompare : public ConditionInterface {
   public:
     isa::rf::RegisterClassType regtype;
     RegisterIndex idx;
     Integer i;
+    ComparisonType ct;
 
-    RegisterEquals(
+    RegisterCompare(
         isa::rf::RegisterClassType regtype,
         RegisterIndex idx,
-        Integer i)
-        : RegisterEquals(nullptr, regtype, idx, i) {}
-    RegisterEquals(
+        Integer i,
+        ComparisonType ct)
+        : RegisterCompare(nullptr, regtype, idx, i, ct) {}
+    RegisterCompare(
         cpu::HartState* hs,
         isa::rf::RegisterClassType regtype,
         RegisterIndex idx,
-        Integer i)
-        : ConditionInterface(ConditionType::REG_EQ, hs), regtype(regtype),
-          idx(idx), i(i) {}
+        Integer i,
+        ComparisonType ct)
+        : ConditionInterface(ConditionType::REG_CMP, hs), regtype(regtype),
+          idx(idx), i(i), ct(ct) {}
 
-    virtual ~RegisterEquals() = default;
+    virtual ~RegisterCompare() = default;
 
     bool check() override {
         if(this->regtype == isa::rf::RegisterClassType::GPR) {
-            return hs && this->hs->rf.GPR.rawreg(idx) == i;
+            return hs && ct(uint64_t(this->hs->rf.GPR.rawreg(idx)), i);
         }
         return false;
     }
 
     static bool classof(const ConditionInterface* ci) {
-        return ci->ct == ConditionType::REG_EQ;
+        return ci->ct == ConditionType::REG_CMP;
     }
 };
 
-class PCEquals : public ConditionInterface {
+class PCCompare : public ConditionInterface {
   public:
     Address addr;
+    ComparisonType ct;
 
-    PCEquals(Address addr) : PCEquals(nullptr, addr) {}
-    PCEquals(cpu::HartState* hs, Address addr)
-        : ConditionInterface(ConditionType::PC_EQ, hs), addr(addr) {}
-    virtual ~PCEquals() = default;
+    PCCompare(Address addr, ComparisonType ct) : PCCompare(nullptr, addr, ct) {}
+    PCCompare(cpu::HartState* hs, Address addr, ComparisonType ct)
+        : ConditionInterface(ConditionType::PC_CMP, hs), addr(addr), ct(ct) {}
+    virtual ~PCCompare() = default;
 
-    bool check() override { return hs && hs->pc == addr; }
+    bool check() override { return hs && ct(uint64_t(hs->pc), addr); }
 
     static bool classof(const ConditionInterface* ci) {
-        return ci->ct == ConditionType::PC_EQ;
+        return ci->ct == ConditionType::PC_CMP;
     }
 };
 class AlwaysTrue : public ConditionInterface {

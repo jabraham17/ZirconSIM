@@ -47,8 +47,8 @@ std::vector<std::shared_ptr<Command>> Parser::parse_controls() {
 std::shared_ptr<Command> Parser::parse_control() {
     // first of event_action and event_cond_action is both SUBSYSTEM COLON EVENT
     // then first of cond is either 1 thing then equals or 4 things then equals
-    if(lexer.peek(5).token_type == TokenType::EQUALS ||
-       lexer.peek(8).token_type == TokenType::EQUALS) {
+    if(is_cond_op(lexer.peek(5).token_type) ||
+       is_cond_op(lexer.peek(8).token_type)) {
         return parse_event_cond_action();
     } else {
         return parse_event_action();
@@ -138,28 +138,53 @@ Parser::parse_cond_list() {
 std::shared_ptr<condition::ConditionInterface> Parser::parse_cond() {
     if(lexer.peek().token_type == TokenType::REGISTER_CLASS) {
         auto [reg_class, reg_idx] = parse_register();
-        expect(TokenType::EQUALS);
+        auto ct = parse_cond_op();
         auto num = expect(TokenType::NUM);
-        return std::make_shared<condition::RegisterEquals>(
+        return std::make_shared<condition::RegisterCompare>(
             reg_class,
             reg_idx,
-            strToInteger(num.lexeme));
+            strToInteger(num.lexeme),
+            ct);
 
     } else if(lexer.peek().token_type == TokenType::MEM) {
         auto addr = parse_mem();
-        expect(TokenType::EQUALS);
+        auto ct = parse_cond_op();
         auto num = expect(TokenType::NUM);
-        return std::make_shared<condition::MemAddrEquals>(
+        return std::make_shared<condition::MemAddrCompare>(
             addr,
-            strToInteger(num.lexeme));
+            strToInteger(num.lexeme),
+            ct);
 
     } else if(lexer.peek().token_type == TokenType::PC) {
         expect(TokenType::PC);
-        expect(TokenType::EQUALS);
+        auto ct = parse_cond_op();
         auto num = expect(TokenType::NUM);
-        return std::make_shared<condition::PCEquals>(strToAddress(num.lexeme));
+        return std::make_shared<condition::PCCompare>(
+            strToAddress(num.lexeme),
+            ct);
 
     } else throw ParseException("Unknown Condition");
+}
+
+// cond_op -> EQUALS | NOTEQUAL
+// cond_op -> LESSTHAN | LESSTHAN_EQUALTO | GREATERTHAN_EQUALTO
+condition::ComparisonType Parser::parse_cond_op() {
+    auto t = lexer.getToken();
+    switch(t.token_type) {
+        case TokenType::EQUALS: return condition::ComparisonType::EQ;
+        case TokenType::NOTEQUAL: return condition::ComparisonType::NEQ;
+        case TokenType::LESSTHAN: return condition::ComparisonType::LT;
+        case TokenType::LESSTHAN_EQUALTO: return condition::ComparisonType::LTE;
+        case TokenType::GREATERTHAN: return condition::ComparisonType::GT;
+        case TokenType::GREATERTHAN_EQUALTO:
+            return condition::ComparisonType::GTE;
+        default: throw ParseException("Unknown Comparison Op");
+    }
+}
+bool Parser::is_cond_op(TokenType tt) {
+    return tt == TokenType::EQUALS || tt == TokenType::NOTEQUAL ||
+           tt == TokenType::LESSTHAN || tt == TokenType::LESSTHAN_EQUALTO ||
+           tt == TokenType::GREATERTHAN || tt == TokenType::GREATERTHAN_EQUALTO;
 }
 
 // register -> REGISTER_CLASS LBRACK NUM RBRACK

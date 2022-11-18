@@ -162,6 +162,25 @@ Token Lexer::getSymbol() {
             case ':': t.token_type = TokenType::COLON; break;
             case ',': t.token_type = TokenType::COMMA; break;
             case '=': t.token_type = TokenType::EQUALS; break;
+            case '!': {
+                c = getChar();
+                if(c == '=') t.token_type = TokenType::NOTEQUAL;
+                break;
+            }
+            case '<': {
+                if(peekChar() == '=') {
+                    getChar();
+                    t.token_type = TokenType::LESSTHAN_EQUALTO;
+                } else t.token_type = TokenType::LESSTHAN;
+                break;
+            }
+            case '>': {
+                if(peekChar() == '=') {
+                    getChar();
+                    t.token_type = TokenType::GREATERTHAN_EQUALTO;
+                } else t.token_type = TokenType::GREATERTHAN;
+                break;
+            }
             case '[': t.token_type = TokenType::LBRACK; break;
             case ']': t.token_type = TokenType::RBRACK; break;
             default: break;
@@ -170,9 +189,11 @@ Token Lexer::getSymbol() {
     return t;
 }
 
+// just need to check first one
 bool Lexer::isSymbol() {
     char c = peekChar();
-    return c == ':' || c == ',' || c == '=' || c == '[' || c == ']';
+    return c == ':' || c == ',' || c == '=' || c == '<' || c == '>' ||
+           c == '!' || c == '[' || c == ']';
 }
 
 void Lexer::skipWhitespace() {
