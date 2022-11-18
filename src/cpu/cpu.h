@@ -5,7 +5,7 @@
 #include "event/event.h"
 #include "isa/rf.h"
 #include "mem/memory-image.h"
-#include <map>
+#include "common/ordered_map.h"
 
 namespace cpu {
 
@@ -69,6 +69,12 @@ class Hart {
     HartState hs;
 
   private:
+
+    uint64_t alloc(size_t n);
+    void copyToHart(void* src, uint64_t dst, size_t n);
+
+    void init_heap();
+    void init_stack(std::vector<std::string> argv = {}, common::ordered_map<std::string, std::string> envp = {});
     bool shouldHalt();
     // Subsystem: hart
     // Description: Fires just before current instruction is executed
@@ -81,9 +87,7 @@ class Hart {
 
   public:
     Hart(mem::MemoryImage& m);
-    void init_heap();
-    void init_stack();
-    void init();
+    void init(std::vector<std::string> argv = {}, common::ordered_map<std::string, std::string> envp = {});
     void execute(uint64_t start_address);
 
     template <typename T> void addBeforeExecuteListener(T&& arg) {

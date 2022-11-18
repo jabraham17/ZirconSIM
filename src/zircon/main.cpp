@@ -16,6 +16,7 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <unordered_map>
+#include "common/ordered_map.h"
 
 std::ostream* getFileStreamIfTrue(
     bool cond,
@@ -30,7 +31,7 @@ std::ostream* getFileStreamIfTrue(
         auto stat_resno = stat(fname->c_str(), &fname_info);
         bool exists_in_file_buffer = false;
         if(stat_resno != 0) exists_in_file_buffer = false;
-        
+
         auto it = std::find_if(
             file_buffer.begin(),
             file_buffer.end(),
@@ -46,20 +47,39 @@ std::ostream* getFileStreamIfTrue(
             // return old file handle
             inst_log = it->second;
             exists_in_file_buffer = true;
-        } 
-        
+        }
+
         if(!exists_in_file_buffer) {
             // open new file handle
             auto handle = (new std::ofstream(*fname));
             file_buffer[*fname] = handle;
             inst_log = handle;
         }
-        
     }
     return inst_log;
 }
 
-int main(int argc, const char** argv) {
+auto stringsplit(std::string s, std::string delim = ",") {
+    std::vector<std::string> tokens;
+    size_t pos = 0;
+    std::string token;
+    while((pos = s.find(delim)) != std::string::npos) {
+        token = s.substr(0, pos);
+        tokens.push_back(token);
+        s.erase(0, pos + delim.length());
+    }
+    tokens.push_back(s);
+    return tokens;
+}
+
+// transforms string of form VAR=VALUE into pair {VAR,VALUE}
+std::pair<std::string, std::string> splitVarEqualsValue(std::string s) {
+    size_t pos = s.find('=');
+    if(pos == std::string::npos) return {s, ""};
+    else return {s.substr(0, pos), s.substr(pos + 1)};
+}
+
+int main(int argc, const char** argv, const char** envp) {
 
     argparse::ArgumentParser program_args(
         {},
@@ -114,14 +134,23 @@ int main(int argc, const char** argv) {
         .metavar("CONTROL")
         .help("a control sequence to apply");
 
+    program_args.add_argument("-e", "-env")
+        .append()
+        .metavar("VAR=VALUE")
+        .help("add environment variables");
+    program_args.add_argument("-E", "--use-host-env")
+        .default_value(false)
+        .implicit_value(true)
+        .help("pass the host environment variables to the simulated binary");
+
     // everything after -- gets shoved into the remaining args
-    std::vector<std::string> remaining_args;
+    std::vector<std::string> simulated_argv;
     int newargc = argc;
     for(int i = 0; i < argc; i++) {
         if(argv[i][0] == '-' && argv[i][1] == '-' && argv[i][2] == '\0') {
             newargc = i;
             for(i = i + 1; i < argc; i++) {
-                remaining_args.push_back(argv[i]);
+                simulated_argv.push_back(argv[i]);
             }
             break;
         }
@@ -140,6 +169,18 @@ int main(int argc, const char** argv) {
     if(!is) {
         std::cerr << "Failed to open '" << filename << "'" << std::endl;
         return 1;
+    }
+    // the filename is the first argv
+    auto argv0 = filename;
+    // FIXME: THIS CODE IS SO NASTY
+    if(argv0.length() >= 2 && argv0[0] == '.' && argv0[1] == '/') {
+        simulated_argv.insert(simulated_argv.begin(), argv0);
+    }
+    else if(argv0.length() >= 2 && argv0[0] == '/') {
+        simulated_argv.insert(simulated_argv.begin(), argv0);
+    }
+    else {
+        simulated_argv.insert(simulated_argv.begin(), "./" + argv0);
     }
 
     auto inst_log = getFileStreamIfTrue(
@@ -296,12 +337,13 @@ int main(int argc, const char** argv) {
                                         uint64_t value,
                                         uint64_t oldvalue,
                                         size_t size) {
-                    *mem_log << "wr-mem," << addr << ",";
-                    if(size == 1) *mem_log << (uint8_t)value;
-                    else if(size == 2) *mem_log << (uint16_t)value;
-                    else if(size == 4) *mem_log << (uint32_t)value;
-                    else *mem_log << value;
-                    *mem_log << std::endl;
+                *mem_log << "wr-mem," << addr << ",";
+                // need extra casts so that cout doesn't tray and interpret as a char
+                if(size == 1) *mem_log << (uint64_t)(uint8_t)value;
+                else if(size == 2) *mem_log << (uint64_t)(uint16_t)value;
+                else if(size == 4) *mem_log << (uint64_t)(uint32_t)value;
+                else *mem_log << (uint64_t)value;
+                *mem_log << std::endl;
             });
         }
     }
@@ -365,7 +407,21 @@ int main(int argc, const char** argv) {
         }
     }
 
-    hart.init();
+    // parse ennv
+    common::ordered_map<std::string, std::string> env_vars;
+    // std::map<std::string, std::string> env_vars;
+    if(program_args.get<bool>("--use-host-env")) {
+        for(int i = 0; envp[i] != 0; i++) {
+            auto [key, value] = splitVarEqualsValue(envp[i]);
+            env_vars.insert_or_assign(key, value);
+        }
+    }
+    for(auto e : program_args.get<std::vector<std::string>>("-env")) {
+        auto [key, value] = splitVarEqualsValue(e);
+        env_vars.insert_or_assign(key, value);
+    }
+
+    hart.init(simulated_argv, env_vars);
     hart.execute(start);
 
     if(program_args.get<bool>("--stats")) {
