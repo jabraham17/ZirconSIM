@@ -2,6 +2,8 @@
 #ifndef ZIRCON_CPU_REGISTER_H_
 #define ZIRCON_CPU_REGISTER_H_
 
+#include "common/format.h"
+#include "event/event.h"
 #include <array>
 #include <bitset>
 #include <cassert>
@@ -10,8 +12,6 @@
 #include <ostream>
 #include <sstream>
 #include <string>
-
-#include "event/event.h"
 
 template <size_t SIZE> class Register {
   private:
@@ -52,9 +52,8 @@ template <size_t SIZE> class Register {
 
     const std::string& getName() { return name; }
     void dump(std::ostream& o) {
-        o << std::setfill(' ') << std::setw(4) << getName() << " 0x"
-          << std::setfill('0') << std::setw(16) << std::right << std::hex
-          << value;
+        o << std::setfill(' ') << std::setw(4) << getName() << " "
+          << common::Format::doubleword << get();
     }
 };
 
@@ -121,12 +120,16 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
     const std::string& getName() { return classname; }
     void dump(std::ostream& o) {
         o << getName();
-        auto half = NUM / 2;
-        for(size_t i = 0; i < half; i++) {
+        auto quart = NUM / 4;
+        for(size_t i = 0; i < quart; i++) {
             o << "\n";
             rawreg(i).dump(o);
             o << " ";
-            rawreg(half + i).dump(o);
+            rawreg(i + quart).dump(o);
+            o << " ";
+            rawreg(i + quart + quart).dump(o);
+            o << " ";
+            rawreg(i + quart + quart + quart).dump(o);
         }
     }
 
