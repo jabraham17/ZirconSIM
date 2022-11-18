@@ -40,10 +40,11 @@
 
 ## refactor
 
-- HartState is more accurately described as ThreadState
+- refactor cpu to be Hart
 - cleanup instruction specification, CUSTOM instructions are getting messy
 - refactor the cpu subdir, inconsistent namespace usage, inconsistent variable naming, better structure
 - fix makefile depens for headers and inc
+- cleanup exceptions, make more consistent
 
 ## documentation
 
@@ -60,8 +61,6 @@
 
 ## tracing
 
-- more configurable trancing
-  - machine readable formats for testing harnesses
 - add full register state tracings
 - add ability to efficiently dump memory
 - add contoller !=
