@@ -136,7 +136,7 @@ class ComparisonType {
     ValueType value_;
 
   public:
-  static const ValueType NONE = 0;
+    static const ValueType NONE = 0;
     static const ValueType EQ = 1;
     static const ValueType NEQ = 2;
     static const ValueType LT = 3;
@@ -152,8 +152,7 @@ class ComparisonType {
         return *this;
     }
     operator ValueType() const { return this->value_; }
-    template <typename T>
-    bool compare(T a, T b) {
+    template <typename T> bool compare(T a, T b) {
         switch(this->value_) {
             case ComparisonType::EQ: return a == b;
             case ComparisonType::NEQ: return a != b;
@@ -162,14 +161,10 @@ class ComparisonType {
             case ComparisonType::LTE: return a <= b;
             case ComparisonType::GTE: return a >= b;
             case ComparisonType::NONE:
-            default:
-            return false;
+            default: return false;
         }
     }
-    template <typename T>
-    bool operator()(T a, T b) {
-        return compare<T>(a, b);
-    }
+    template <typename T> bool operator()(T a, T b) { return compare<T>(a, b); }
 };
 
 class ConditionInterface {

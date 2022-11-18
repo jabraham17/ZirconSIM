@@ -35,17 +35,17 @@ bool Hart::shouldHalt() {
         op == isa::inst::Opcode::rv32i_jal && jmp_target == hs.pc.previous());
 }
 
-    uint64_t Hart::alloc(size_t n) {
+uint64_t Hart::alloc(size_t n) {
     auto ptr = hs.memory_locations["heap_end"];
     hs.memimg.allocate(ptr, n);
     hs.memory_locations["heap_end"] += n;
     return ptr;
+}
+void Hart::copyToHart(void* src, uint64_t dst, size_t n) {
+    for(size_t i = 0; i < n; i++) {
+        hs.memimg.byte(dst + i) = ((char*)src)[i];
     }
-    void Hart::copyToHart(void* src, uint64_t dst, size_t n) {
-        for(size_t i = 0; i < n; i++) {
-            hs.memimg.byte(dst + i) = ((char*)src)[i];
-        }
-    }
+}
 
 enum class AUXVecType : uint64_t {
     AT_NULL = 0,    /* End of vector */
@@ -139,7 +139,9 @@ intptr_t alignup(intptr_t ptr, unsigned n) {
     return ptr;
 }
 
-void Hart::init_stack(std::vector<std::string> argv, common::ordered_map<std::string, std::string> envp) {
+void Hart::init_stack(
+    std::vector<std::string> argv,
+    common::ordered_map<std::string, std::string> envp) {
     // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
     hs.memory_locations["start_start"] = 0x7fffffff00000000;
     uint64_t stack_size = 0x10000;
@@ -147,7 +149,6 @@ void Hart::init_stack(std::vector<std::string> argv, common::ordered_map<std::st
         hs.memory_locations["start_start"] + stack_size;
     hs.memimg.allocate(hs.memory_locations["start_start"], stack_size);
     auto sp = hs.memory_locations["stack_end"];
-
 
     // auxvec
     common::ordered_map<AUXVecType, uint64_t> auxvec;
@@ -158,7 +159,6 @@ void Hart::init_stack(std::vector<std::string> argv, common::ordered_map<std::st
     }
     auxvec.insert_or_assign(AUXVecType::AT_RANDOM, rand_addr);
     auxvec.insert_or_assign(AUXVecType::AT_NULL, 0);
-
 
     auto argc = argv.size();
     auto envpc = envp.size();
@@ -172,44 +172,45 @@ void Hart::init_stack(std::vector<std::string> argv, common::ordered_map<std::st
     auto stack_setup_size_aligned = alignup(stack_setup_size, 7);
     // sp is where main enters, MUST BE ALIGNED
     sp = sp - stack_setup_size_aligned;
- 
+
     auto stack_idx = 0;
 
     // write argc first
-    hs.memimg.word(sp + 8*(stack_idx++)) = argc;
-    //write argv
-    for(auto s: argv) {
+    hs.memimg.word(sp + 8 * (stack_idx++)) = argc;
+    // write argv
+    for(auto s : argv) {
         auto slen = s.size();
         auto addr = alloc(slen + 1); // alloc space for null byte
         copyToHart((void*)s.c_str(), addr, slen);
-        hs.memimg.doubleword(sp + 8*(stack_idx++)) = addr;
+        hs.memimg.doubleword(sp + 8 * (stack_idx++)) = addr;
     }
     // write NULL
-    hs.memimg.doubleword(sp + 8*(stack_idx++)) = 0;
+    hs.memimg.doubleword(sp + 8 * (stack_idx++)) = 0;
 
     // write ENV
-    for(auto [key, value]: envp) {
+    for(auto [key, value] : envp) {
         auto s = key + "=" + value;
         auto slen = s.size();
         auto addr = alloc(slen + 1); // alloc space for null byte
         copyToHart((void*)s.c_str(), addr, slen);
-        hs.memimg.doubleword(sp + 8*(stack_idx++)) = addr;
+        hs.memimg.doubleword(sp + 8 * (stack_idx++)) = addr;
     }
     // write NULL
-    hs.memimg.doubleword(sp + 8*(stack_idx++)) = 0;
-
+    hs.memimg.doubleword(sp + 8 * (stack_idx++)) = 0;
 
     // write auxvec
-    for(auto [key, value]: auxvec) {
-        hs.memimg.doubleword(sp + 8*(stack_idx++)) = uint64_t(key);
-        hs.memimg.doubleword(sp + 8*(stack_idx++)) = value;
+    for(auto [key, value] : auxvec) {
+        hs.memimg.doubleword(sp + 8 * (stack_idx++)) = uint64_t(key);
+        hs.memimg.doubleword(sp + 8 * (stack_idx++)) = value;
     }
 
     // set gpr for sp
     hs.rf.GPR[2] = sp;
 }
 
-void Hart::init(std::vector<std::string> argv, common::ordered_map<std::string, std::string> envp) {
+void Hart::init(
+    std::vector<std::string> argv,
+    common::ordered_map<std::string, std::string> envp) {
     init_heap();
     init_stack(argv, envp);
 }

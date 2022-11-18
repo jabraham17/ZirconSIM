@@ -26,10 +26,9 @@ void DumpPC::action(std::ostream* o) {
     if(o && hs) {
         uint64_t pc = hs->pc;
         uint32_t inst = 0;
-        if(hs->memimg.raw(pc))
-        inst = hs->getInstWord();
-        *o << "PC[" << common::Format::doubleword << pc << "] = " << isa::inst::disassemble(inst, pc) << "\n";
-        
+        if(hs->memimg.raw(pc)) inst = hs->getInstWord();
+        *o << "PC[" << common::Format::doubleword << pc
+           << "] = " << isa::inst::disassemble(inst, pc) << "\n";
     }
 }
 void DumpMemoryAddress::action(std::ostream* o) {

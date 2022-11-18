@@ -3,6 +3,7 @@
 #include "color/color.h"
 #include "common/argparse.hpp"
 #include "common/format.h"
+#include "common/ordered_map.h"
 #include "controller/parser/parser.h"
 #include "cpu/cpu.h"
 #include "cpu/isa/inst.h"
@@ -16,7 +17,6 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <unordered_map>
-#include "common/ordered_map.h"
 
 std::ostream* getFileStreamIfTrue(
     bool cond,
@@ -175,11 +175,9 @@ int main(int argc, const char** argv, const char** envp) {
     // FIXME: THIS CODE IS SO NASTY
     if(argv0.length() >= 2 && argv0[0] == '.' && argv0[1] == '/') {
         simulated_argv.insert(simulated_argv.begin(), argv0);
-    }
-    else if(argv0.length() >= 2 && argv0[0] == '/') {
+    } else if(argv0.length() >= 2 && argv0[0] == '/') {
         simulated_argv.insert(simulated_argv.begin(), argv0);
-    }
-    else {
+    } else {
         simulated_argv.insert(simulated_argv.begin(), "./" + argv0);
     }
 
@@ -338,7 +336,8 @@ int main(int argc, const char** argv, const char** envp) {
                                         uint64_t oldvalue,
                                         size_t size) {
                 *mem_log << "wr-mem," << addr << ",";
-                // need extra casts so that cout doesn't tray and interpret as a char
+                // need extra casts so that cout doesn't tray and interpret as a
+                // char
                 if(size == 1) *mem_log << (uint64_t)(uint8_t)value;
                 else if(size == 2) *mem_log << (uint64_t)(uint16_t)value;
                 else if(size == 4) *mem_log << (uint64_t)(uint32_t)value;

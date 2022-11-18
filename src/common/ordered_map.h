@@ -106,10 +106,10 @@ template <typename Key, typename T> class ordered_map {
     }
 
     // lookup
-    // disabled for now as making these track insertion order is a pain in the ass
-    // T& at(const Key& key) { return map_.at(key); }
-    // const T& at(const Key& key) const { return map_.at(key); }
-    // T& operator[](const Key& key) { return map_[key]; }
+    // disabled for now as making these track insertion order is a pain in the
+    // ass T& at(const Key& key) { return map_.at(key); } const T& at(const Key&
+    // key) const { return map_.at(key); } T& operator[](const Key& key) {
+    // return map_[key]; }
     size_type count(const Key& key) const { return map_.count(key); }
     Iterator find(const Key& key) {
         if(map_.count(key)) {

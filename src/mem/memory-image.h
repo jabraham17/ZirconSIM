@@ -126,11 +126,12 @@ class MemoryImage {
             else if(std::is_same<T, uint64_t>::value) return 8;
             return 8;
         }
-        MemoryRegion& mr() {  
+        MemoryRegion& mr() {
             auto mr_ptr = mi->getMemoryRegion(addr);
             if(mr_ptr) return *mr_ptr;
             else throw OutOfBoundsException(addr);
-            }
+        }
+
       public:
         T read();
         void write(T v);
