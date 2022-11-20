@@ -29,11 +29,11 @@ class Parser {
         //     t = lexer.getToken();
         // }
     }
-    CommandList parse();
+    ControlList parse();
 
     /*
     controls          -> control | control controls
-    control           -> event_action | event_cond_action
+    control           -> event_action | event_cond_action | watch_stmt
     event_action      -> event action_list
     event_cond_action -> event cond_list action_list
     event             -> SUBSYSTEM COLON EVENT
@@ -45,13 +45,14 @@ class Parser {
     cond_op           -> LESSTHAN | LESSTHAN_EQUALTO | GREATERTHAN_EQUALTO
     register          -> REGISTER_CLASS LBRACK NUM RBRACK
     mem               -> MEM LBRACK NUM RBRACK
+    watch_stmt        -> WATCH register | WATCH mem
     */
 
   private:
     Token expect(TokenType tt);
 
-    std::vector<std::shared_ptr<Command>> parse_controls();
-    std::shared_ptr<Command> parse_control();
+    std::vector<std::shared_ptr<ControlBase>> parse_controls();
+    std::shared_ptr<ControlBase> parse_control();
     std::shared_ptr<Command> parse_event_action();
     std::shared_ptr<ConditionalCommand> parse_event_cond_action();
     event::EventType parse_event();
@@ -64,6 +65,7 @@ class Parser {
     bool is_cond_op(TokenType tt);
     std::pair<isa::rf::RegisterClassType, RegisterIndex> parse_register();
     Address parse_mem();
+    std::shared_ptr<Watch> parse_watch_stmt();
 };
 
 } // namespace parser

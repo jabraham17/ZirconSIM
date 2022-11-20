@@ -79,6 +79,7 @@ Token Lexer::getID() {
     if(t.lexeme == "PC") t.token_type = TokenType::PC;
     else if(t.lexeme == "M") t.token_type = TokenType::MEM;
     else if(t.lexeme == "STOP") t.token_type = TokenType::STOP;
+    else if(t.lexeme == "WATCH") t.token_type = TokenType::WATCH;
     else if(event::isEventSubsystemType(t.lexeme))
         t.token_type = TokenType::SUBSYSTEM;
     else if(event::isEventType(t.lexeme)) t.token_type = TokenType::EVENT;

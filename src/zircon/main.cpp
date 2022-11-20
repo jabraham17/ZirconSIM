@@ -363,6 +363,10 @@ int main(int argc, const char** argv, const char** envp) {
         for(auto c : parsed_commands.allConditions()) {
             c->hs = &hart.hs;
         }
+        for(auto w : parsed_commands.watches) {
+            w->hs = &hart.hs;
+            w->setLog(&std::cout);
+        }
         for(auto c : parsed_commands.commands) {
             switch(c->getEventType()) {
                 case event::EventType::HART_AFTER_EXECUTE:
@@ -402,6 +406,26 @@ int main(int argc, const char** argv, const char** envp) {
                         });
                     break;
                 default: std::cerr << "No Event Handler Defined\n";
+            }
+        }
+        for(auto w : parsed_commands.watches) {
+            if(auto wr =
+                   std::dynamic_pointer_cast<controller::WatchRegister>(w)) {
+                hart.addBeforeExecuteListener(
+                    [wr](cpu::HartState& hs) { wr->update(); });
+                     hart.addBeforeExecuteListener(
+                    [wr](cpu::HartState& hs) { wr->update(); });
+            } else if(
+                auto wm =
+                    std::dynamic_pointer_cast<controller::WatchMemoryAddress>(
+                        w)) {
+                                hart.addBeforeExecuteListener(
+                    [wm](cpu::HartState& hs) { wm->update(); });
+                                                    hart.addAfterExecuteListener(
+                    [wm](cpu::HartState& hs) { wm->update(); });
+            }
+            else {
+                std::cerr << "No Event Handler Defined\n";
             }
         }
     }

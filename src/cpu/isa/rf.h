@@ -13,8 +13,8 @@ enum class RegisterClassType {
     NONE,
 };
 bool isRegisterClassType(std::string s);
-
 RegisterClassType getRegisterClassType(std::string s);
+std::string getRegisterClassString(RegisterClassType rcf);
 
 class RegisterFile {
   public:

@@ -14,5 +14,11 @@ RegisterClassType getRegisterClassType(std::string s) {
 #include "defs/registers.inc"
     return RegisterClassType::NONE;
 }
+std::string getRegisterClassString(RegisterClassType rcf) {
+#define REGISTER_CLASS(r, ...)                                                 \
+    if(rcf == RegisterClassType::r) return #r;
+#include "defs/registers.inc"
+    return "NONE";
+}
 } // namespace rf
 } // namespace isa

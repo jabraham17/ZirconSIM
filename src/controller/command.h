@@ -7,6 +7,7 @@
 #include "event/event.h"
 #include "mem/memory-image.h"
 #include <memory>
+#include <optional>
 
 namespace controller {
 
@@ -277,10 +278,16 @@ class AlwaysTrue : public ConditionInterface {
 
 } // namespace condition
 
-struct CommandList;
+struct ControlList;
 
-class Command {
-    friend CommandList;
+// empty class for inheritance
+class ControlBase {
+  public:
+    virtual ~ControlBase() = default;
+};
+
+class Command : public ControlBase {
+    friend ControlList;
 
   private:
     event::EventType et;
@@ -301,7 +308,7 @@ class Command {
 };
 
 class ConditionalCommand : public Command {
-    friend CommandList;
+    friend ControlList;
 
   private:
     std::vector<std::shared_ptr<condition::ConditionInterface>> conditions;
@@ -322,10 +329,122 @@ class ConditionalCommand : public Command {
     }
 };
 
-struct CommandList {
+
+// chnage watches to define commands to also dump
+// maybe restructure watches as a new operator?
+// it becomes part of the conidition?
+
+class Watch : public ControlBase {
+  private:
+    std::optional<uint64_t> previous;
+    std::ostream* out;
+
+  public:
+    cpu::HartState* hs;
+
+    Watch(cpu::HartState* hs = nullptr) : previous(), out(nullptr), hs(hs) {}
+    virtual ~Watch() = default;
+
+    void setLog(std::ostream* o) { this->out = o; }
+
+    virtual bool hasChanged() {
+        std::optional<uint64_t> value = readCurrentValue();
+        // no current value, no change
+        if(!value.has_value()) return false;
+        // no previous value, no change
+        if(!previous.has_value()) return false;
+
+        return *value != *previous;
+    }
+    virtual void update() {
+        std::optional<uint64_t> current = readCurrentValue();
+        if(!current.has_value()) return;
+        // no value, read one
+        if(!previous.has_value()) {
+            if(out)
+                *out << "WATCH " << name() << ": Setting initial value to "
+                     << common::Format::doubleword << *current << std::endl;
+            previous = *current;
+        }
+        // update if not the same
+        else if(*previous != current) {
+            if(out) {
+                *out << "WATCH " << name()
+                     << ": PREV=" << common::Format::doubleword << *previous
+                     << " NEW=" << common::Format::doubleword << *current
+                     << std::endl;
+                     std::cout << "I AM THE FUCKER " << common::Format::doubleword << uint64_t(hs->pc) << "\n";
+            }
+            previous = *current;
+        }
+    }
+    virtual std::string name() = 0;
+    virtual std::optional<uint64_t> readCurrentValue() = 0;
+};
+
+class WatchRegister : public Watch {
+  public:
+    isa::rf::RegisterClassType regtype;
+    RegisterIndex idx;
+
+    WatchRegister(isa::rf::RegisterClassType regtype, RegisterIndex idx)
+        : WatchRegister(nullptr, regtype, idx) {}
+    WatchRegister(
+        cpu::HartState* hs,
+        isa::rf::RegisterClassType regtype,
+        RegisterIndex idx)
+        : Watch(hs), regtype(regtype), idx(idx) {}
+    virtual ~WatchRegister() = default;
+
+    std::string name() {
+        return isa::rf::getRegisterClassString(this->regtype) + "[" +
+               std::to_string(this->idx) + "]";
+    }
+    std::optional<uint64_t> readCurrentValue() {
+        if(hs) {
+            if(this->regtype == isa::rf::RegisterClassType::GPR) {
+                return this->hs->rf.GPR.rawreg(idx).get();
+            }
+        }
+        return std::nullopt;
+    }
+};
+
+class WatchMemoryAddress : public Watch {
+  public:
+    Address addr;
+
+    WatchMemoryAddress(Address addr) : WatchMemoryAddress(nullptr, addr) {}
+    WatchMemoryAddress(cpu::HartState* hs, Address addr)
+        : Watch(hs), addr(addr) {}
+    virtual ~WatchMemoryAddress() = default;
+
+    std::string name() {
+        std::stringstream ss;
+        ss << "MEM[" << common::Format::doubleword << this->addr << "]";
+        return ss.str();
+    }
+    std::optional<uint64_t> readCurrentValue() {
+        if(hs) {
+            auto converted_addr = hs->memimg.raw(addr);
+            if(converted_addr) return *(uint64_t*)(converted_addr);
+        }
+        return std::nullopt;
+    }
+};
+
+struct ControlList {
     std::vector<std::shared_ptr<Command>> commands;
-    CommandList(std::vector<std::shared_ptr<Command>> commands)
-        : commands(commands) {}
+    std::vector<std::shared_ptr<Watch>> watches;
+    ControlList(std::vector<std::shared_ptr<ControlBase>> controls) {
+        for(auto control : controls) {
+            if(auto cmd = std::dynamic_pointer_cast<Command>(control)) {
+                commands.push_back(cmd);
+            } else if(auto watch = std::dynamic_pointer_cast<Watch>(control)) {
+                watches.push_back(watch);
+            }
+        }
+    }
 
     std::vector<std::shared_ptr<action::ActionInterface>> allActions() {
         std::vector<std::shared_ptr<action::ActionInterface>> actions;

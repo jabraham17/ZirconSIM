@@ -18,23 +18,21 @@ Token Parser::expect(TokenType tt) {
         "Expected '" + std::string(tt) + "' got '" + std::string(t.token_type) +
         "'");
 }
-CommandList Parser::parse() {
+ControlList Parser::parse() {
     try {
         auto controls = parse_controls();
         expect(TokenType::END_OF_FILE);
-        return CommandList(controls);
+        return ControlList(controls);
     } catch(const ParseException& e) {
         *log << e.what() << "\n";
-        return CommandList({});
+        return ControlList({});
     }
 }
 
-// ./build/bin/zircon test/main-musl-debug.out -control mem:read pc
-
 // controls -> control | control controls
-std::vector<std::shared_ptr<Command>> Parser::parse_controls() {
+std::vector<std::shared_ptr<ControlBase>> Parser::parse_controls() {
     auto control = parse_control();
-    if(lexer.peek().token_type == TokenType::SUBSYSTEM) {
+    if(lexer.peek().token_type == TokenType::SUBSYSTEM || lexer.peek().token_type == TokenType::WATCH) {
         auto control_list = parse_controls();
         control_list.insert(control_list.begin(), control);
         return control_list;
@@ -43,11 +41,14 @@ std::vector<std::shared_ptr<Command>> Parser::parse_controls() {
     }
 }
 
-// control -> event_action | event_cond_action
-std::shared_ptr<Command> Parser::parse_control() {
+// control -> event_action | event_cond_action | watch_stmt
+std::shared_ptr<ControlBase> Parser::parse_control() {
     // first of event_action and event_cond_action is both SUBSYSTEM COLON EVENT
     // then first of cond is either 1 thing then equals or 4 things then equals
-    if(is_cond_op(lexer.peek(5).token_type) ||
+    if(lexer.peek().token_type == TokenType::WATCH) {
+        return parse_watch_stmt();
+    }
+    else if(is_cond_op(lexer.peek(5).token_type) ||
        is_cond_op(lexer.peek(8).token_type)) {
         return parse_event_cond_action();
     } else {
@@ -209,5 +210,22 @@ Address Parser::parse_mem() {
 
     return strToAddress(num.lexeme);
 }
+
+// watch_stmt -> WATCH register | WATCH mem
+std::shared_ptr<Watch> Parser::parse_watch_stmt() {
+    expect(TokenType::WATCH);
+    if(lexer.peek().token_type == TokenType::REGISTER_CLASS && lexer.peek(2).token_type == TokenType::LBRACK) {
+        auto [reg_class, idx] = parse_register();
+        return std::make_shared<WatchRegister>(reg_class, idx);
+        
+    } else if(lexer.peek().token_type == TokenType::MEM) {
+        auto addr = parse_mem();
+        return std::make_shared<WatchMemoryAddress>(addr);
+    } 
+    else {
+        throw ParseException("Unknown Watch Statement");
+    }
+}
+
 } // namespace parser
 } // namespace controller
