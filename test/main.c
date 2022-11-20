@@ -50,5 +50,10 @@ int main() {
     for(int i = 0; i < 10; i++) {
         printf("x[%d]=%d\n",i,x[i]);
     }
+    fflush(stdout);
+    printf("Enter char: ");
+    fflush(stdout);
+    char c = getc(stdin);
+    printf("I got: '%c'\n", c);
     return 0;
 }
