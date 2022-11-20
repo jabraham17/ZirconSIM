@@ -64,7 +64,7 @@ constexpr Word getBTypeImm(Word bits) {
     //        (/*imm10_5*/ getBitsFromLSB<25, 6>(bits) << 5) |
     //        (/*imm4_1*/ getBitsFromLSB<8, 4>(bits) << 1) |
     //        (/*imm11*/ getBitsFromLSB<7, 1>(bits) << 11);
-        return (/*imm12*/ getBitRange<31, 31>(bits) << 12) |
+    return (/*imm12*/ getBitRange<31, 31>(bits) << 12) |
            (/*imm10_5*/ getBitRange<30, 25>(bits) << 5) |
            (/*imm4_1*/ getBitRange<11, 8>(bits) << 1) |
            (/*imm11*/ getBitRange<7, 7>(bits) << 11);

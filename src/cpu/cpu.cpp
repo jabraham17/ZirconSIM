@@ -26,7 +26,7 @@ Hart::Hart(mem::MemoryImage& m) : hs(m) {}
 bool Hart::shouldHalt() {
     // halt if no longer executing
     if(!hs.executing) return true;
-    //if pc is beyond the bounds of memory , return true
+    // if pc is beyond the bounds of memory , return true
     if(hs.memimg.raw(hs.pc) == nullptr) return true;
     // if the instruction just executed was a jmp to itself, halt
     uint32_t inst = hs.getInstWord();

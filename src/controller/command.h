@@ -28,10 +28,12 @@ enum class ActionType {
 class ActionInterface {
   public:
     ActionType at;
-    protected:
+
+  protected:
     cpu::HartState* hs;
     size_t indent;
-public:
+
+  public:
     ActionInterface(
         ActionType at = ActionType::NONE,
         cpu::HartState* hs = nullptr)
@@ -46,12 +48,10 @@ public:
         assert(this->isa<U>());
         return static_cast<U*>(this);
     }
-    virtual void setHS(cpu::HartState* hs) {
-        this->hs = hs;
-    }
-    void increaseIndent(size_t indent = 2) {this->indent += indent;}
+    virtual void setHS(cpu::HartState* hs) { this->hs = hs; }
+    void increaseIndent(size_t indent = 2) { this->indent += indent; }
     // possible sign underflow may occur here
-    void decreaseIndent(size_t indent = 2) {this->indent -= indent;}
+    void decreaseIndent(size_t indent = 2) { this->indent -= indent; }
 };
 
 class DumpRegisterClass : public ActionInterface {
@@ -131,11 +131,16 @@ class Stop : public ActionInterface {
     }
 };
 class ActionGroup : public ActionInterface {
-    private: 
+  private:
     std::vector<std::shared_ptr<action::ActionInterface>> actions;
+
   public:
-    ActionGroup(std::vector<std::shared_ptr<action::ActionInterface>> actions) : ActionGroup(nullptr, actions) {}
-    ActionGroup(cpu::HartState* hs, std::vector<std::shared_ptr<action::ActionInterface>> actions) : ActionInterface(ActionType::GROUP, hs), actions(actions) {}
+    ActionGroup(std::vector<std::shared_ptr<action::ActionInterface>> actions)
+        : ActionGroup(nullptr, actions) {}
+    ActionGroup(
+        cpu::HartState* hs,
+        std::vector<std::shared_ptr<action::ActionInterface>> actions)
+        : ActionInterface(ActionType::GROUP, hs), actions(actions) {}
     virtual ~ActionGroup() = default;
 
     void action(std::ostream* o = nullptr) override;
@@ -147,7 +152,8 @@ class ActionGroup : public ActionInterface {
         ActionInterface::setHS(hs);
         updateActions();
     }
-      private:
+
+  private:
     void updateActions() {
         for(auto a : this->actions) {
             a->setHS(this->hs);
@@ -205,9 +211,11 @@ class ComparisonType {
 class ConditionInterface {
   public:
     ConditionType ct;
-    protected:
+
+  protected:
     cpu::HartState* hs;
-    public:
+
+  public:
     ConditionInterface(
         ConditionType ct = ConditionType::NONE,
         cpu::HartState* hs = nullptr)
@@ -221,9 +229,7 @@ class ConditionInterface {
         assert(this->isa<U>());
         return static_cast<U*>(this);
     }
-    virtual void setHS(cpu::HartState* hs) {
-        this->hs = hs;
-    }
+    virtual void setHS(cpu::HartState* hs) { this->hs = hs; }
 };
 class MemAddrCompare : public ConditionInterface {
   public:

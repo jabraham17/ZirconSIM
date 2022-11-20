@@ -24,7 +24,7 @@
     F(NOTEQUAL)                                                                \
     F(LBRACK)                                                                  \
     F(RBRACK)                                                                  \
-    F(NUM) \
+    F(NUM)                                                                     \
     F(WATCH)
 
 namespace controller {

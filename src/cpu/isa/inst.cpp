@@ -88,7 +88,7 @@ std::string disassemble(uint32_t bits, uint32_t pc, bool color) {
                << internal::colorReset(color) << " "
                << internal::colorReg(color) << "x" << instruction::getRd(bits)
                << internal::colorReset(color) << ", "
-               << internal::colorNumber(color) <<  "0x" << std::hex
+               << internal::colorNumber(color) << "0x" << std::hex
                << (instruction::getUTypeImm(bits) >> 12)
                << internal::colorReset(color);
             return ss.str();

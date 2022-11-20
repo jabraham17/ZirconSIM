@@ -2,10 +2,10 @@
 #ifndef ZIRCON_COMMON_ORDERED_MAP_H_
 #define ZIRCON_COMMON_ORDERED_MAP_H_
 
+#include <algorithm>
 #include <iterator>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 
 namespace common {
 
