@@ -46,6 +46,24 @@ EMULATE_SYSCALL(
     struct stat* addr = convertAddress<struct stat*>(hs, hs.rf.GPR[11]);
     hs.rf.GPR[10] = fstat(fildes, addr);)
 
+EMULATE_SYSCALL(
+    openat, 56, int fd = hs.rf.GPR[10];
+    const char* path = convertAddress<const char*>(hs, hs.rf.GPR[11]);
+    int oflag = hs.rf.GPR[12];
+    hs.rf.GPR[10] = syscall(
+        SYS_openat,
+        fd,
+        path,
+        oflag,
+        hs.rf.GPR[13],
+        hs.rf.GPR[14],
+        hs.rf.GPR[15]);)
+
+EMULATE_SYSCALL(close, 57, uint64_t fd = hs.rf.GPR[10];
+                // dont close stdio
+                // FIXME: ugly hack, maybe we should emulate these files?
+                if(fd != 0 && fd != 1 && fd != 2) hs.rf.GPR[10] = close(fd);)
+
 EMULATE_SYSCALL(lseek, 62, uint64_t fd = hs.rf.GPR[10];
                 off_t offset = off_t(hs.rf.GPR[11]);
                 int whence = hs.rf.GPR[12];
@@ -63,13 +81,17 @@ EMULATE_SYSCALL(write, 64, uint64_t fd = hs.rf.GPR[10];
 
 EMULATE_SYSCALL(
     writev, 66, uint64_t fildes = hs.rf.GPR[10];
-    struct iovec* iov = convertAddress<struct iovec*>(hs, hs.rf.GPR[11], false);
+    struct iovec* iov = convertAddress<struct iovec*>(hs, hs.rf.GPR[11], true);
     uint64_t iovcnt = hs.rf.GPR[12];
     // need to rewrite the address inside of iov
     for(uint64_t idx = 0; idx < iovcnt; idx++) {
-        if(iov && iov[idx].iov_len) {
-            uint64_t orig_buffer = (uint64_t)iov[idx].iov_base;
-            iov[idx].iov_base = convertAddress<void*>(hs, orig_buffer);
+        if(iov &&
+           hs.memimg.raw((uint64_t)iov + (idx * 16) + 8 /*iov[idx].iov_len*/)) {
+            uint64_t orig_buffer = *(uint64_t*)(hs.memimg.raw(
+                (uint64_t)iov + (idx * 16) /*iov[idx].iov_base*/));
+            *(uint64_t*)(hs.memimg.raw(
+                (uint64_t)iov + (idx * 16) /*iov[idx].iov_base*/)) =
+                convertAddress<uint64_t>(hs, orig_buffer, true);
         }
     } hs.rf.GPR[10] = writev(fildes, iov, iovcnt);)
 
@@ -109,12 +131,13 @@ EMULATE_SYSCALL(
 EMULATE_SYSCALL(umask, 166, uint64_t mode = hs.rf.GPR[10];
                 hs.rf.GPR[10] = umask(mode);)
 
-EMULATE_SYSCALL(
-    gettimeofday,
-    169,
-    struct timeval* tv = convertAddress<struct timeval*>(hs, hs.rf.GPR[10]);
-    struct timezone* tz = convertAddress<struct timezone*>(hs, hs.rf.GPR[11]);
-    hs.rf.GPR[10] = gettimeofday(tv, tz);)
+EMULATE_SYSCALL(gettimeofday,
+                169,
+                struct timeval* tv =
+                    convertAddress<struct timeval*>(hs, hs.rf.GPR[10], false);
+                struct timezone* tz =
+                    convertAddress<struct timezone*>(hs, hs.rf.GPR[11], false);
+                hs.rf.GPR[10] = gettimeofday(tv, tz);)
 
 EMULATE_SYSCALL(exit, 93, hs.executing = false;)
 EMULATE_SYSCALL(exit_group, 94, hs.executing = false;)
