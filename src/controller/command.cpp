@@ -28,15 +28,15 @@ void DumpPC::action(std::ostream* o) {
         uint32_t inst = 0;
         if(hs->memimg.raw(pc)) inst = hs->getInstWord();
         *o << "PC[" << common::Format::doubleword << pc
-           << "] = " << isa::inst::disassemble(inst, pc) << "\n";
+           << "] = " << isa::inst::disassemble(inst, pc) << std::endl;
     }
 }
 void DumpMemoryAddress::action(std::ostream* o) {
     if(o && hs) {
         auto converted_addr = hs->memimg.raw(addr);
-        *o << "MEM[" << common::Format::doubleword << converted_addr
+        *o << "MEM[" << common::Format::doubleword << addr
            << "] = " << common::Format::doubleword
-           << *(uint64_t*)(converted_addr) << "\n";
+           << *(uint64_t*)(converted_addr) << std::endl;
     }
 }
 void Stop::action([[maybe_unused]] std::ostream* o) {
