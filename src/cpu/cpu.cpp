@@ -143,11 +143,11 @@ void Hart::init_stack(
     std::vector<std::string> argv,
     common::ordered_map<std::string, std::string> envp) {
     // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
-    hs.memory_locations["start_start"] = 0x7fffffff00000000;
+    hs.memory_locations["stack_start"] = 0x7fffffff00000000;
     uint64_t stack_size = 0x10000;
     hs.memory_locations["stack_end"] =
-        hs.memory_locations["start_start"] + stack_size;
-    hs.memimg.allocate(hs.memory_locations["start_start"], stack_size);
+        hs.memory_locations["stack_start"] + stack_size;
+    hs.memimg.allocate(hs.memory_locations["stack_start"], stack_size);
     auto sp = hs.memory_locations["stack_end"];
 
     // auxvec
