@@ -1,7 +1,7 @@
 #include "isa-begin.inc"
 
-U_TYPE(rv32i, lui, 0b0110111, hs.rf.GPR[RD] = IMM_U_TYPE; hs.pc += 4, 0)
-U_TYPE(rv32i, auipc, 0b0010111, hs.rf.GPR[RD] = IMM_U_TYPE + hs.pc;
+U_TYPE(rv32i, lui, 0b0110111, hs.rf.GPR[RD] = IMM_U_TYPE_SEXT64; hs.pc += 4, 0)
+U_TYPE(rv32i, auipc, 0b0010111, hs.rf.GPR[RD] = IMM_U_TYPE_SEXT64 + hs.pc;
        hs.pc += 4, 0)
 J_TYPE(rv32i, jal, 0b1101111, hs.rf.GPR[RD] = hs.pc + 4;
        hs.pc = IMM_J_TYPE_SEXT64 + hs.pc;

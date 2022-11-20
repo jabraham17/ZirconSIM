@@ -52,7 +52,7 @@
 #define IMM_B_TYPE_SEXT64                                                      \
     (instruction::signext64<13>(instruction::getBTypeImm(bits)))
 #define IMM_U_TYPE_SEXT64                                                      \
-    (instruction::signext64<20>(instruction::getUTypeImm(bits)))
+    (instruction::signext64<32>(instruction::getUTypeImm(bits)))
 #define IMM_J_TYPE_SEXT64                                                      \
     (instruction::signext64<20>(instruction::getJTypeImm(bits)))
 #define IMM_I_TYPE_SEXT32                                                      \
@@ -62,7 +62,7 @@
 #define IMM_B_TYPE_SEXT32                                                      \
     (instruction::signext32<13>(instruction::getBTypeImm(bits)))
 #define IMM_U_TYPE_SEXT32                                                      \
-    (instruction::signext32<20>(instruction::getUTypeImm(bits)))
+    (instruction::signext32<32>(instruction::getUTypeImm(bits)))
 #define IMM_J_TYPE_SEXT32                                                      \
     (instruction::signext32<20>(instruction::getJTypeImm(bits)))
 
