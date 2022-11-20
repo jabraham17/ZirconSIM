@@ -205,8 +205,9 @@ class ComparisonType {
 class ConditionInterface {
   public:
     ConditionType ct;
+    protected:
     cpu::HartState* hs;
-
+    public:
     ConditionInterface(
         ConditionType ct = ConditionType::NONE,
         cpu::HartState* hs = nullptr)
@@ -219,6 +220,9 @@ class ConditionInterface {
     template <typename U> U* cast() {
         assert(this->isa<U>());
         return static_cast<U*>(this);
+    }
+    virtual void setHS(cpu::HartState* hs) {
+        this->hs = hs;
     }
 };
 class MemAddrCompare : public ConditionInterface {
@@ -363,7 +367,7 @@ class ConditionalCommand : public Command {
     }
 };
 
-// chnage watches to define commands to also dump
+// change watches to define commands to also dump
 // maybe restructure watches as a new operator?
 // it becomes part of the conidition?
 
@@ -384,7 +388,7 @@ class Watch : public ControlBase {
     virtual ~Watch() = default;
 
     void setLog(std::ostream* o) { this->out = o; }
-    void setHS(cpu::HartState* hs) {
+    virtual void setHS(cpu::HartState* hs) {
         this->hs = hs;
         this->updateActions();
     }

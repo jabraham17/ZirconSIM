@@ -361,7 +361,7 @@ int main(int argc, const char** argv, const char** envp) {
             a->setHS(&hart.hs);
         }
         for(auto c : parsed_commands.allConditions()) {
-            c->hs = &hart.hs;
+            c->setHS(&hart.hs);
         }
         for(auto w : parsed_commands.watches) {
             w->setHS(&hart.hs);
