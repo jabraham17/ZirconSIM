@@ -5,6 +5,7 @@
 #include <iterator>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 namespace common {
 
