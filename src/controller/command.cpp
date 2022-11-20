@@ -33,10 +33,13 @@ void DumpPC::action(std::ostream* o) {
 }
 void DumpMemoryAddress::action(std::ostream* o) {
     if(o && hs) {
+        *o << "MEM[" << common::Format::doubleword << addr << "] = ";
         auto converted_addr = hs->memimg.raw(addr);
-        *o << "MEM[" << common::Format::doubleword << addr
-           << "] = " << common::Format::doubleword
-           << *(uint64_t*)(converted_addr) << std::endl;
+        if(converted_addr)
+            *o << common::Format::doubleword << *(uint64_t*)(converted_addr);
+        else *o << "nil";
+
+        *o << std::endl;
     }
 }
 void Stop::action([[maybe_unused]] std::ostream* o) {
