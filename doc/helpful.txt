@@ -5,3 +5,4 @@ https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-cc.adoc
 
 http://articles.manugarg.com/aboutelfauxiliaryvectors
 
+https://lwn.net/Articles/631631/
