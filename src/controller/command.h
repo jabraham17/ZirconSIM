@@ -373,7 +373,6 @@ class Watch : public ControlBase {
                      << ": PREV=" << common::Format::doubleword << *previous
                      << " NEW=" << common::Format::doubleword << *current
                      << std::endl;
-                     std::cout << "I AM THE FUCKER " << common::Format::doubleword << uint64_t(hs->pc) << "\n";
             }
             previous = *current;
         }
