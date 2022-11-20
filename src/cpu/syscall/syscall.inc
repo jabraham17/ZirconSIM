@@ -42,11 +42,9 @@ EMULATE_SYSCALL(ioctl,
 #endif
 
 EMULATE_SYSCALL(fstat, 80, uint64_t fildes = hs.rf.GPR[10];
-                uint64_t addr = hs.rf.GPR[11];
-                struct stat* real_addr = addr
-                                             ? (struct stat*)hs.memimg.raw(addr)
-                                             : 0;
-                hs.rf.GPR[10] = fstat(fildes, real_addr);)
+                struct stat* addr = convertAddress<struct stat*>(hs, hs.rf.GPR[11]);
+                hs.rf.GPR[10] = fstat(fildes, addr);
+                )
 
 EMULATE_SYSCALL(write, 64, uint64_t fd = hs.rf.GPR[10];
                 uint64_t addr = hs.rf.GPR[11];

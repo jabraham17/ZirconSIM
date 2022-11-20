@@ -18,6 +18,18 @@ namespace sys {
 
 namespace internal {
 
+template <typename T>
+T convertAddress(cpu::HartState& hs, uint64_t addr) {
+    // if address is within the range of the stack, it needs no change
+    // if the address is no in the range of the stack and it is NOT null, convert through the memory interface
+    // FIXME: this is likely very very fragile and will possibly break in the future
+    if(addr >= hs.memory_locations["stack_start"] && addr <= hs.memory_locations["stack_end"]) {
+        return T(addr);
+    }
+    else if(addr == 0) return T(0);
+    else return T(hs.memimg.raw(addr));
+}
+
 int64_t
 getMappedSyscallNumber([[maybe_unused]] int64_t riscv64_syscall_number) {
 #define MAP_SYSCALL(name, x86_64, riscv64, ...)                                \
