@@ -371,11 +371,11 @@ int main(int argc, const char** argv, const char** envp) {
             switch(c->getEventType()) {
                 case event::EventType::HART_AFTER_EXECUTE:
                     hart.addAfterExecuteListener(
-                        [c](cpu::HartState& ) { c->doit(&std::cout); });
+                        [c](cpu::HartState&) { c->doit(&std::cout); });
                     break;
                 case event::EventType::HART_BEFORE_EXECUTE:
                     hart.addBeforeExecuteListener(
-                        [c](cpu::HartState& ) { c->doit(&std::cout); });
+                        [c](cpu::HartState&) { c->doit(&std::cout); });
                     break;
                 case event::EventType::MEM_READ:
                     hart.hs.memimg.addReadListener(
@@ -412,19 +412,18 @@ int main(int argc, const char** argv, const char** envp) {
             if(auto wr =
                    std::dynamic_pointer_cast<controller::WatchRegister>(w)) {
                 hart.addBeforeExecuteListener(
-                    [wr](cpu::HartState& ) { wr->update(); });
-                     hart.addBeforeExecuteListener(
-                    [wr](cpu::HartState& ) { wr->update(); });
+                    [wr](cpu::HartState&) { wr->update(); });
+                hart.addBeforeExecuteListener(
+                    [wr](cpu::HartState&) { wr->update(); });
             } else if(
                 auto wm =
                     std::dynamic_pointer_cast<controller::WatchMemoryAddress>(
                         w)) {
-                                hart.addBeforeExecuteListener(
-                    [wm](cpu::HartState& ) { wm->update(); });
-                                                    hart.addAfterExecuteListener(
-                    [wm](cpu::HartState& ) { wm->update(); });
-            }
-            else {
+                hart.addBeforeExecuteListener(
+                    [wm](cpu::HartState&) { wm->update(); });
+                hart.addAfterExecuteListener(
+                    [wm](cpu::HartState&) { wm->update(); });
+            } else {
                 std::cerr << "No Event Handler Defined\n";
             }
         }
