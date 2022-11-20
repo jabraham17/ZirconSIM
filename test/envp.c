@@ -2,6 +2,8 @@
 #include <elf.h>
 #include <stdio.h>
 
+extern char** environ;
+
 int main(int argc, char** argv, char** envp) {
     // puts("hello\n");
     printf("ARGC %d\n", argc);
@@ -14,6 +16,10 @@ int main(int argc, char** argv, char** envp) {
 
     printf("\n");
 
+    if(!envp) {
+        printf("No ENVP, resetting to environ\n");
+        envp = environ;
+    }
     printf("ENV %p\n", envp);
     if(envp) {
         for(i = 0; envp[i] != 0; i++) {
