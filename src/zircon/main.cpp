@@ -333,7 +333,7 @@ int main(int argc, const char** argv, const char** envp) {
             memimg.addWriteListener([mem_log](
                                         uint64_t addr,
                                         uint64_t value,
-                                        uint64_t oldvalue,
+                                        [[maybe_unused]] uint64_t oldvalue,
                                         size_t size) {
                 *mem_log << "wr-mem," << addr << ",";
                 // need extra casts so that cout doesn't tray and interpret as a
@@ -371,11 +371,11 @@ int main(int argc, const char** argv, const char** envp) {
             switch(c->getEventType()) {
                 case event::EventType::HART_AFTER_EXECUTE:
                     hart.addAfterExecuteListener(
-                        [c](cpu::HartState& hs) { c->doit(&std::cout); });
+                        [c](cpu::HartState& ) { c->doit(&std::cout); });
                     break;
                 case event::EventType::HART_BEFORE_EXECUTE:
                     hart.addBeforeExecuteListener(
-                        [c](cpu::HartState& hs) { c->doit(&std::cout); });
+                        [c](cpu::HartState& ) { c->doit(&std::cout); });
                     break;
                 case event::EventType::MEM_READ:
                     hart.hs.memimg.addReadListener(
@@ -412,17 +412,17 @@ int main(int argc, const char** argv, const char** envp) {
             if(auto wr =
                    std::dynamic_pointer_cast<controller::WatchRegister>(w)) {
                 hart.addBeforeExecuteListener(
-                    [wr](cpu::HartState& hs) { wr->update(); });
+                    [wr](cpu::HartState& ) { wr->update(); });
                      hart.addBeforeExecuteListener(
-                    [wr](cpu::HartState& hs) { wr->update(); });
+                    [wr](cpu::HartState& ) { wr->update(); });
             } else if(
                 auto wm =
                     std::dynamic_pointer_cast<controller::WatchMemoryAddress>(
                         w)) {
                                 hart.addBeforeExecuteListener(
-                    [wm](cpu::HartState& hs) { wm->update(); });
+                    [wm](cpu::HartState& ) { wm->update(); });
                                                     hart.addAfterExecuteListener(
-                    [wm](cpu::HartState& hs) { wm->update(); });
+                    [wm](cpu::HartState& ) { wm->update(); });
             }
             else {
                 std::cerr << "No Event Handler Defined\n";
