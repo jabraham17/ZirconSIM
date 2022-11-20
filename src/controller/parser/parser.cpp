@@ -32,7 +32,8 @@ ControlList Parser::parse() {
 // controls -> control | control controls
 std::vector<std::shared_ptr<ControlBase>> Parser::parse_controls() {
     auto control = parse_control();
-    if(lexer.peek().token_type == TokenType::SUBSYSTEM || lexer.peek().token_type == TokenType::WATCH) {
+    if(lexer.peek().token_type == TokenType::SUBSYSTEM ||
+       lexer.peek().token_type == TokenType::WATCH) {
         auto control_list = parse_controls();
         control_list.insert(control_list.begin(), control);
         return control_list;
@@ -47,9 +48,9 @@ std::shared_ptr<ControlBase> Parser::parse_control() {
     // then first of cond is either 1 thing then equals or 4 things then equals
     if(lexer.peek().token_type == TokenType::WATCH) {
         return parse_watch_stmt();
-    }
-    else if(is_cond_op(lexer.peek(5).token_type) ||
-       is_cond_op(lexer.peek(8).token_type)) {
+    } else if(
+        is_cond_op(lexer.peek(5).token_type) ||
+        is_cond_op(lexer.peek(8).token_type)) {
         return parse_event_cond_action();
     } else {
         return parse_event_action();
@@ -60,6 +61,8 @@ std::shared_ptr<ControlBase> Parser::parse_control() {
 std::shared_ptr<Command> Parser::parse_event_action() {
     auto ev = parse_event();
     auto act = parse_action_list();
+    // keep these as a an action list, not group
+    // because they are unconditionally run
     return std::make_shared<Command>(ev, act);
 }
 
@@ -68,7 +71,10 @@ std::shared_ptr<ConditionalCommand> Parser::parse_event_cond_action() {
     auto ev = parse_event();
     auto cond = parse_cond_list();
     auto act = parse_action_list();
-    return std::make_shared<ConditionalCommand>(ev, cond, act);
+    // turn actions into action group
+    std::vector<std::shared_ptr<action::ActionInterface>> action_group = {
+        std::make_shared<action::ActionGroup>(act)};
+    return std::make_shared<ConditionalCommand>(ev, cond, action_group);
 }
 
 // event -> SUBSYSTEM COLON EVENT
@@ -211,20 +217,36 @@ Address Parser::parse_mem() {
     return strToAddress(num.lexeme);
 }
 
-// watch_stmt -> WATCH register | WATCH mem
+// watch_stmt -> WATCH register | WATCH mem | WATCH register action_list | WATCH
+// mem action_list
 std::shared_ptr<Watch> Parser::parse_watch_stmt() {
     expect(TokenType::WATCH);
-    if(lexer.peek().token_type == TokenType::REGISTER_CLASS && lexer.peek(2).token_type == TokenType::LBRACK) {
+    std::shared_ptr<Watch> watch;
+    if(lexer.peek().token_type == TokenType::REGISTER_CLASS &&
+       lexer.peek(2).token_type == TokenType::LBRACK) {
         auto [reg_class, idx] = parse_register();
-        return std::make_shared<WatchRegister>(reg_class, idx);
-        
+        watch = std::make_shared<WatchRegister>(reg_class, idx);
+
     } else if(lexer.peek().token_type == TokenType::MEM) {
         auto addr = parse_mem();
-        return std::make_shared<WatchMemoryAddress>(addr);
-    } 
-    else {
+        watch = std::make_shared<WatchMemoryAddress>(addr);
+    } else {
         throw ParseException("Unknown Watch Statement");
     }
+    std::vector<std::shared_ptr<action::ActionInterface>> actions;
+    if(lexer.peek().token_type == TokenType::REGISTER_CLASS ||
+       lexer.peek().token_type == TokenType::PC ||
+       lexer.peek().token_type == TokenType::MEM ||
+       lexer.peek().token_type == TokenType::STOP) {
+        actions = parse_action_list();
+    }
+    if(watch) {
+        // turn actions into action group
+        auto action_group = std::make_shared<action::ActionGroup>(actions);
+        watch->setActions({action_group});
+    }
+
+    return watch;
 }
 
 } // namespace parser

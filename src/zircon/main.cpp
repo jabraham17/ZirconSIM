@@ -358,13 +358,13 @@ int main(int argc, const char** argv, const char** envp) {
         auto parser = controller::parser::Parser(control_args);
         auto parsed_commands = parser.parse();
         for(auto a : parsed_commands.allActions()) {
-            a->hs = &hart.hs;
+            a->setHS(&hart.hs);
         }
         for(auto c : parsed_commands.allConditions()) {
             c->hs = &hart.hs;
         }
         for(auto w : parsed_commands.watches) {
-            w->hs = &hart.hs;
+            w->setHS(&hart.hs);
             w->setLog(&std::cout);
         }
         for(auto c : parsed_commands.commands) {

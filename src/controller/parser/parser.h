@@ -46,6 +46,7 @@ class Parser {
     register          -> REGISTER_CLASS LBRACK NUM RBRACK
     mem               -> MEM LBRACK NUM RBRACK
     watch_stmt        -> WATCH register | WATCH mem
+    watch_stmt        -> WATCH register action_list | WATCH mem action_list
     */
 
   private:

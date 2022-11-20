@@ -22,17 +22,20 @@ enum class ActionType {
     DUMP_MEM_ADDR,
     DUMP_PC,
     STOP,
+    GROUP,
     NONE,
 };
 class ActionInterface {
   public:
     ActionType at;
+    protected:
     cpu::HartState* hs;
-
+    size_t indent;
+public:
     ActionInterface(
         ActionType at = ActionType::NONE,
         cpu::HartState* hs = nullptr)
-        : at(at), hs(hs) {}
+        : at(at), hs(hs), indent(0) {}
     virtual ~ActionInterface() = default;
 
     void operator()(std::ostream* o = nullptr) { this->action(o); }
@@ -43,6 +46,12 @@ class ActionInterface {
         assert(this->isa<U>());
         return static_cast<U*>(this);
     }
+    virtual void setHS(cpu::HartState* hs) {
+        this->hs = hs;
+    }
+    void increaseIndent(size_t indent = 2) {this->indent += indent;}
+    // possible sign underflow may occur here
+    void decreaseIndent(size_t indent = 2) {this->indent -= indent;}
 };
 
 class DumpRegisterClass : public ActionInterface {
@@ -119,6 +128,31 @@ class Stop : public ActionInterface {
 
     static bool classof(const ActionInterface* ai) {
         return ai->at == ActionType::STOP;
+    }
+};
+class ActionGroup : public ActionInterface {
+    private: 
+    std::vector<std::shared_ptr<action::ActionInterface>> actions;
+  public:
+    ActionGroup(std::vector<std::shared_ptr<action::ActionInterface>> actions) : ActionGroup(nullptr, actions) {}
+    ActionGroup(cpu::HartState* hs, std::vector<std::shared_ptr<action::ActionInterface>> actions) : ActionInterface(ActionType::GROUP, hs), actions(actions) {}
+    virtual ~ActionGroup() = default;
+
+    void action(std::ostream* o = nullptr) override;
+
+    static bool classof(const ActionInterface* ai) {
+        return ai->at == ActionType::GROUP;
+    }
+    virtual void setHS(cpu::HartState* hs) override {
+        ActionInterface::setHS(hs);
+        updateActions();
+    }
+      private:
+    void updateActions() {
+        for(auto a : this->actions) {
+            a->setHS(this->hs);
+            a->increaseIndent();
+        }
     }
 };
 } // namespace action
@@ -329,23 +363,36 @@ class ConditionalCommand : public Command {
     }
 };
 
-
 // chnage watches to define commands to also dump
 // maybe restructure watches as a new operator?
 // it becomes part of the conidition?
 
 class Watch : public ControlBase {
-  private:
+  protected:
     std::optional<uint64_t> previous;
     std::ostream* out;
+    cpu::HartState* hs;
+    std::vector<std::shared_ptr<action::ActionInterface>> actions;
 
   public:
-    cpu::HartState* hs;
-
-    Watch(cpu::HartState* hs = nullptr) : previous(), out(nullptr), hs(hs) {}
+    Watch(
+        cpu::HartState* hs = nullptr,
+        std::vector<std::shared_ptr<action::ActionInterface>> actions = {})
+        : previous(), out(nullptr), hs(hs), actions(actions) {
+        this->updateActions();
+    }
     virtual ~Watch() = default;
 
     void setLog(std::ostream* o) { this->out = o; }
+    void setHS(cpu::HartState* hs) {
+        this->hs = hs;
+        this->updateActions();
+    }
+    void
+    setActions(std::vector<std::shared_ptr<action::ActionInterface>> actions) {
+        this->actions = actions;
+        this->updateActions();
+    }
 
     virtual bool hasChanged() {
         std::optional<uint64_t> value = readCurrentValue();
@@ -356,29 +403,17 @@ class Watch : public ControlBase {
 
         return *value != *previous;
     }
-    virtual void update() {
-        std::optional<uint64_t> current = readCurrentValue();
-        if(!current.has_value()) return;
-        // no value, read one
-        if(!previous.has_value()) {
-            if(out)
-                *out << "WATCH " << name() << ": Setting initial value to "
-                     << common::Format::doubleword << *current << std::endl;
-            previous = *current;
-        }
-        // update if not the same
-        else if(*previous != current) {
-            if(out) {
-                *out << "WATCH " << name()
-                     << ": PREV=" << common::Format::doubleword << *previous
-                     << " NEW=" << common::Format::doubleword << *current
-                     << std::endl;
-            }
-            previous = *current;
-        }
-    }
+    virtual void update();
     virtual std::string name() = 0;
     virtual std::optional<uint64_t> readCurrentValue() = 0;
+
+  private:
+    void updateActions() {
+        for(auto a : this->actions) {
+            a->setHS(this->hs);
+            a->increaseIndent();
+        }
+    }
 };
 
 class WatchRegister : public Watch {
@@ -387,19 +422,20 @@ class WatchRegister : public Watch {
     RegisterIndex idx;
 
     WatchRegister(isa::rf::RegisterClassType regtype, RegisterIndex idx)
-        : WatchRegister(nullptr, regtype, idx) {}
+        : WatchRegister(nullptr, {}, regtype, idx) {}
     WatchRegister(
         cpu::HartState* hs,
+        std::vector<std::shared_ptr<action::ActionInterface>> actions,
         isa::rf::RegisterClassType regtype,
         RegisterIndex idx)
-        : Watch(hs), regtype(regtype), idx(idx) {}
+        : Watch(hs, actions), regtype(regtype), idx(idx) {}
     virtual ~WatchRegister() = default;
 
-    std::string name() {
+    virtual std::string name() override {
         return isa::rf::getRegisterClassString(this->regtype) + "[" +
                std::to_string(this->idx) + "]";
     }
-    std::optional<uint64_t> readCurrentValue() {
+    virtual std::optional<uint64_t> readCurrentValue() override {
         if(hs) {
             if(this->regtype == isa::rf::RegisterClassType::GPR) {
                 return this->hs->rf.GPR.rawreg(idx).get();
@@ -413,17 +449,20 @@ class WatchMemoryAddress : public Watch {
   public:
     Address addr;
 
-    WatchMemoryAddress(Address addr) : WatchMemoryAddress(nullptr, addr) {}
-    WatchMemoryAddress(cpu::HartState* hs, Address addr)
-        : Watch(hs), addr(addr) {}
+    WatchMemoryAddress(Address addr) : WatchMemoryAddress(nullptr, {}, addr) {}
+    WatchMemoryAddress(
+        cpu::HartState* hs,
+        std::vector<std::shared_ptr<action::ActionInterface>> actions,
+        Address addr)
+        : Watch(hs, actions), addr(addr) {}
     virtual ~WatchMemoryAddress() = default;
 
-    std::string name() {
+    virtual std::string name() override {
         std::stringstream ss;
         ss << "MEM[" << common::Format::doubleword << this->addr << "]";
         return ss.str();
     }
-    std::optional<uint64_t> readCurrentValue() {
+    virtual std::optional<uint64_t> readCurrentValue() override {
         if(hs) {
             auto converted_addr = hs->memimg.raw(addr);
             if(converted_addr) return *(uint64_t*)(converted_addr);
