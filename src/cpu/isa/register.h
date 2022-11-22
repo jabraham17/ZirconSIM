@@ -133,10 +133,10 @@ template <size_t NUM, size_t SIZE> class RegisterClass {
         }
     }
 
-    void addReadListener(decltype(event_read)::callback_type func) {
+    void addReadListener(event::Event<std::string, uint64_t, uint64_t>::callback_type func) {
         event_read.addListener(func);
     }
-    void addWriteListener(decltype(event_write)::callback_type func) {
+    void addWriteListener(event::Event<std::string, uint64_t, uint64_t, uint64_t>::callback_type func) {
         event_write.addListener(func);
     }
 };
