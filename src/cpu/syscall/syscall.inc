@@ -50,8 +50,7 @@ EMULATE_SYSCALL(
     openat, 56, int fd = hs.rf.GPR[10];
     const char* path = convertAddress<const char*>(hs, hs.rf.GPR[11]);
     int oflag = hs.rf.GPR[12];
-    hs.rf.GPR[10] = syscall(
-        SYS_openat,
+    hs.rf.GPR[10] = openat(
         fd,
         path,
         oflag,
