@@ -19,18 +19,25 @@ namespace sys {
 
 namespace internal {
 
+// template <typename T>
+// T convertAddress(cpu::HartState& hs, uint64_t addr, bool checkStack = true) {
+//     // if address is within the range of the stack, it needs no change
+//     // if the address is no in the range of the stack and it is NOT null,
+//     // convert through the memory interface
+//     // FIXME: this is likely very very fragile and will possibly break in the
+//     // future
+//     if(checkStack && addr >= hs.memory_locations["stack_start"] &&
+//        addr <= hs.memory_locations["stack_end"]) {
+//         return T(addr);
+//     } else if(addr == 0) return T(0);
+//     else return T(hs.memimg.raw(addr));
+// }
+
+// takes a simulated address and converts it to a real address
 template <typename T>
-T convertAddress(cpu::HartState& hs, uint64_t addr, bool checkStack = true) {
-    // if address is within the range of the stack, it needs no change
-    // if the address is no in the range of the stack and it is NOT null,
-    // convert through the memory interface
-    // FIXME: this is likely very very fragile and will possibly break in the
-    // future
-    if(checkStack && addr >= hs.memory_locations["stack_start"] &&
-       addr <= hs.memory_locations["stack_end"]) {
-        return T(addr);
-    } else if(addr == 0) return T(0);
-    else return T(hs.memimg.raw(addr));
+T convertToRealAddress(cpu::HartState& hs, uint64_t addr) {
+    if(addr) return T(hs.memimg.raw(addr));
+    else return T(0);
 }
 
 int64_t

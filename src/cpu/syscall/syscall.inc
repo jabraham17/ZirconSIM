@@ -43,12 +43,12 @@ EMULATE_SYSCALL(ioctl,
 
 EMULATE_SYSCALL(
     fstat, 80, uint64_t fildes = hs.rf.GPR[10];
-    struct stat* addr = convertAddress<struct stat*>(hs, hs.rf.GPR[11]);
+    struct stat* addr = convertToRealAddress<struct stat*>(hs, hs.rf.GPR[11]);
     hs.rf.GPR[10] = fstat(fildes, addr);)
 
 EMULATE_SYSCALL(
     openat, 56, int fd = hs.rf.GPR[10];
-    const char* path = convertAddress<const char*>(hs, hs.rf.GPR[11]);
+    const char* path = convertToRealAddress<const char*>(hs, hs.rf.GPR[11]);
     int oflag = hs.rf.GPR[12];
     hs.rf.GPR[10] = openat(
         fd,
@@ -69,28 +69,39 @@ EMULATE_SYSCALL(lseek, 62, uint64_t fd = hs.rf.GPR[10];
                 hs.rf.GPR[10] = lseek(fd, offset, whence);)
 
 EMULATE_SYSCALL(read, 63, uint64_t fd = hs.rf.GPR[10];
-                void* addr = convertAddress<void*>(hs, hs.rf.GPR[11]);
+                void* addr = convertToRealAddress<void*>(hs, hs.rf.GPR[11]);
                 uint64_t count = hs.rf.GPR[12];
                 hs.rf.GPR[10] = read(fd, addr, count);)
 
 EMULATE_SYSCALL(write, 64, uint64_t fd = hs.rf.GPR[10];
-                void* addr = convertAddress<void*>(hs, hs.rf.GPR[11]);
+                void* addr = convertToRealAddress<void*>(hs, hs.rf.GPR[11]);
                 uint64_t count = hs.rf.GPR[12];
                 hs.rf.GPR[10] = write(fd, addr, count);)
 
+// EMULATE_SYSCALL(
+//     writev, 66, uint64_t fildes = hs.rf.GPR[10];
+//     struct iovec* iov = convertToRealAddress<struct iovec*>(hs, hs.rf.GPR[11], true);
+//     uint64_t iovcnt = hs.rf.GPR[12];
+//     // need to rewrite the address inside of iov
+//     for(uint64_t idx = 0; idx < iovcnt; idx++) {
+//         if(iov &&
+//            hs.memimg.raw((uint64_t)iov + (idx * 16) + 8 /*iov[idx].iov_len*/)) {
+//             uint64_t orig_buffer = *(uint64_t*)(hs.memimg.raw(
+//                 (uint64_t)iov + (idx * 16) /*iov[idx].iov_base*/));
+//             *(uint64_t*)(hs.memimg.raw(
+//                 (uint64_t)iov + (idx * 16) /*iov[idx].iov_base*/)) =
+//                 convertToRealAddress<uint64_t>(hs, orig_buffer, true);
+//         }
+//     } hs.rf.GPR[10] = writev(fildes, iov, iovcnt);)
 EMULATE_SYSCALL(
     writev, 66, uint64_t fildes = hs.rf.GPR[10];
-    struct iovec* iov = convertAddress<struct iovec*>(hs, hs.rf.GPR[11], true);
+    struct iovec* iov = convertToRealAddress<struct iovec*>(hs, hs.rf.GPR[11]);
     uint64_t iovcnt = hs.rf.GPR[12];
     // need to rewrite the address inside of iov
     for(uint64_t idx = 0; idx < iovcnt; idx++) {
-        if(iov &&
-           hs.memimg.raw((uint64_t)iov + (idx * 16) + 8 /*iov[idx].iov_len*/)) {
-            uint64_t orig_buffer = *(uint64_t*)(hs.memimg.raw(
-                (uint64_t)iov + (idx * 16) /*iov[idx].iov_base*/));
-            *(uint64_t*)(hs.memimg.raw(
-                (uint64_t)iov + (idx * 16) /*iov[idx].iov_base*/)) =
-                convertAddress<uint64_t>(hs, orig_buffer, true);
+        if(iov && iov[idx].iov_len) {
+            uint64_t orig_buffer = uint64_t(iov[idx].iov_base);
+            iov[idx].iov_base = convertToRealAddress<void*>(hs, orig_buffer);
         }
     } hs.rf.GPR[10] = writev(fildes, iov, iovcnt);)
 
@@ -98,33 +109,33 @@ EMULATE_SYSCALL(clock_settime,
                 112,
                 clockid_t clockid = (clockid_t)hs.rf.GPR[10];
                 struct timespec* tp =
-                    convertAddress<struct timespec*>(hs, hs.rf.GPR[11], false);
+                    convertToRealAddress<struct timespec*>(hs, hs.rf.GPR[11]);
                 hs.rf.GPR[10] = clock_settime(clockid, tp);)
 EMULATE_SYSCALL(clock_gettime,
                 113,
                 clockid_t clockid = (clockid_t)hs.rf.GPR[10];
                 struct timespec* tp =
-                    convertAddress<struct timespec*>(hs, hs.rf.GPR[11], false);
+                    convertToRealAddress<struct timespec*>(hs, hs.rf.GPR[11]);
                 hs.rf.GPR[10] = clock_gettime(clockid, tp);)
 EMULATE_SYSCALL(clock_getres, 114, clockid_t clockid = (clockid_t)hs.rf.GPR[10];
                 struct timespec* res =
-                    convertAddress<struct timespec*>(hs, hs.rf.GPR[11], false);
+                    convertToRealAddress<struct timespec*>(hs, hs.rf.GPR[11]);
                 hs.rf.GPR[10] = clock_getres(clockid, res);)
 
 EMULATE_SYSCALL(
     uname,
     160,
-    struct utsname* buf = convertAddress<struct utsname*>(hs, hs.rf.GPR[10]);
+    struct utsname* buf = convertToRealAddress<struct utsname*>(hs, hs.rf.GPR[10]);
     hs.rf.GPR[10] = uname(buf);)
 
 EMULATE_SYSCALL(
     getrlimit, 163, uint64_t resource = hs.rf.GPR[10];
-    struct rlimit* rlp = convertAddress<struct rlimit*>(hs, hs.rf.GPR[11]);
+    struct rlimit* rlp = convertToRealAddress<struct rlimit*>(hs, hs.rf.GPR[11]);
     hs.rf.GPR[10] = getrlimit(resource, rlp);)
 
 EMULATE_SYSCALL(
     setrlimit, 164, uint64_t resource = hs.rf.GPR[10];
-    struct rlimit* rlp = convertAddress<struct rlimit*>(hs, hs.rf.GPR[11]);
+    struct rlimit* rlp = convertToRealAddress<struct rlimit*>(hs, hs.rf.GPR[11]);
     hs.rf.GPR[10] = setrlimit(resource, rlp);)
 
 EMULATE_SYSCALL(umask, 166, uint64_t mode = hs.rf.GPR[10];
@@ -133,9 +144,9 @@ EMULATE_SYSCALL(umask, 166, uint64_t mode = hs.rf.GPR[10];
 EMULATE_SYSCALL(gettimeofday,
                 169,
                 struct timeval* tv =
-                    convertAddress<struct timeval*>(hs, hs.rf.GPR[10], false);
+                    convertToRealAddress<struct timeval*>(hs, hs.rf.GPR[10]);
                 struct timezone* tz =
-                    convertAddress<struct timezone*>(hs, hs.rf.GPR[11], false);
+                    convertToRealAddress<struct timezone*>(hs, hs.rf.GPR[11]);
                 hs.rf.GPR[10] = gettimeofday(tv, tz);)
 
 EMULATE_SYSCALL(exit, 93, hs.executing = false;)
@@ -144,7 +155,7 @@ EMULATE_SYSCALL(exit_group, 94, hs.executing = false;)
 #ifndef __EMSCRIPTEN__
 EMULATE_SYSCALL(set_tid_address,
                 96,
-                int* tidptr = convertAddress<int*>(hs, hs.rf.GPR[10]);
+                int* tidptr = convertToRealAddress<int*>(hs, hs.rf.GPR[10]);
                 hs.rf.GPR[10] = syscall(SYS_set_tid_address, tidptr);)
 #else
 // FIXME: no concept of set_tid_address in emscripten, whats the better
