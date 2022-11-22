@@ -184,7 +184,7 @@ EMULATE_SYSCALL(
             if(!(flags & MAP_ANONYMOUS)) {
                 // init with fd
                 lseek(fd, offset, SEEK_SET);
-                read(fd, (void*)addr, length);
+                (void)!read(fd, (void*)addr, length);
             }
             hs.rf.GPR[10] = addr;
         }
