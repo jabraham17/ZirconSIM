@@ -26,9 +26,10 @@ void DumpRegister::action(std::ostream* o) {
 
 void DumpPC::action(std::ostream* o) {
     if(o && hs) {
-        uint64_t pc = hs->pc;
+        uint64_t pc = hs->pc + offset*4;
         uint32_t inst = 0;
-        if(hs->memimg.raw(pc)) inst = hs->getInstWord();
+        uint32_t* inst_ptr = reinterpret_cast<uint32_t*>(hs->memimg.raw(pc));
+        if(inst_ptr) inst =*inst_ptr;
         *o << std::string(indent, ' ');
         *o << "PC[" << common::Format::doubleword << pc
            << "] = " << isa::inst::disassemble(inst, pc) << std::endl;

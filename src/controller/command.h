@@ -14,6 +14,7 @@ namespace controller {
 using Address = uint64_t;
 using RegisterIndex = uint64_t;
 using Integer = uint64_t;
+using SignedInteger = int64_t;
 
 namespace action {
 enum class ActionType {
@@ -93,8 +94,9 @@ class DumpRegister : public ActionInterface {
 };
 class DumpPC : public ActionInterface {
   public:
-    DumpPC() : DumpPC(nullptr) {}
-    DumpPC(cpu::HartState* hs) : ActionInterface(ActionType::DUMP_PC, hs) {}
+    SignedInteger offset;
+    DumpPC(SignedInteger offset) : DumpPC(nullptr, offset) {}
+    DumpPC(cpu::HartState* hs, SignedInteger offset) : ActionInterface(ActionType::DUMP_PC, hs), offset(offset) {}
     virtual ~DumpPC() = default;
 
     void action(std::ostream* o = nullptr) override;
@@ -307,15 +309,16 @@ class RegisterCompare : public ConditionInterface {
 
 class PCCompare : public ConditionInterface {
   public:
+    SignedInteger offset;
     Address addr;
     ComparisonType ct;
 
-    PCCompare(Address addr, ComparisonType ct) : PCCompare(nullptr, addr, ct) {}
-    PCCompare(cpu::HartState* hs, Address addr, ComparisonType ct)
-        : ConditionInterface(ConditionType::PC_CMP, hs), addr(addr), ct(ct) {}
+    PCCompare(SignedInteger offset, Address addr, ComparisonType ct) : PCCompare(nullptr, offset, addr, ct) {}
+    PCCompare(cpu::HartState* hs, SignedInteger offset, Address addr, ComparisonType ct)
+        : ConditionInterface(ConditionType::PC_CMP, hs), offset(offset), addr(addr), ct(ct) {}
     virtual ~PCCompare() = default;
 
-    bool check() override { return hs && ct(uint64_t(hs->pc), addr); }
+    bool check() override { return hs && ct(uint64_t(hs->pc + offset*4), addr); }
 
     static bool classof(const ConditionInterface* ci) {
         return ci->ct == ConditionType::PC_CMP;

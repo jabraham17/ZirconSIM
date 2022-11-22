@@ -38,15 +38,16 @@ class Parser {
     event_cond_action -> event cond_list action_list
     event             -> SUBSYSTEM COLON EVENT
     action_list       -> action | action COMMA action_list
-    action            -> REGISTER_CLASS | register | PC | mem | STOP
+    action            -> REGISTER_CLASS | register | pc | mem | STOP
     cond_list         -> cond | cond COMMA cond_list
-    cond              -> register EQUALS NUM | mem EQUALS NUM | PC EQUALS NUM
+    cond              -> register EQUALS NUM | mem EQUALS NUM | pc EQUALS NUM
     cond_op           -> EQUALS | NOTEQUAL
     cond_op           -> LESSTHAN | LESSTHAN_EQUALTO | GREATERTHAN_EQUALTO
     register          -> REGISTER_CLASS LBRACK NUM RBRACK
     mem               -> MEM LBRACK NUM RBRACK
     watch_stmt        -> WATCH register | WATCH mem
     watch_stmt        -> WATCH register action_list | WATCH mem action_list
+    pc                -> PC | PC PLUS NUM | PC MINUS NUM
     */
 
   private:
@@ -67,6 +68,7 @@ class Parser {
     std::pair<isa::rf::RegisterClassType, RegisterIndex> parse_register();
     Address parse_mem();
     std::shared_ptr<Watch> parse_watch_stmt();
+    SignedInteger parse_pc();
 };
 
 } // namespace parser

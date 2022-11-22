@@ -184,6 +184,8 @@ Token Lexer::getSymbol() {
             }
             case '[': t.token_type = TokenType::LBRACK; break;
             case ']': t.token_type = TokenType::RBRACK; break;
+            case '+': t.token_type = TokenType::PLUS; break;
+            case '-': t.token_type = TokenType::MINUS; break;
             default: break;
         }
     }
@@ -194,7 +196,7 @@ Token Lexer::getSymbol() {
 bool Lexer::isSymbol() {
     char c = peekChar();
     return c == ':' || c == ',' || c == '=' || c == '<' || c == '>' ||
-           c == '!' || c == '[' || c == ']';
+           c == '!' || c == '[' || c == ']' || c == '+' || c == '-';
 }
 
 void Lexer::skipWhitespace() {

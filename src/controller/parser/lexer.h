@@ -22,6 +22,8 @@
     F(GREATERTHAN)                                                             \
     F(GREATERTHAN_EQUALTO)                                                     \
     F(NOTEQUAL)                                                                \
+    F(PLUS) \
+    F(MINUS) \
     F(LBRACK)                                                                  \
     F(RBRACK)                                                                  \
     F(NUM)                                                                     \

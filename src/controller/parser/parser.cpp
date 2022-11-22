@@ -8,6 +8,7 @@ namespace parser {
 Address strToAddress(std::string s) { return std::stoull(s); }
 RegisterIndex strToRegisterIndex(std::string s) { return std::stoull(s); }
 Integer strToInteger(std::string s) { return std::stoull(s); }
+SignedInteger strToSignedInteger(std::string s) { return std::stoll(s); }
 
 Token Parser::expect(TokenType tt) {
     auto t = lexer.getToken();
@@ -101,7 +102,7 @@ Parser::parse_action_list() {
     }
 }
 
-// action -> REGISTER_CLASS | register | PC | mem | STOP
+// action -> REGISTER_CLASS | register | pc | mem | STOP
 std::shared_ptr<action::ActionInterface> Parser::parse_action() {
     if(lexer.peek().token_type == TokenType::REGISTER_CLASS) {
         if(lexer.peek(2).token_type == TokenType::LBRACK) {
@@ -116,8 +117,8 @@ std::shared_ptr<action::ActionInterface> Parser::parse_action() {
             return std::make_shared<action::DumpRegisterClass>(reg_class_type);
         }
     } else if(lexer.peek().token_type == TokenType::PC) {
-        expect(TokenType::PC);
-        return std::make_shared<action::DumpPC>();
+        auto pc_offset = parse_pc();
+        return std::make_shared<action::DumpPC>(pc_offset);
     } else if(lexer.peek().token_type == TokenType::MEM) {
         auto addr = parse_mem();
         return std::make_shared<action::DumpMemoryAddress>(addr);
@@ -141,7 +142,7 @@ Parser::parse_cond_list() {
     }
 }
 
-// cond -> register EQUALS NUM | mem EQUALS NUM | PC EQUALS NUM
+// cond -> register EQUALS NUM | mem EQUALS NUM | pc EQUALS NUM
 std::shared_ptr<condition::ConditionInterface> Parser::parse_cond() {
     if(lexer.peek().token_type == TokenType::REGISTER_CLASS) {
         auto [reg_class, reg_idx] = parse_register();
@@ -163,10 +164,11 @@ std::shared_ptr<condition::ConditionInterface> Parser::parse_cond() {
             ct);
 
     } else if(lexer.peek().token_type == TokenType::PC) {
-        expect(TokenType::PC);
+        auto pc_offset = parse_pc();
         auto ct = parse_cond_op();
         auto num = expect(TokenType::NUM);
         return std::make_shared<condition::PCCompare>(
+            pc_offset,
             strToAddress(num.lexeme),
             ct);
 
@@ -247,6 +249,25 @@ std::shared_ptr<Watch> Parser::parse_watch_stmt() {
     }
 
     return watch;
+}
+
+// pc -> PC | PC PLUS NUM | PC MINUS NUM
+SignedInteger Parser::parse_pc() {
+    expect(TokenType::PC);
+    if(lexer.peek().token_type == TokenType::PLUS) {
+        expect(TokenType::PLUS);
+        auto num = expect(TokenType::NUM);
+        return strToSignedInteger(num.lexeme);
+    }
+    else if(lexer.peek().token_type == TokenType::MINUS) {
+        expect(TokenType::MINUS);
+        auto num = expect(TokenType::NUM);
+        return -strToSignedInteger(num.lexeme);
+    }
+    else {
+        // offset of 0 to pc
+        return 0;
+    }
 }
 
 } // namespace parser
