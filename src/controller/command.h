@@ -49,9 +49,9 @@ class ActionInterface {
         return static_cast<U*>(this);
     }
     virtual void setHS(cpu::HartState* hs) { this->hs = hs; }
-    void increaseIndent(size_t indent = 2) { this->indent += indent; }
+    virtual void increaseIndent(size_t indent = 2) { this->indent += indent; }
     // possible sign underflow may occur here
-    void decreaseIndent(size_t indent = 2) { this->indent -= indent; }
+    virtual void decreaseIndent(size_t indent = 2) { this->indent -= indent; }
 };
 
 class DumpRegisterClass : public ActionInterface {
@@ -151,6 +151,19 @@ class ActionGroup : public ActionInterface {
     virtual void setHS(cpu::HartState* hs) override {
         ActionInterface::setHS(hs);
         updateActions();
+    }
+
+    virtual void increaseIndent(size_t indent = 2) override {
+        ActionInterface::increaseIndent(indent);
+        for(auto a : this->actions) {
+            a->increaseIndent();
+        }
+    }
+        virtual void decreaseIndent(size_t indent = 2) override {
+        ActionInterface::decreaseIndent(indent);
+        for(auto a : this->actions) {
+            a->decreaseIndent();
+        }
     }
 
   private:
