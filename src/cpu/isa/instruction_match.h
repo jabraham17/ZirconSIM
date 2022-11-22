@@ -9,7 +9,7 @@ using Word = uint32_t;
 // get a mask with N bits
 template <std::size_t N> constexpr Word getMask() {
     static_assert(N <= sizeof(Word) * 8, "Invalid Bit Length");
-    return (1UL << N) - 1;
+    return (1ULL << N) - 1;
 }
 template <std::size_t N, std::size_t COUNT>
 constexpr Word getBitsFromLSB(Word bits) {
