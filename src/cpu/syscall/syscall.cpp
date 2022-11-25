@@ -48,7 +48,6 @@ T convertToRealAddress(cpu::HartState& hs, uint64_t addr) {
 //     else return T(hs.memimg.raw(addr));
 // }
 
-
 int64_t
 getMappedSyscallNumber([[maybe_unused]] int64_t riscv64_syscall_number) {
 #define MAP_SYSCALL(name, x86_64, riscv64, ...)                                \
@@ -93,7 +92,9 @@ void emulate(cpu::HartState& hs) {
     uint64_t arg4 = hs.rf.GPR[14];
     uint64_t arg5 = hs.rf.GPR[15];
     asm volatile(
-        #if (defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 14) || (!defined(__clang__) && (defined(__GNUC__) || defined(__GNUG__)))
+    #if(defined(__clang__) && defined(__clang_major__) &&                      \
+        __clang_major__ >= 14) ||                                              \
+        (!defined(__clang__) && (defined(__GNUC__) || defined(__GNUG__)))
         "mov rax, %[sys]\n\t"
         "mov rdi, %[arg0]\n\t"
         "mov rsi, %[arg1]\n\t"
@@ -103,7 +104,7 @@ void emulate(cpu::HartState& hs) {
         "mov r9, %[arg5]\n\t"
         "syscall\n\t"
         "mov %[result], rax\n\t"
-        #else
+    #else
         "movq %[sys], %%rax\n\t"
         "movq %[arg0], %%rdi\n\t"
         "movq %[arg1], %%rsi\n\t"
@@ -113,7 +114,7 @@ void emulate(cpu::HartState& hs) {
         "movq %[arg5], %%r9\n\t"
         "syscall\n\t"
         "movq %%rax, %[result]\n\t"
-        #endif
+    #endif
         : [result] "=r"(result)
         : [arg0] "r"(arg0),
           [arg1] "r"(arg1),
