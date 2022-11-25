@@ -25,8 +25,16 @@ source $SCRIPT_DIR/env_vars.sh
 
 
 TOOLCHAIN=$1
+if [ -z $TOOLCHAIN ]; then
+    echo "Need to specify a toolchain"
+    exit 1
+fi
 shift
 MAIN=$1
+if [ -z $MAIN ]; then
+    echo "Need at least 1 argument, likely a source file"
+    exit 1
+fi
 OUTNAME=$SCRIPT_DIR/$(basename $MAIN | sed 's/\(.*\)\..*/\1/')
 if [[ $TOOLCHAIN == "native" ]]; then
     PREFIX=
