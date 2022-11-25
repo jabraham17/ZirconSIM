@@ -43,7 +43,8 @@ EMULATE_SYSCALL(ioctl,
 
 EMULATE_SYSCALL(
     fstat, 80, uint64_t fildes = hs.rf.GPR[10];
-    struct stat* addr = convertToRealAddress<struct stat*>(hs, hs.rf.GPR[11]);
+    struct stat* addr = (struct stat*)(uint64_t)hs.rf.GPR[11];//convertAddress<struct stat*>(hs, hs.rf.GPR[11]);
+    // std::cout << "ADDR: " << addr << " converted "<< convertAddress<struct stat*>(hs, hs.rf.GPR[11]) << std::endl;
     hs.rf.GPR[10] = fstat(fildes, addr);)
 
 EMULATE_SYSCALL(

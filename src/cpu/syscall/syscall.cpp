@@ -39,6 +39,15 @@ T convertToRealAddress(cpu::HartState& hs, uint64_t addr) {
     if(addr) return T(hs.memimg.raw(addr));
     else return T(0);
 }
+// template <typename T = uint64_t*>
+// T accessAddress(cpu::HartState& hs, uint64_t addr, bool checkStack = true) {
+//     if(checkStack && addr >= hs.memory_locations["stack_start"] &&
+//        addr <= hs.memory_locations["stack_end"]) {
+//         return T(addr);
+//     } else if(addr == 0) return T(0);
+//     else return T(hs.memimg.raw(addr));
+// }
+
 
 int64_t
 getMappedSyscallNumber([[maybe_unused]] int64_t riscv64_syscall_number) {
