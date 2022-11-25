@@ -91,7 +91,7 @@ class MemoryImage {
     event::Event<uint64_t, uint64_t> event_allocation;
 
     MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
-        uint8_t* ptr = (uint8_t*)malloc(sizeof(*ptr)*size);
+        uint8_t* ptr = (uint8_t*)malloc(sizeof(*ptr) * size);
         MemoryRegion mr(addr, size, ptr);
         memory_map.push_back(mr);
         return memory_map.back();
@@ -165,15 +165,11 @@ class MemoryImage {
     MemoryCellProxy<uint64_t> doubleword(uint64_t addr) {
         return MemoryCellProxy<uint64_t>(this, addr);
     }
-    uint8_t* raw(uint64_t addr, bool print = false) {
+    uint8_t* raw(uint64_t addr) {
         auto mr = getMemoryRegion(addr);
         if(mr) {
-            if(print) {
-            std::cout << "Memory region start: " << std::hex << mr->address << "\n";
-            std::cout << "Memory region length: " << std::hex << mr->size << "\n";
-            }
-            return mr->raw(addr);}
-        else return nullptr;
+            return mr->raw(addr);
+        } else return nullptr;
     }
     template <typename T> void addReadListener(T&& arg) {
         event_read.addListener(std::forward<T>(arg));
