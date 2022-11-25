@@ -25,7 +25,7 @@ source $SCRIPT_DIR/env_vars.sh
 
 FILE1=$1
 FILE2=$2
-if [ -z $FILE1 || -z $FILE2 ]; then
+if [[ -z $FILE1 || -z $FILE2 ]]; then
     echo "Need 2 files to compare"
     exit 1
 fi
