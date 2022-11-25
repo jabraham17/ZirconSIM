@@ -421,21 +421,8 @@ int main(int argc, const char** argv, const char** envp) {
     }
     for(auto w : parsed_commands.watches) {
         w->setColor(useColor);
-        if(auto wr = std::dynamic_pointer_cast<controller::WatchRegister>(w)) {
-            hart.addBeforeExecuteListener(
-                [wr](cpu::HartState&) { wr->update(); });
-            hart.addBeforeExecuteListener(
-                [wr](cpu::HartState&) { wr->update(); });
-        } else if(
-            auto wm =
-                std::dynamic_pointer_cast<controller::WatchMemoryAddress>(w)) {
-            hart.addBeforeExecuteListener(
-                [wm](cpu::HartState&) { wm->update(); });
-            hart.addAfterExecuteListener(
-                [wm](cpu::HartState&) { wm->update(); });
-        } else {
-            std::cerr << "No Event Handler Defined\n";
-        }
+        hart.addBeforeExecuteListener([w](cpu::HartState&) { w->update(); });
+        hart.addAfterExecuteListener([w](cpu::HartState&) { w->update(); });
     }
 
     // parse ennv
