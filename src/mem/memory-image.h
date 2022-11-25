@@ -72,8 +72,8 @@ class MemoryImage {
     };
 
     std::vector<MemoryRegion> memory_map;
-    std::unique_ptr<uint8_t[]> memory;
-    uint8_t* memory_ptr;
+    // std::unique_ptr<uint8_t[]> memory;
+    // uint8_t* memory_ptr;
     size_t mem_size;
 
     // Subsystem: mem
@@ -94,14 +94,15 @@ class MemoryImage {
     event::Event<uint64_t, uint64_t> event_allocation;
 
     MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
-        if(memory_ptr - memory.get() + size >= mem_size) {
-            throw OutOfMemoryException();
-        }
+        // if(memory_ptr - memory.get() + size >= mem_size) {
+        //     throw OutOfMemoryException();
+        // }
 
-        auto ptr = memory_ptr;
+        // auto ptr = memory_ptr;
+        uint8_t* ptr = (uint8_t*)malloc(sizeof(*ptr)*size);
         MemoryRegion mr(addr, size, ptr);
         memory_map.push_back(mr);
-        memory_ptr += size;
+        // memory_ptr += size;
         return memory_map.back();
     }
 
@@ -151,8 +152,8 @@ class MemoryImage {
 
   public:
     MemoryImage(size_t size = 0x1000) : mem_size(size) {
-        memory = std::make_unique<uint8_t[]>(mem_size);
-        memory_ptr = memory.get();
+        // memory = std::make_unique<uint8_t[]>(mem_size);
+        // memory_ptr = memory.get();
     }
 
     void allocate(uint64_t addr, uint64_t size) {
@@ -176,9 +177,14 @@ class MemoryImage {
     MemoryCellProxy<uint64_t> doubleword(uint64_t addr) {
         return MemoryCellProxy<uint64_t>(this, addr);
     }
-    uint8_t* raw(uint64_t addr) {
+    uint8_t* raw(uint64_t addr, bool print = false) {
         auto mr = getMemoryRegion(addr);
-        if(mr) return mr->raw(addr);
+        if(mr) {
+            if(print) {
+            std::cout << "Memory region start: " << std::hex << mr->address << "\n";
+            std::cout << "Memory region length: " << std::hex << mr->size << "\n";
+            }
+            return mr->raw(addr);}
         else return nullptr;
     }
     template <typename T> void addReadListener(T&& arg) {
