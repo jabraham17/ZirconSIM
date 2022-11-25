@@ -33,6 +33,7 @@ class ActionInterface {
   protected:
     cpu::HartState* hs;
     size_t indent;
+    bool useColor = false;
 
   public:
     ActionInterface(
@@ -51,8 +52,9 @@ class ActionInterface {
     }
     virtual void setHS(cpu::HartState* hs) { this->hs = hs; }
     virtual void increaseIndent(size_t indent = 2) { this->indent += indent; }
-    // possible sign underflow may occur here
+    // FIXME: possible sign underflow may occur here
     virtual void decreaseIndent(size_t indent = 2) { this->indent -= indent; }
+    virtual void setColor(bool useColor) { this->useColor = useColor; }
 };
 
 class DumpRegisterClass : public ActionInterface {
@@ -96,7 +98,8 @@ class DumpPC : public ActionInterface {
   public:
     SignedInteger offset;
     DumpPC(SignedInteger offset) : DumpPC(nullptr, offset) {}
-    DumpPC(cpu::HartState* hs, SignedInteger offset) : ActionInterface(ActionType::DUMP_PC, hs), offset(offset) {}
+    DumpPC(cpu::HartState* hs, SignedInteger offset)
+        : ActionInterface(ActionType::DUMP_PC, hs), offset(offset) {}
     virtual ~DumpPC() = default;
 
     void action(std::ostream* o = nullptr) override;
@@ -154,6 +157,10 @@ class ActionGroup : public ActionInterface {
         ActionInterface::setHS(hs);
         updateActions();
     }
+    virtual void setColor(bool useColor) override {
+        ActionInterface::setColor(useColor);
+        this->updateActions();
+    }
 
     virtual void increaseIndent(size_t indent = 2) override {
         ActionInterface::increaseIndent(indent);
@@ -161,7 +168,7 @@ class ActionGroup : public ActionInterface {
             a->increaseIndent();
         }
     }
-        virtual void decreaseIndent(size_t indent = 2) override {
+    virtual void decreaseIndent(size_t indent = 2) override {
         ActionInterface::decreaseIndent(indent);
         for(auto a : this->actions) {
             a->decreaseIndent();
@@ -173,6 +180,7 @@ class ActionGroup : public ActionInterface {
         for(auto a : this->actions) {
             a->setHS(this->hs);
             a->increaseIndent();
+            a->setColor(this->useColor);
         }
     }
 };
@@ -313,12 +321,20 @@ class PCCompare : public ConditionInterface {
     Address addr;
     ComparisonType ct;
 
-    PCCompare(SignedInteger offset, Address addr, ComparisonType ct) : PCCompare(nullptr, offset, addr, ct) {}
-    PCCompare(cpu::HartState* hs, SignedInteger offset, Address addr, ComparisonType ct)
-        : ConditionInterface(ConditionType::PC_CMP, hs), offset(offset), addr(addr), ct(ct) {}
+    PCCompare(SignedInteger offset, Address addr, ComparisonType ct)
+        : PCCompare(nullptr, offset, addr, ct) {}
+    PCCompare(
+        cpu::HartState* hs,
+        SignedInteger offset,
+        Address addr,
+        ComparisonType ct)
+        : ConditionInterface(ConditionType::PC_CMP, hs), offset(offset),
+          addr(addr), ct(ct) {}
     virtual ~PCCompare() = default;
 
-    bool check() override { return hs && ct(uint64_t(hs->pc + offset*4), addr); }
+    bool check() override {
+        return hs && ct(uint64_t(hs->pc + offset * 4), addr);
+    }
 
     static bool classof(const ConditionInterface* ci) {
         return ci->ct == ConditionType::PC_CMP;
@@ -342,8 +358,12 @@ struct ControlList;
 
 // empty class for inheritance
 class ControlBase {
+  protected:
+    bool useColor = false;
+
   public:
     virtual ~ControlBase() = default;
+    virtual void setColor(bool useColor) { this->useColor = useColor; }
 };
 
 class Command : public ControlBase {
@@ -365,6 +385,12 @@ class Command : public ControlBase {
         }
     }
     auto getEventType() { return et; }
+
+    virtual void setColor(bool useColor) override {
+        ControlBase::setColor(useColor);
+        for(auto a : actions)
+            a->setColor(useColor);
+    }
 };
 
 class ConditionalCommand : public Command {
@@ -419,6 +445,10 @@ class Watch : public ControlBase {
         this->actions = actions;
         this->updateActions();
     }
+    virtual void setColor(bool useColor) override {
+        ControlBase::setColor(useColor);
+        this->updateActions();
+    }
 
     virtual bool hasChanged() {
         std::optional<uint64_t> value = readCurrentValue();
@@ -438,6 +468,7 @@ class Watch : public ControlBase {
         for(auto a : this->actions) {
             a->setHS(this->hs);
             a->increaseIndent();
+            a->setColor(this->useColor);
         }
     }
 };
@@ -533,6 +564,9 @@ struct ControlList {
 
         return conditions;
     }
+    ControlList() = default;
+    ControlList(const ControlList& other) = default;
+    ControlList& operator=(const ControlList& other) = default;
 };
 
 } // namespace controller
