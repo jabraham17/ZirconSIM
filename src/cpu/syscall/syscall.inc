@@ -51,13 +51,8 @@ EMULATE_SYSCALL(
     openat, 56, int fd = hs.rf.GPR[10];
     const char* path = convertToRealAddress<const char*>(hs, hs.rf.GPR[11]);
     int oflag = hs.rf.GPR[12];
-    hs.rf.GPR[10] = openat(
-        fd,
-        path,
-        oflag,
-        hs.rf.GPR[13],
-        hs.rf.GPR[14],
-        hs.rf.GPR[15]);)
+    hs.rf.GPR[10] =
+        openat(fd, path, oflag, hs.rf.GPR[13], hs.rf.GPR[14], hs.rf.GPR[15]);)
 
 EMULATE_SYSCALL(close, 57, uint64_t fd = hs.rf.GPR[10];
                 // dont close stdio
@@ -81,12 +76,13 @@ EMULATE_SYSCALL(write, 64, uint64_t fd = hs.rf.GPR[10];
 
 // EMULATE_SYSCALL(
 //     writev, 66, uint64_t fildes = hs.rf.GPR[10];
-//     struct iovec* iov = convertToRealAddress<struct iovec*>(hs, hs.rf.GPR[11], true);
-//     uint64_t iovcnt = hs.rf.GPR[12];
+//     struct iovec* iov = convertToRealAddress<struct iovec*>(hs,
+//     hs.rf.GPR[11], true); uint64_t iovcnt = hs.rf.GPR[12];
 //     // need to rewrite the address inside of iov
 //     for(uint64_t idx = 0; idx < iovcnt; idx++) {
 //         if(iov &&
-//            hs.memimg.raw((uint64_t)iov + (idx * 16) + 8 /*iov[idx].iov_len*/)) {
+//            hs.memimg.raw((uint64_t)iov + (idx * 16) + 8
+//            /*iov[idx].iov_len*/)) {
 //             uint64_t orig_buffer = *(uint64_t*)(hs.memimg.raw(
 //                 (uint64_t)iov + (idx * 16) /*iov[idx].iov_base*/));
 //             *(uint64_t*)(hs.memimg.raw(
@@ -123,21 +119,21 @@ EMULATE_SYSCALL(clock_getres, 114, clockid_t clockid = (clockid_t)hs.rf.GPR[10];
                     convertToRealAddress<struct timespec*>(hs, hs.rf.GPR[11]);
                 hs.rf.GPR[10] = clock_getres(clockid, res);)
 
-EMULATE_SYSCALL(
-    uname,
-    160,
-    struct utsname* buf = convertToRealAddress<struct utsname*>(hs, hs.rf.GPR[10]);
-    hs.rf.GPR[10] = uname(buf);)
+EMULATE_SYSCALL(uname,
+                160,
+                struct utsname* buf =
+                    convertToRealAddress<struct utsname*>(hs, hs.rf.GPR[10]);
+                hs.rf.GPR[10] = uname(buf);)
 
-EMULATE_SYSCALL(
-    getrlimit, 163, uint64_t resource = hs.rf.GPR[10];
-    struct rlimit* rlp = convertToRealAddress<struct rlimit*>(hs, hs.rf.GPR[11]);
-    hs.rf.GPR[10] = getrlimit(resource, rlp);)
+EMULATE_SYSCALL(getrlimit, 163, uint64_t resource = hs.rf.GPR[10];
+                struct rlimit* rlp =
+                    convertToRealAddress<struct rlimit*>(hs, hs.rf.GPR[11]);
+                hs.rf.GPR[10] = getrlimit(resource, rlp);)
 
-EMULATE_SYSCALL(
-    setrlimit, 164, uint64_t resource = hs.rf.GPR[10];
-    struct rlimit* rlp = convertToRealAddress<struct rlimit*>(hs, hs.rf.GPR[11]);
-    hs.rf.GPR[10] = setrlimit(resource, rlp);)
+EMULATE_SYSCALL(setrlimit, 164, uint64_t resource = hs.rf.GPR[10];
+                struct rlimit* rlp =
+                    convertToRealAddress<struct rlimit*>(hs, hs.rf.GPR[11]);
+                hs.rf.GPR[10] = setrlimit(resource, rlp);)
 
 EMULATE_SYSCALL(umask, 166, uint64_t mode = hs.rf.GPR[10];
                 hs.rf.GPR[10] = umask(mode);)
