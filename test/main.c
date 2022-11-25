@@ -4,6 +4,7 @@
 #include <time.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 int ack(int m, int n)
 {
@@ -27,6 +28,7 @@ int fib(int n) {
 }
 
 int main() {
+    printf("sizeof stat %ld\n", sizeof(struct stat));
     srand(time(0));
     printf("hello, world %d\n", rand());
 
