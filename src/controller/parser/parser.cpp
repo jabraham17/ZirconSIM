@@ -20,14 +20,9 @@ Token Parser::expect(TokenType tt) {
         "'");
 }
 ControlList Parser::parse() {
-    try {
-        auto controls = parse_controls();
-        expect(TokenType::END_OF_FILE);
-        return ControlList(controls);
-    } catch(const ParseException& e) {
-        *log << e.what() << "\n";
-        return ControlList({});
-    }
+    auto controls = parse_controls();
+    expect(TokenType::END_OF_FILE);
+    return ControlList(controls);
 }
 
 // controls -> control | control controls
@@ -72,10 +67,12 @@ std::shared_ptr<ConditionalCommand> Parser::parse_event_cond_action() {
     auto ev = parse_event();
     auto cond = parse_cond_list();
     auto act = parse_action_list();
-    // turn actions into action group
-    std::vector<std::shared_ptr<action::ActionInterface>> action_group = {
-        std::make_shared<action::ActionGroup>(act)};
-    return std::make_shared<ConditionalCommand>(ev, cond, action_group);
+    // turn actions into action group if more than 1
+    if(act.size() > 1) {
+        std::vector<std::shared_ptr<action::ActionInterface>> action_group = {
+            std::make_shared<action::ActionGroup>(act)};
+        return std::make_shared<ConditionalCommand>(ev, cond, action_group);
+    } else return std::make_shared<ConditionalCommand>(ev, cond, act);
 }
 
 // event -> SUBSYSTEM COLON EVENT
@@ -243,9 +240,13 @@ std::shared_ptr<Watch> Parser::parse_watch_stmt() {
         actions = parse_action_list();
     }
     if(watch) {
-        // turn actions into action group
-        auto action_group = std::make_shared<action::ActionGroup>(actions);
-        watch->setActions({action_group});
+        // turn actions into action group if more than 1
+        if(actions.size() > 1) {
+            auto action_group = std::make_shared<action::ActionGroup>(actions);
+            watch->setActions({action_group});
+        } else {
+            watch->setActions(actions);
+        }
     }
 
     return watch;
@@ -258,13 +259,11 @@ SignedInteger Parser::parse_pc() {
         expect(TokenType::PLUS);
         auto num = expect(TokenType::NUM);
         return strToSignedInteger(num.lexeme);
-    }
-    else if(lexer.peek().token_type == TokenType::MINUS) {
+    } else if(lexer.peek().token_type == TokenType::MINUS) {
         expect(TokenType::MINUS);
         auto num = expect(TokenType::NUM);
         return -strToSignedInteger(num.lexeme);
-    }
-    else {
+    } else {
         // offset of 0 to pc
         return 0;
     }
