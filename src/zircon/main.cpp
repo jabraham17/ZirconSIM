@@ -215,7 +215,7 @@ int main(int argc, const char** argv, const char** envp) {
     }
 
     elf::File f(std::move(is));
-    mem::MemoryImage memimg(0x800000);
+    mem::MemoryImage memimg;
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
     bool useColor = program_args.get<bool>("--color");

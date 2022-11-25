@@ -72,9 +72,6 @@ class MemoryImage {
     };
 
     std::vector<MemoryRegion> memory_map;
-    // std::unique_ptr<uint8_t[]> memory;
-    // uint8_t* memory_ptr;
-    size_t mem_size;
 
     // Subsystem: mem
     // Description: Fires when memory is read
@@ -94,15 +91,9 @@ class MemoryImage {
     event::Event<uint64_t, uint64_t> event_allocation;
 
     MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
-        // if(memory_ptr - memory.get() + size >= mem_size) {
-        //     throw OutOfMemoryException();
-        // }
-
-        // auto ptr = memory_ptr;
         uint8_t* ptr = (uint8_t*)malloc(sizeof(*ptr)*size);
         MemoryRegion mr(addr, size, ptr);
         memory_map.push_back(mr);
-        // memory_ptr += size;
         return memory_map.back();
     }
 
@@ -151,10 +142,7 @@ class MemoryImage {
     };
 
   public:
-    MemoryImage(size_t size = 0x1000) : mem_size(size) {
-        // memory = std::make_unique<uint8_t[]>(mem_size);
-        // memory_ptr = memory.get();
-    }
+    MemoryImage() = default;
 
     void allocate(uint64_t addr, uint64_t size) {
         event_allocation(addr, size);

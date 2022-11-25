@@ -20,7 +20,7 @@ void emulate_impl(std::string filename) {
     }
 
     elf::File f(std::move(is));
-    mem::MemoryImage memimg(0xF0000);
+    mem::MemoryImage memimg;
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 
