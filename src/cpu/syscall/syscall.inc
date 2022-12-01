@@ -49,6 +49,38 @@ EMULATE_SYSCALL(fstat,
                 hs.rf.GPR[10] = -1;)
 
 EMULATE_SYSCALL(
+    open, 1024,
+    const char* path = convertToRealAddress<const char*>(hs, hs.rf.GPR[10]);
+    int flags = int(hs.rf.GPR[11]);
+    mode_t mode;
+    // if create or tmp, use mode
+    // else use a mode of 0
+    if(flags & O_CREAT || flags & O_TMPFILE)
+    mode = mode_t(hs.rf.GPR[12]);
+    else mode = 0;
+    // printf("ZIRCON DEBUG: %s 0x%x 0x%x\n", path, flags, mode);
+    // printf("O_APPEND %d\n", flags & O_APPEND); 
+    // printf("O_ASYNC %d\n", flags & O_ASYNC); 
+    // printf("O_CLOEXEC %d\n", flags & O_CLOEXEC); 
+    // printf("O_CREAT %d\n", flags & O_CREAT); 
+    // printf("O_DIRECT %d\n", flags & O_DIRECT); 
+    // printf("O_DIRECTORY %d\n", flags & O_DIRECTORY); 
+    // printf("O_DSYNC %d\n", flags & O_DSYNC); 
+    // printf("O_EXCL %d\n", flags & O_EXCL); 
+    // printf("O_LARGEFILE %d\n", flags & O_LARGEFILE); 
+    // printf("O_NOATIME %d\n", flags & O_NOATIME); 
+    // printf("O_NOCTTY %d\n", flags & O_NOCTTY); 
+    // printf("O_NOFOLLOW %d\n", flags & O_NOFOLLOW); 
+    // printf("O_NONBLOCK %d\n", flags & O_NONBLOCK); 
+    // printf("O_NDELAY %d\n", flags & O_NDELAY); 
+    // printf("O_PATH %d\n", flags & O_PATH); 
+    // printf("O_SYNC %d\n", flags & O_SYNC); 
+    // printf("O_TMPFILE %d\n", flags & O_TMPFILE); 
+    // printf("O_TRUNC %d\n", flags & O_TRUNC); 
+    hs.rf.GPR[10] = syscall(SYS_open, path, flags, mode);
+    )
+
+EMULATE_SYSCALL(
     openat, 56, int fd = hs.rf.GPR[10];
     const char* path = convertToRealAddress<const char*>(hs, hs.rf.GPR[11]);
     int oflag = hs.rf.GPR[12];
