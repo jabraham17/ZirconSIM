@@ -1,0 +1,40 @@
+ARCH=unix
+
+SOURCES=hint.c hkernel.c
+INCLUDES=hint.h typedefs.h
+TARGET=DOUBLE INT FLOAT SHORT LONGLONG
+
+CC=cc
+CFLAGS+=-O3 -D$(ARCH) -ansi -Wall -Wextra
+LDFLAGS+=-lm
+
+BIN_DIRECTORY=bin
+TARGET:=$(addprefix $(BIN_DIRECTORY)/,$(TARGET))
+
+.PHONY: all
+all: make_dirs $(TARGET)
+
+.PHONY: make_dirs
+make_dirs:
+	@mkdir -p $(BIN_DIRECTORY)
+
+.PHONY: clean
+clean:
+	$(RM) -f $(TARGET) hint.o hkernel.o
+
+$(BIN_DIRECTORY)/DOUBLE: $(SOURCES) $(INCLUDES_PATH) Makefile
+	$(CC) $(CFLAGS) $(SOURCES) -DDOUBLE -DIINT -o $@ $(LDFLAGS)
+
+$(BIN_DIRECTORY)/INT: $(SOURCES) $(INCLUDES_PATH) Makefile
+	$(CC) $(CFLAGS) $(SOURCES) -DINT -DIINT -o $@ $(LDFLAGS)
+
+$(BIN_DIRECTORY)/FLOAT: $(SOURCES) $(INCLUDES_PATH) Makefile
+	$(CC) $(CFLAGS) $(SOURCES) -DFLOAT -DIINT -o $@ $(LDFLAGS)
+
+$(BIN_DIRECTORY)/SHORT: $(SOURCES) $(INCLUDES_PATH) Makefile
+	$(CC) $(CFLAGS) $(SOURCES) -DSHORT -DIINT -o $@ $(LDFLAGS)
+
+$(BIN_DIRECTORY)/LONGLONG: $(SOURCES) $(INCLUDES_PATH) Makefile
+	$(CC) $(CFLAGS) $(SOURCES) -DLONGLONG -DIINT -o $@ $(LDFLAGS)
+
+
