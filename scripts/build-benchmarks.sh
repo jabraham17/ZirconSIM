@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+
+set -e
 realpath() {
   OURPWD=$PWD
   cd "$(dirname "$1")"
@@ -17,17 +20,9 @@ else
     SCRIPT_NAME=${BASH_SOURCE[0]}
 fi
 SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
+source $SCRIPT_DIR/env.sh
 
-
-ZIRCON_HOME=$SCRIPT_DIR/..
-
-export RV64IMA_ELF=$ZIRCON_HOME/toolchains/rv64ima
-export RV64IMA_ELF_DEBUG=$ZIRCON_HOME/toolchains/rv64ima-debug
-
-export RV64IMA_LINUX=$ZIRCON_HOME/toolchains/rv64ima-linux
-export RV64IMA_LINUX_DEBUG=$ZIRCON_HOME/toolchains/rv64ima-linux-debug
-
-export RV64IMA_MUSL=$ZIRCON_HOME/toolchains/rv64ima-musl
-export RV64IMA_MUSL_DEBUG=$ZIRCON_HOME/toolchains/rv64ima-musl-debug
-
-
+(set -x && \
+    cd $ZIRCON_BENCHMARK && \
+    ./build.sh $ZIRCON_RV64IMA_ELF $ZIRCON_BENCHMARK_BUILD \
+)
