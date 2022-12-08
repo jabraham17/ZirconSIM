@@ -23,12 +23,28 @@ SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
 source $SCRIPT_DIR/env.sh
 
 SOURCE=$1
-shift
 if [ -z $SOURCE ]; then
     echo "No Source Direcrty Given"
-    echo "Correct Usage: $SCRIPT_NAME <gnu-source>"
+    echo "Correct Usage: $SCRIPT_NAME <gnu-source> <toolchain>"
     exit 1
 fi
+shift
+TOOLCHAIN=$1
+if [ -z $TOOLCHAIN ]; then
+    echo "No Toolchain name"
+    echo "Correct Usage: $SCRIPT_NAME <gnu-source> <toolchain>"
+    exit 1
+fi
+shift
+
+# make source absolute
+case $SOURCE in
+    # abs path
+    /*) SOURCE=$SOURCE ;;
+    # relative path
+    *) SOURCE=`pwd`/$SOURCE ;;
+esac
+
 
 BUILD=""
 INSTALL=""

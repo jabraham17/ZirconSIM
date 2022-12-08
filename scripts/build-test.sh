@@ -34,6 +34,7 @@ if [ -z $MAIN ]; then
     echo "Need at least 1 argument, likely a source file"
     exit 1
 fi
+
 OUTNAME=$ZIRCON_TEST_BUILD/$(basename $MAIN | sed 's/\(.*\)\..*/\1/')
 mkdir -p $ZIRCON_TEST_BUILD
 if [[ $TOOLCHAIN == "native" ]]; then

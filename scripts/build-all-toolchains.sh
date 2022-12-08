@@ -22,9 +22,17 @@ fi
 SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
 source $SCRIPT_DIR/env.sh
 
-$ZIRCON_SCRIPTS/build-toolchain.sh elf
-$ZIRCON_SCRIPTS/build-toolchain.sh elf-debug
-$ZIRCON_SCRIPTS/build-toolchain.sh linux
-$ZIRCON_SCRIPTS/build-toolchain.sh linux-debug
-$ZIRCON_SCRIPTS/build-toolchain.sh musl
-$ZIRCON_SCRIPTS/build-toolchain.sh musl-debug
+SOURCE=$1
+if [ -z $SOURCE ]; then
+    echo "No Source Direcrty Given"
+    echo "Correct Usage: $SCRIPT_NAME <gnu-source>"
+    exit 1
+fi
+shift
+
+$ZIRCON_SCRIPTS/build-toolchain.sh $SOURCE elf $@
+$ZIRCON_SCRIPTS/build-toolchain.sh $SOURCE elf-debug $@
+$ZIRCON_SCRIPTS/build-toolchain.sh $SOURCE linux $@
+$ZIRCON_SCRIPTS/build-toolchain.sh $SOURCE linux-debug $@
+$ZIRCON_SCRIPTS/build-toolchain.sh $SOURCE musl $@
+$ZIRCON_SCRIPTS/build-toolchain.sh $SOURCE musl-debug $@
