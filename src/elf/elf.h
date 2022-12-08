@@ -7,6 +7,7 @@
 #include <fstream>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 namespace elf {
 
@@ -77,17 +78,17 @@ static_assert(
 ssize_t parseSectionHeader(std::ifstream&, SectionHeader&);
 bool validateSectionHeader(SectionHeader&);
 
-// struct SymbolTableEntry {
-//     uint32_t st_name;
-//     uint8_t st_info;
-//     uint8_t st_other;
-//     uint16_t st_shndx;
-//     uint64_t st_value;
-//     uint64_t st_size;
-// };
-// static_assert(
-//     sizeof(SectionHeader) == 0x18,
-//     "SectionHeader must be 0x40 bytes");
+struct __attribute__((packed))  SymbolTableEntry {
+    uint32_t st_name;
+    uint8_t st_info;
+    uint8_t st_other;
+    uint16_t st_shndx;
+    uint64_t st_value;
+    uint64_t st_size;
+};
+static_assert(
+    sizeof(SymbolTableEntry) == 0x18,
+    "SectionHeader must be 0x18 bytes");
 
 class File {
   private:
@@ -109,11 +110,12 @@ class File {
     bool isValid() { return valid; }
 
     std::string getSectionHeaderString(uint64_t);
+    std::string getString(uint64_t);
 
     void buildMemoryImage(mem::MemoryImage&);
     uint64_t getStartAddress();
 
-    void getSymbolTable();
+    std::unordered_map<uint64_t, std::string> getSymbolTable();
 };
 
 } // namespace elf

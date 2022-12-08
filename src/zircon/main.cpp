@@ -123,7 +123,7 @@ int main(int argc, const char** argv, const char** envp) {
         .metavar("LOGFILE")
         .help("memory accesses log file");
 
-    program_args.add_argument("-S", "--stats")
+    program_args.add_argument("--stats")
         .default_value(false)
         .implicit_value(true)
         .help("dump runtime statistics");
@@ -144,6 +144,11 @@ int main(int argc, const char** argv, const char** envp) {
         .default_value(false)
         .implicit_value(true)
         .help("pass the host environment variables to the simulated binary");
+
+    program_args.add_argument("-S", "--syms")
+        .default_value(false)
+        .implicit_value(true)
+        .help("try to resolve ELF symbols");
 
     // everything after -- gets shoved into the remaining args
     std::vector<std::string> simulated_argv;
@@ -238,6 +243,8 @@ int main(int argc, const char** argv, const char** envp) {
     bool useColor = program_args.get<bool>("--color");
     cpu::Hart hart(memimg);
 
+    auto elf_symbols = f.getSymbolTable();
+
     auto colorAddr = [useColor]() {
         return useColor ? color::getColor(
                               {color::ColorCode::LIGHT_CYAN,
@@ -260,22 +267,48 @@ int main(int argc, const char** argv, const char** envp) {
                               {color::ColorCode::RED, color::ColorCode::FAINT})
                         : "";
     };
+    auto colorSym = [useColor]() {
+        return useColor ? color::getColor({color::ColorCode::GREEN}) : "";
+    };
     auto colorReset = [useColor]() {
         return useColor ? color::getReset() : "";
     };
 
     if(program_args.get<bool>("--inst")) {
-        hart.addBeforeExecuteListener(
-            [inst_log, useColor, colorReset, colorHex, colorAddr](
-                cpu::HartState& hs) {
+        if(program_args.get<bool>("--syms")) {
+            hart.addBeforeExecuteListener([inst_log,
+                                           useColor,
+                                           colorReset,
+                                           colorHex,
+                                           colorAddr,
+                                           colorSym,
+                                           elf_symbols](cpu::HartState& hs) {
                 auto inst = hs.getInstWord();
+
                 *inst_log << "PC[" << colorAddr() << common::Format::doubleword
                           << hs.pc << colorReset() << "] = " << colorHex()
                           << common::Format::word << inst << colorReset()
                           << "; "
-                          << isa::inst::disassemble(inst, hs.pc, useColor)
-                          << std::endl;
+                          << isa::inst::disassemble(inst, hs.pc, useColor);
+                auto it = elf_symbols.find(uint64_t(hs.pc));
+                if(it != elf_symbols.end()) {
+                    *inst_log << " <" << colorSym() << it->second << colorReset() << ">";
+                }
+                *inst_log << std::endl;
             });
+        } else {
+            hart.addBeforeExecuteListener(
+                [inst_log, useColor, colorReset, colorHex, colorAddr](
+                    cpu::HartState& hs) {
+                    auto inst = hs.getInstWord();
+                    *inst_log
+                        << "PC[" << colorAddr() << common::Format::doubleword
+                        << hs.pc << colorReset() << "] = " << colorHex()
+                        << common::Format::word << inst << colorReset() << "; "
+                        << isa::inst::disassemble(inst, hs.pc, useColor)
+                        << std::endl;
+                });
+        }
     }
 
     if(program_args.get<bool>("--reg")) {

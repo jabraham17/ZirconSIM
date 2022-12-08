@@ -94,6 +94,8 @@ bool elf::File::parse() {
     return true;
 }
 
+uint64_t elf::File::getStartAddress() { return fh.e_entry; }
+
 std::string elf::File::getSectionHeaderString(uint64_t offset) {
     auto shstrtab = shs[fh.e_shstrndx];
     ifs.seekg(shstrtab.sh_offset + offset);
@@ -102,7 +104,21 @@ std::string elf::File::getSectionHeaderString(uint64_t offset) {
     return std::string(buffer);
 }
 
-uint64_t elf::File::getStartAddress() { return fh.e_entry; }
+std::string elf::File::getString(uint64_t offset) {
+    for(auto it = shs.begin(); it != shs.end(); it++) {
+        auto idx = (it - shs.end());
+        auto sh = *it;
+        if(sh.sh_type != 3 /*SHT_STRTAB*/) continue;
+        if(idx == fh.e_shstrndx) continue; // skip section header string table
+        if(offset >= sh.sh_size) continue;
+        ifs.seekg(sh.sh_offset + offset);
+        // rely on null terminated strings, could read symbol size?
+        char buffer[64];
+        ifs.read(buffer, 64);
+        return std::string(buffer);
+    }
+    return "";
+}
 
 void elf::File::buildMemoryImage(mem::MemoryImage& m) {
     // for each loadable segment
@@ -135,14 +151,19 @@ void elf::File::buildMemoryImage(mem::MemoryImage& m) {
     }
 }
 
-// std::map<uint64_t, std::string> elf::File::getSymbolTable() {
-//     for(auto sh: shs) {
-//         if(sh.sh_type != 2 /*SHT_SYMTABLE*/) continue;
-//         auto n_entries = (sh.sh_size / sh.sh_entsize) - 1;
-//         SymbolTableEntry* entries = new SymbolTableEntry[n_entries];
-//         ifs.seekg(sh.sh_offset + sh.sh_entsize); // skip first entry
-//         ifs.read(entries, n_entries * sh.sh_entsize);
-//         std::cout << "section has " << sh.sh_size << " " << sh.sh_entsize <<
-//         "\n";
-//     }
-// }
+std::unordered_map<uint64_t, std::string> elf::File::getSymbolTable() {
+    std::unordered_map<uint64_t, std::string> syms;
+    for(auto sh : shs) {
+        if(sh.sh_type != 2 /*SHT_SYMTABLE*/) continue;
+        auto n_entries = (sh.sh_size / sh.sh_entsize) - 1;
+        SymbolTableEntry* entries = new SymbolTableEntry[n_entries];
+        ifs.seekg(sh.sh_offset + sh.sh_entsize); // skip first entry
+        ifs.read((char*)entries, n_entries * sh.sh_entsize);
+        // for each entry, read its name and put in map
+        for(auto i = 0; i < n_entries; i++) {
+            std::string s = getString(entries[i].st_name);
+            if(s.size() > 0) syms[entries[i].st_value] = s;
+        }
+    }
+    return syms;
+}
