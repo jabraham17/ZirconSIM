@@ -23,12 +23,12 @@ SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
 source $SCRIPT_DIR/env_vars.sh
 
 OBJDUMP=
-if [ -f "$RV64IMA_ELF/bin/riscv64-unknown-elf-objdump" ]; then
-    OBJDUMP=$RV64IMA_ELF/bin/riscv64-unknown-elf-objdump
-elif [ -f "$RV64IMA_LINUX/bin/riscv64-unknown-linux-objdump" ]; then
-    OBJDUMP=$RV64IMA_LINUX/bin/riscv64-unknown-linux-objdump
-elif [ -f "$RV64IMA_MUSL/bin/riscv64-unknown-linux-musl-objdump" ]; then
-    OBJDUMP=$RV64IMA_MUSl/bin/riscv64-unknown-linux-musl-objdump
+if [ -f "$ZIRCON_RV64IMA_ELF/bin/riscv64-unknown-elf-objdump" ]; then
+    OBJDUMP=$ZIRCON_RV64IMA_ELF/bin/riscv64-unknown-elf-objdump
+elif [ -f "$ZIRCON_RV64IMA_LINUX/bin/riscv64-unknown-linux-objdump" ]; then
+    OBJDUMP=$ZIRCON_RV64IMA_LINUX/bin/riscv64-unknown-linux-objdump
+elif [ -f "$ZIRCON_RV64IMA_MUSL/bin/riscv64-unknown-linux-musl-objdump" ]; then
+    OBJDUMP=$ZIRCON_RV64IMA_MUSl/bin/riscv64-unknown-linux-musl-objdump
 else
     echo "No built objdump"
     exit 1

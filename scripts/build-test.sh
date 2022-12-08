@@ -41,22 +41,22 @@ if [[ $TOOLCHAIN == "native" ]]; then
     PREFIX=
     OUTNAME+="-native.out"
 elif [[ $TOOLCHAIN == "elf" ]]; then
-    PREFIX=$RV64IMA_ELF/bin/riscv64-unknown-elf-
+    PREFIX=$ZIRCON_RV64IMA_ELF/bin/riscv64-unknown-elf-
     OUTNAME+="-elf.out"
 elif [[ $TOOLCHAIN == "elf-debug" ]]; then
-    PREFIX=$RV64IMA_ELF_DEBUG/bin/riscv64-unknown-elf-
+    PREFIX=$ZIRCON_RV64IMA_ELF_DEBUG/bin/riscv64-unknown-elf-
     OUTNAME+="-elf-debug.out"
 elif [[ $TOOLCHAIN == "linux" ]]; then
-    PREFIX=$RV64IMA_LINUX/bin/riscv64-unknown-linux-gnu-
+    PREFIX=$ZIRCON_RV64IMA_LINUX/bin/riscv64-unknown-linux-gnu-
     OUTNAME+="-linux.out"
 elif [[ $TOOLCHAIN == "linux-debug" ]]; then
-    PREFIX=$RV64IMA_LINUX_DEBUG/bin/riscv64-unknown-linux-gnu-
+    PREFIX=$ZIRCON_RV64IMA_LINUX_DEBUG/bin/riscv64-unknown-linux-gnu-
     OUTNAME+="-linux-debug.out"
 elif [[ $TOOLCHAIN == "musl" ]]; then
-    PREFIX=$RV64IMA_MUSL/bin/riscv64-unknown-linux-musl-
+    PREFIX=$ZIRCON_RV64IMA_MUSL/bin/riscv64-unknown-linux-musl-
     OUTNAME+="-musl.out"
 elif [[ $TOOLCHAIN == "musl-debug" ]]; then
-    PREFIX=$RV64IMA_MUSL_DEBUG/bin/riscv64-unknown-linux-musl-
+    PREFIX=$ZIRCON_RV64IMA_MUSL_DEBUG/bin/riscv64-unknown-linux-musl-
     OUTNAME+="-musl-debug.out"
 else
     echo "Invalid Toolchain"
