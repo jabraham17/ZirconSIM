@@ -20,7 +20,6 @@ else
     SCRIPT_NAME=${BASH_SOURCE[0]}
 fi
 SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
-
 source $SCRIPT_DIR/env_vars.sh
 
 OBJDUMP=

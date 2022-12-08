@@ -20,14 +20,11 @@ else
     SCRIPT_NAME=${BASH_SOURCE[0]}
 fi
 SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
+source $SCRIPT_DIR/env.sh
 
-source $SCRIPT_DIR/env_vars.sh
-
-FILE1=$1
-FILE2=$2
-if [[ -z $FILE1 || -z $FILE2 ]]; then
-    echo "Need 2 files to compare"
-    exit 1
-fi
-
-(set -x && diff <($SCRIPT_DIR/objdump.sh -S $FILE1) <($SCRIPT_DIR/objdump.sh -S $FILE2))
+$ZIRCON_SCRIPTS/build-toolchain.sh elf
+$ZIRCON_SCRIPTS/build-toolchain.sh elf-debug
+$ZIRCON_SCRIPTS/build-toolchain.sh linux
+$ZIRCON_SCRIPTS/build-toolchain.sh linux-debug
+$ZIRCON_SCRIPTS/build-toolchain.sh musl
+$ZIRCON_SCRIPTS/build-toolchain.sh musl-debug

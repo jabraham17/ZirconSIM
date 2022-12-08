@@ -20,14 +20,13 @@ else
     SCRIPT_NAME=${BASH_SOURCE[0]}
 fi
 SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
+source $SCRIPT_DIR/env.sh
 
-source $SCRIPT_DIR/env_vars.sh
-
-($SCRIPT_DIR/build_test.sh native $@) &
-($SCRIPT_DIR/build_test.sh elf $@) &
-($SCRIPT_DIR/build_test.sh elf-debug $@) &
-($SCRIPT_DIR/build_test.sh linux $@) &
-($SCRIPT_DIR/build_test.sh linux-debug $@) &
-($SCRIPT_DIR/build_test.sh musl $@) &
-($SCRIPT_DIR/build_test.sh musl-debug $@) &
+($ZIRCON_SCRIPTS/build_test.sh native $@) &
+($ZIRCON_SCRIPTS/build_test.sh elf $@) &
+($ZIRCON_SCRIPTS/build_test.sh elf-debug $@) &
+($ZIRCON_SCRIPTS/build_test.sh linux $@) &
+($ZIRCON_SCRIPTS/build_test.sh linux-debug $@) &
+($ZIRCON_SCRIPTS/build_test.sh musl $@) &
+($ZIRCON_SCRIPTS/build_test.sh musl-debug $@) &
 wait

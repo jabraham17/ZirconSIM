@@ -30,7 +30,7 @@ fi
 
 (set -x && \
     cd $SCRIPT_DIR/hint && \
-    make CC="clang" CFLAGS="--target=riscv64-unknown-elf --gcc-toolchain=$RV64IMA_ELF --sysroot=$RV64IMA_ELF/riscv64-unknown-elf" LDFLAGS="-static" -B all \
+    make CC="clang" CFLAGS="--target=riscv64-unknown-elf -march=rv64ima -mabi=lp64 --gcc-toolchain=$RV64IMA_ELF --sysroot=$RV64IMA_ELF/riscv64-unknown-elf" LDFLAGS="-static" -B all \
 )
 (set -x && \
     cd $SCRIPT_DIR/hint && \

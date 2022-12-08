@@ -20,8 +20,7 @@ else
     SCRIPT_NAME=${BASH_SOURCE[0]}
 fi
 SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
-
-source $SCRIPT_DIR/env_vars.sh
+source $SCRIPT_DIR/env.sh
 
 
 TOOLCHAIN=$1
@@ -35,7 +34,8 @@ if [ -z $MAIN ]; then
     echo "Need at least 1 argument, likely a source file"
     exit 1
 fi
-OUTNAME=$SCRIPT_DIR/$(basename $MAIN | sed 's/\(.*\)\..*/\1/')
+OUTNAME=$ZIRCON_TEST_BUILD/$(basename $MAIN | sed 's/\(.*\)\..*/\1/')
+mkdir -p $ZIRCON_TEST_BUILD
 if [[ $TOOLCHAIN == "native" ]]; then
     PREFIX=
     OUTNAME+="-native.out"

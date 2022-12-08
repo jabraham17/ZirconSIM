@@ -6,5 +6,6 @@
 *.bin
 build/
 build-wasm/
-build-toolchain/
 toolchains/
+test/build/
+benchmark/build/
