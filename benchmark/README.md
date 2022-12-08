@@ -21,3 +21,6 @@ https://github.com/nfinit/ansibench
 
 
 https://github.com/michaeljclark/rv8-bench
+
+https://github.com/staceyson/splash2
+https://parsec.cs.princeton.edu/
