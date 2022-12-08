@@ -160,7 +160,7 @@ std::unordered_map<uint64_t, std::string> elf::File::getSymbolTable() {
         ifs.seekg(sh.sh_offset + sh.sh_entsize); // skip first entry
         ifs.read((char*)entries, n_entries * sh.sh_entsize);
         // for each entry, read its name and put in map
-        for(auto i = 0; i < n_entries; i++) {
+        for(decltype(n_entries) i = 0; i < n_entries; i++) {
             std::string s = getString(entries[i].st_name);
             if(s.size() > 0) syms[entries[i].st_value] = s;
         }
