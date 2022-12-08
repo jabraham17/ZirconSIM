@@ -9,3 +9,4 @@ build-wasm/
 toolchains/
 test/build/
 benchmark/build/
+benchmark/results/
