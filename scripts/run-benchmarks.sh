@@ -24,5 +24,5 @@ source $SCRIPT_DIR/env.sh
 
 (set -x && \
     cd $ZIRCON_BENCHMARK && \
-    ./run.sh $ZIRCON_RV64IMA_ELF/bin/riscv64-unknown-elf-run $ZIRCON_HOME/build/bin/zircon $ZIRCON_BENCHMARK_BUILD $ZIRCON_BENCHMARK/results \
+    ./run.sh $ZIRCON_RV64IMA_ELF/bin/riscv64-unknown-elf-run $ZIRCON_HOME/build/bin/zircon $ZIRCON_BENCHMARK_BUILD $ZIRCON_BENCHMARK_RESULT \
 )
