@@ -16,12 +16,33 @@
 
 namespace mem {
 
-struct MemoryException : public std::exception {
-    const char* what() const noexcept { return "Memory Exception"; }
+struct MemoryException : public std::runtime_error {
+    MemoryException() : std::runtime_error("Memory Exception") {}
+    MemoryException(std::string message)
+        : std::runtime_error("Memory Exception: " + message) {}
+    MemoryException(std::string type, std::string message)
+        : std::runtime_error("Memory Exception[" + type + "]: " + message) {}
 };
-struct OutOfMemoryException : public MemoryException {
-    const char* what() const noexcept { return "Out of Memory"; }
+
+struct ReallocationMemoryException : public MemoryException {
+    uint64_t addr;
+    uint64_t size;
+    ReallocationMemoryException(uint64_t addr, uint64_t size = 0)
+        : MemoryException("Reallocation", ""), addr(addr), size(size) {}
+    const char* what() const noexcept {
+        std::stringstream ss;
+        ss << MemoryException::what() << "\n";
+        ss << "attempted to reallocate 0x" << std::hex << addr;
+        if(size != 0) {
+            ss << " of size 0x" << std::hex << addr;
+        }
+        return strdup(ss.str().c_str());
+    }
 };
+// struct OutOfMemoryException : public MemoryException {
+//     OutOfMemoryException(std::string message = "") :
+//     MemoryException("OutOfMemory", message) {}
+// };
 struct OutOfBoundsException : public MemoryException {
     uint64_t addr;
     uint64_t range_lower;
@@ -30,10 +51,11 @@ struct OutOfBoundsException : public MemoryException {
         uint64_t addr,
         uint64_t range_lower = 0,
         uint64_t range_upper = 0)
-        : addr(addr), range_lower(range_lower), range_upper(range_upper) {}
+        : MemoryException("OutOfBounds", ""), addr(addr),
+          range_lower(range_lower), range_upper(range_upper) {}
     const char* what() const noexcept {
         std::stringstream ss;
-        ss << "Out of Bounds Access: ";
+        ss << MemoryException::what() << "\n";
         if(range_lower == 0 && range_upper == 0) {
             ss << "unknown addr 0x" << std::hex << addr;
         } else {
@@ -145,10 +167,10 @@ class MemoryImage {
     MemoryImage() = default;
 
     void allocate(uint64_t addr, uint64_t size) {
-        event_allocation(addr, size);
         if(size == 0) return;
+        event_allocation(addr, size);
         if(getMemoryRegion(addr)) {
-            throw MemoryException();
+            throw ReallocationMemoryException(addr, size);
         }
         allocateMemoryRegion(addr, size);
     }
