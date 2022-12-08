@@ -272,7 +272,7 @@ class MemAddrCompare : public ConditionInterface {
     virtual ~MemAddrCompare() = default;
 
     bool check() override {
-        return hs && ct((*(uint64_t*)(hs->memimg.raw(addr))), i);
+        return hs && ct((*(uint64_t*)(hs->mem().raw(addr))), i);
     }
 
     static bool classof(const ConditionInterface* ci) {
@@ -305,7 +305,7 @@ class RegisterCompare : public ConditionInterface {
 
     bool check() override {
         if(this->regtype == isa::rf::RegisterClassType::GPR) {
-            return hs && ct(uint64_t(this->hs->rf.GPR.rawreg(idx)), i);
+            return hs && ct(uint64_t(this->hs->rf().GPR.rawreg(idx)), i);
         }
         return false;
     }
@@ -495,7 +495,7 @@ class WatchRegister : public Watch {
     virtual std::optional<uint64_t> readCurrentValue() override {
         if(hs) {
             if(this->regtype == isa::rf::RegisterClassType::GPR) {
-                return this->hs->rf.GPR.rawreg(idx).get();
+                return this->hs->rf().GPR.rawreg(idx).get();
             }
         }
         return std::nullopt;
@@ -521,7 +521,7 @@ class WatchMemoryAddress : public Watch {
     }
     virtual std::optional<uint64_t> readCurrentValue() override {
         if(hs) {
-            auto converted_addr = hs->memimg.raw(addr);
+            auto converted_addr = hs->mem().raw(addr);
             if(converted_addr) return *(uint64_t*)(converted_addr);
         }
         return std::nullopt;

@@ -12,7 +12,7 @@ CUSTOM(rv32i,
        //        instruction::getRs2(bits);
        return ss.str();
        , std::cout << "unimp\n";
-       hs.pc += 4;
+       hs().pc += 4;
        , 0)
 
 CUSTOM(rv32i,
@@ -31,5 +31,5 @@ CUSTOM(rv32i,
           << internal::colorReset(color);
        return ss.str();
        , std::cout << "unimp\n";
-       hs.pc += 4;
+       hs().pc += 4;
        , 0)

@@ -30,10 +30,10 @@ void emulate_impl(std::string filename) {
     std::ostream* reg_log = &std::cout;
 
     hart.addBeforeExecuteListener([inst_log](cpu::HartState& hs) {
-        auto inst = hs.getInstWord();
-        *inst_log << "PC[" << common::Format::doubleword << hs.pc
+        auto inst = hs().getInstWord();
+        *inst_log << "PC[" << common::Format::doubleword << hs().pc
                   << "] = " << common::Format::word << inst << "; "
-                  << isa::inst::disassemble(inst, hs.pc) << std::endl;
+                  << isa::inst::disassemble(inst, hs().pc) << std::endl;
     });
     hart.addRegisterReadListener(
         [reg_log](std::string classname, uint64_t idx, uint64_t value) {

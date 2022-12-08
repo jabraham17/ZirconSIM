@@ -59,19 +59,6 @@ std::ostream* getFileStreamIfTrue(
     return inst_log;
 }
 
-auto stringsplit(std::string s, std::string delim = ",") {
-    std::vector<std::string> tokens;
-    size_t pos = 0;
-    std::string token;
-    while((pos = s.find(delim)) != std::string::npos) {
-        token = s.substr(0, pos);
-        tokens.push_back(token);
-        s.erase(0, pos + delim.length());
-    }
-    tokens.push_back(s);
-    return tokens;
-}
-
 // transforms string of form VAR=VALUE into pair {VAR,VALUE}
 std::pair<std::string, std::string> splitVarEqualsValue(std::string s) {
     size_t pos = s.find('=');
@@ -237,11 +224,10 @@ int main(int argc, const char** argv, const char** envp) {
     }
 
     elf::File f(std::move(is));
-    mem::MemoryImage memimg;
-    f.buildMemoryImage(memimg);
+    cpu::Hart hart(std::make_shared<mem::MemoryImage>());
+    f.buildMemoryImage(hart.hs().mem());
     auto start = f.getStartAddress();
     bool useColor = program_args.get<bool>("--color");
-    cpu::Hart hart(memimg);
 
     auto elf_symbols = f.getSymbolTable();
 
@@ -283,14 +269,14 @@ int main(int argc, const char** argv, const char** envp) {
                                            colorAddr,
                                            colorSym,
                                            elf_symbols](cpu::HartState& hs) {
-                auto inst = hs.getInstWord();
+                auto inst = hs().getInstWord();
 
                 *inst_log << "PC[" << colorAddr() << common::Format::doubleword
-                          << hs.pc << colorReset() << "] = " << colorHex()
+                          << hs().pc << colorReset() << "] = " << colorHex()
                           << common::Format::word << inst << colorReset()
                           << "; "
-                          << isa::inst::disassemble(inst, hs.pc, useColor);
-                auto it = elf_symbols.find(uint64_t(hs.pc));
+                          << isa::inst::disassemble(inst, hs().pc, useColor);
+                auto it = elf_symbols.find(uint64_t(hs().pc));
                 if(it != elf_symbols.end()) {
                     *inst_log << " <" << colorSym() << it->second << colorReset() << ">";
                 }
@@ -300,12 +286,12 @@ int main(int argc, const char** argv, const char** envp) {
             hart.addBeforeExecuteListener(
                 [inst_log, useColor, colorReset, colorHex, colorAddr](
                     cpu::HartState& hs) {
-                    auto inst = hs.getInstWord();
+                    auto inst = hs().getInstWord();
                     *inst_log
                         << "PC[" << colorAddr() << common::Format::doubleword
-                        << hs.pc << colorReset() << "] = " << colorHex()
+                        << hs().pc << colorReset() << "] = " << colorHex()
                         << common::Format::word << inst << colorReset() << "; "
-                        << isa::inst::disassemble(inst, hs.pc, useColor)
+                        << isa::inst::disassemble(inst, hs().pc, useColor)
                         << std::endl;
                 });
         }
@@ -338,7 +324,7 @@ int main(int argc, const char** argv, const char** envp) {
     }
     if(program_args.get<bool>("--mem")) {
         if(!program_args.get<bool>("--csv")) {
-            memimg.addAllocationListener(
+            hart.hs().mem().addAllocationListener(
                 [mem_log, colorReset, colorAddr](uint64_t addr, uint64_t size) {
                     *mem_log << "ALLOCATE[" << colorAddr()
                              << common::Format::doubleword << addr
@@ -347,7 +333,7 @@ int main(int argc, const char** argv, const char** envp) {
                              << colorReset() << "]" << std::endl;
                 });
 
-            memimg.addReadListener([mem_log, colorReset, colorAddr, colorNew](
+            hart.hs().mem().addReadListener([mem_log, colorReset, colorAddr, colorNew](
                                        uint64_t addr,
                                        uint64_t value,
                                        size_t size) {
@@ -356,7 +342,7 @@ int main(int argc, const char** argv, const char** envp) {
                          << "] = " << colorNew() << common::Format::hexnum(size)
                          << (uint64_t)value << colorReset() << std::endl;
             });
-            memimg.addWriteListener(
+            hart.hs().mem().addWriteListener(
                 [mem_log, colorReset, colorAddr, colorNew, colorOld](
                     uint64_t addr,
                     uint64_t value,
@@ -371,7 +357,7 @@ int main(int argc, const char** argv, const char** envp) {
                              << colorReset() << std::endl;
                 });
         } else {
-            memimg.addReadListener(
+            hart.hs().mem().addReadListener(
                 [mem_log](uint64_t addr, uint64_t value, size_t size) {
                     *mem_log << "rd-mem," << addr << ",";
                     if(size == 1) *mem_log << (uint8_t)value;
@@ -380,7 +366,7 @@ int main(int argc, const char** argv, const char** envp) {
                     else *mem_log << value;
                     *mem_log << std::endl;
                 });
-            memimg.addWriteListener([mem_log](
+            hart.hs().mem().addWriteListener([mem_log](
                                         uint64_t addr,
                                         uint64_t value,
                                         [[maybe_unused]] uint64_t oldvalue,
@@ -403,13 +389,13 @@ int main(int argc, const char** argv, const char** envp) {
     }
 
     for(auto a : parsed_commands.allActions()) {
-        a->setHS(&hart.hs);
+        a->setHS(&hart.hs());
     }
     for(auto c : parsed_commands.allConditions()) {
-        c->setHS(&hart.hs);
+        c->setHS(&hart.hs());
     }
     for(auto w : parsed_commands.watches) {
-        w->setHS(&hart.hs);
+        w->setHS(&hart.hs());
         w->setLog(&std::cout);
     }
     for(auto c : parsed_commands.commands) {
@@ -424,27 +410,27 @@ int main(int argc, const char** argv, const char** envp) {
                     [c](cpu::HartState&) { c->doit(&std::cout); });
                 break;
             case event::EventType::MEM_READ:
-                hart.hs.memimg.addReadListener(
+                hart.hs().mem().addReadListener(
                     [c](uint64_t, uint64_t, size_t) { c->doit(&std::cout); });
                 break;
             case event::EventType::MEM_WRITE:
-                hart.hs.memimg.addWriteListener(
+                hart.hs().mem().addWriteListener(
                     [c](uint64_t, uint64_t, uint64_t, size_t) {
                         c->doit(&std::cout);
                     });
                 break;
             case event::EventType::MEM_ALLOCATION:
-                hart.hs.memimg.addAllocationListener(
+                hart.hs().mem().addAllocationListener(
                     [c](uint64_t, uint64_t) { c->doit(&std::cout); });
                 break;
             case event::EventType::REG_READ:
-                hart.hs.rf.addReadListener(
+                hart.hs().rf().addReadListener(
                     [c](std::string, uint64_t, uint64_t) {
                         c->doit(&std::cout);
                     });
                 break;
             case event::EventType::REG_WRITE:
-                hart.hs.rf.addWriteListener(
+                hart.hs().rf().addWriteListener(
                     [c](std::string, uint64_t, uint64_t, uint64_t) {
                         c->doit(&std::cout);
                     });

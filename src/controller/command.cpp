@@ -37,7 +37,7 @@ void DumpRegisterClass::action(std::ostream* o) {
     if(o && hs) {
         if(this->regtype == isa::rf::RegisterClassType::GPR) {
             *o << std::string(indent, ' ');
-            this->hs->rf.GPR.dump(*o);
+            this->hs->rf().GPR.dump(*o);
             *o << std::endl;
         }
     }
@@ -47,7 +47,7 @@ void DumpRegister::action(std::ostream* o) {
     if(o && hs) {
         if(this->regtype == isa::rf::RegisterClassType::GPR) {
             *o << std::string(indent, ' ');
-            this->hs->rf.GPR.rawreg(idx).dump(*o);
+            this->hs->rf().GPR.rawreg(idx).dump(*o);
             *o << std::endl;
         }
     }
@@ -57,7 +57,7 @@ void DumpPC::action(std::ostream* o) {
     if(o && hs) {
         uint64_t pc = hs->pc + offset * 4;
         uint32_t inst = 0;
-        uint32_t* inst_ptr = reinterpret_cast<uint32_t*>(hs->memimg.raw(pc));
+        uint32_t* inst_ptr = reinterpret_cast<uint32_t*>(hs->mem().raw(pc));
         if(inst_ptr) inst = *inst_ptr;
         *o << std::string(indent, ' ');
         *o << "PC[" << colorAddr(useColor) << common::Format::doubleword << pc
@@ -71,7 +71,7 @@ void DumpMemoryAddress::action(std::ostream* o) {
         *o << std::string(indent, ' ');
         *o << "MEM[" << colorAddr(useColor) << common::Format::doubleword
            << addr << colorReset(useColor) << "] = ";
-        auto converted_addr = hs->memimg.raw(addr);
+        auto converted_addr = hs->mem().raw(addr);
         if(converted_addr) {
             auto value = *(uint64_t*)(converted_addr);
             *o << colorNew(useColor) << common::Format::doubleword << value

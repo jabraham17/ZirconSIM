@@ -15,37 +15,40 @@ namespace cpu {
 
 // use raw(addr) so we don't log mem access
 uint32_t HartState::getInstWord() const {
-    auto ptr = memimg.raw(pc);
+    auto ptr = mem().raw(pc);
     return *((uint32_t*)ptr);
 }
 
-HartState::HartState(mem::MemoryImage& m) : memimg(m), executing(true) {}
+HartState::HartState(std::shared_ptr<mem::MemoryImage> m)
+    : rf_(std::make_unique<isa::rf::RegisterFile>()), memimg_(m),
+      executing(true) {}
 
-Hart::Hart(mem::MemoryImage& m) : hs(m) {}
+Hart::Hart(std::shared_ptr<mem::MemoryImage> m)
+    : hs_(std::make_unique<HartState>(m)) {}
 
 bool Hart::shouldHalt() {
     // halt if no longer executing
-    if(!hs.executing) return true;
+    if(!hs().executing) return true;
     // if pc is beyond the bounds of memory , return true
-    if(hs.memimg.raw(hs.pc) == nullptr) return true;
+    if(hs().mem().raw(hs().pc) == nullptr) return true;
     // if the instruction just executed was a jmp to itself, halt
-    uint32_t inst = hs.getInstWord();
+    uint32_t inst = hs().getInstWord();
     auto op = isa::inst::decodeInstruction(inst);
     auto jmp_target =
-        instruction::signext64<20>(instruction::getJTypeImm(inst)) + hs.pc;
+        instruction::signext64<20>(instruction::getJTypeImm(inst)) + hs().pc;
     return (
-        op == isa::inst::Opcode::rv32i_jal && jmp_target == hs.pc.previous());
+        op == isa::inst::Opcode::rv32i_jal && jmp_target == hs().pc.previous());
 }
 
 uint64_t Hart::alloc(size_t n) {
-    auto ptr = hs.memory_locations["heap_end"];
-    hs.memimg.allocate(ptr, n);
-    hs.memory_locations["heap_end"] += n;
+    auto ptr = hs().getMemLocation("heap_end");
+    hs().mem().allocate(ptr, n);
+    hs().setMemLocation("heap_end", ptr + n);
     return ptr;
 }
 void Hart::copyToHart(void* src, uint64_t dst, size_t n) {
     for(size_t i = 0; i < n; i++) {
-        hs.memimg.byte(dst + i) = ((char*)src)[i];
+        hs().mem().byte(dst + i) = ((char*)src)[i];
     }
 }
 
@@ -126,13 +129,14 @@ enum class AUXVecType : uint64_t {
 void Hart::init_heap() {
     // initial heap size is 0
     // uint64_t SPACING = 0x10000;
-    hs.memory_locations["heap_start"] = 0x100000000;
+    hs().setMemLocation("heap_start", 0x100000000);
 
-    // hs.memory_locations["stack_end"] + SPACING;
+    // hs().memory_locations["stack_end"] + SPACING;
     uint64_t heap_size = 0;
-    hs.memory_locations["heap_end"] =
-        hs.memory_locations["heap_start"] + heap_size;
-    hs.memimg.allocate(hs.memory_locations["heap_start"], heap_size);
+    hs().setMemLocation(
+        "heap_end",
+        hs().getMemLocation("heap_start") + heap_size);
+    hs().mem().allocate(hs().getMemLocation("heap_start"), heap_size);
 }
 
 intptr_t alignup(intptr_t ptr, unsigned n) {
@@ -145,19 +149,19 @@ void Hart::init_stack(
     std::vector<std::string> argv,
     common::ordered_map<std::string, std::string> envp) {
     // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
-    hs.memory_locations["stack_start"] = 0x7fffffff00000000;
+    hs().setMemLocation("stack_start", 0x7fffffff00000000);
     uint64_t stack_size = 0x10000;
-    hs.memory_locations["stack_end"] =
-        hs.memory_locations["stack_start"] + stack_size;
-    hs.memimg.allocate(hs.memory_locations["stack_start"], stack_size);
-    auto sp = hs.memory_locations["stack_end"];
+    hs().setMemLocation("stack_end",
+        hs().getMemLocation("stack_start") + stack_size);
+    hs().mem().allocate(hs().getMemLocation("stack_start"), stack_size);
+    auto sp = hs().getMemLocation("stack_end");
 
     // auxvec
     common::ordered_map<AUXVecType, uint64_t> auxvec;
     auxvec.insert_or_assign(AUXVecType::AT_PAGESZ, 4096);
     auto rand_addr = alloc(16);
     for(auto i = 0; i < 16; i++) {
-        hs.memimg.byte(rand_addr + i) = uint8_t(rand());
+        hs().mem().byte(rand_addr + i) = uint8_t(rand());
     }
     auxvec.insert_or_assign(AUXVecType::AT_RANDOM, rand_addr);
     auxvec.insert_or_assign(AUXVecType::AT_NULL, 0);
@@ -178,16 +182,16 @@ void Hart::init_stack(
     auto stack_idx = 0;
 
     // write argc first
-    hs.memimg.word(sp + 8 * (stack_idx++)) = argc;
+    hs().mem().word(sp + 8 * (stack_idx++)) = argc;
     // write argv
     for(auto s : argv) {
         auto slen = s.size();
         auto addr = alloc(slen + 1); // alloc space for null byte
         copyToHart((void*)s.c_str(), addr, slen);
-        hs.memimg.doubleword(sp + 8 * (stack_idx++)) = addr;
+        hs().mem().doubleword(sp + 8 * (stack_idx++)) = addr;
     }
     // write NULL
-    hs.memimg.doubleword(sp + 8 * (stack_idx++)) = 0;
+    hs().mem().doubleword(sp + 8 * (stack_idx++)) = 0;
 
     // write ENV
     for(auto [key, value] : envp) {
@@ -195,19 +199,19 @@ void Hart::init_stack(
         auto slen = s.size();
         auto addr = alloc(slen + 1); // alloc space for null byte
         copyToHart((void*)s.c_str(), addr, slen);
-        hs.memimg.doubleword(sp + 8 * (stack_idx++)) = addr;
+        hs().mem().doubleword(sp + 8 * (stack_idx++)) = addr;
     }
     // write NULL
-    hs.memimg.doubleword(sp + 8 * (stack_idx++)) = 0;
+    hs().mem().doubleword(sp + 8 * (stack_idx++)) = 0;
 
     // write auxvec
     for(auto [key, value] : auxvec) {
-        hs.memimg.doubleword(sp + 8 * (stack_idx++)) = uint64_t(key);
-        hs.memimg.doubleword(sp + 8 * (stack_idx++)) = value;
+        hs().mem().doubleword(sp + 8 * (stack_idx++)) = uint64_t(key);
+        hs().mem().doubleword(sp + 8 * (stack_idx++)) = value;
     }
 
     // set gpr for sp
-    hs.rf.GPR[2] = sp;
+    hs().rf().GPR[2] = sp;
 }
 
 void Hart::init(
@@ -218,13 +222,13 @@ void Hart::init(
 }
 
 void Hart::execute(uint64_t start_address) {
-    hs.pc = start_address;
+    hs().pc = start_address;
     while(1) {
         try {
-            event_before_execute(hs);
-            auto inst = hs.getInstWord();
-            isa::inst::executeInstruction(inst, hs);
-            event_after_execute(hs);
+            event_before_execute(hs());
+            auto inst = hs().getInstWord();
+            isa::inst::executeInstruction(inst, hs());
+            event_after_execute(hs());
 
             if(shouldHalt()) break;
         } catch(const std::exception& e) {

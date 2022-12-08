@@ -7,25 +7,25 @@
 #endif
 
 COUNTER("all instructions executed", counter++;)
-COUNTER("R-Type instructions executed", auto bits = hs.getInstWord();
+COUNTER("R-Type instructions executed", auto bits = hs().getInstWord();
         auto op = isa::inst::decodeInstruction(bits);
         if(op.isRType()) counter++;)
-COUNTER("I-Type instructions executed", auto bits = hs.getInstWord();
+COUNTER("I-Type instructions executed", auto bits = hs().getInstWord();
         auto op = isa::inst::decodeInstruction(bits);
         if(op.isIType()) counter++;)
-COUNTER("S-Type instructions executed", auto bits = hs.getInstWord();
+COUNTER("S-Type instructions executed", auto bits = hs().getInstWord();
         auto op = isa::inst::decodeInstruction(bits);
         if(op.isSType()) counter++;)
-COUNTER("B-Type instructions executed", auto bits = hs.getInstWord();
+COUNTER("B-Type instructions executed", auto bits = hs().getInstWord();
         auto op = isa::inst::decodeInstruction(bits);
         if(op.isBType()) counter++;)
-COUNTER("U-Type instructions executed", auto bits = hs.getInstWord();
+COUNTER("U-Type instructions executed", auto bits = hs().getInstWord();
         auto op = isa::inst::decodeInstruction(bits);
         if(op.isUType()) counter++;)
-COUNTER("J-Type instructions executed", auto bits = hs.getInstWord();
+COUNTER("J-Type instructions executed", auto bits = hs().getInstWord();
         auto op = isa::inst::decodeInstruction(bits);
         if(op.isJType()) counter++;)
-COUNTER("ebreak/ecall instructions executed", auto bits = hs.getInstWord();
+COUNTER("ebreak/ecall instructions executed", auto bits = hs().getInstWord();
         auto op = isa::inst::decodeInstruction(bits);
         if(op == isa::inst::Opcode::rv32i_ebreak ||
            op == isa::inst::Opcode::rv32i_ecall) counter++;)

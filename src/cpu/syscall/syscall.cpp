@@ -26,26 +26,26 @@ namespace internal {
 //     // convert through the memory interface
 //     // FIXME: this is likely very very fragile and will possibly break in the
 //     // future
-//     if(checkStack && addr >= hs.memory_locations["stack_start"] &&
-//        addr <= hs.memory_locations["stack_end"]) {
+//     if(checkStack && addr >= hs().memory_locations["stack_start"] &&
+//        addr <= hs().memory_locations["stack_end"]) {
 //         return T(addr);
 //     } else if(addr == 0) return T(0);
-//     else return T(hs.memimg.raw(addr));
+//     else return T(hs().mem().raw(addr));
 // }
 
 // takes a simulated address and converts it to a real address
 template <typename T>
 T convertToRealAddress(cpu::HartState& hs, uint64_t addr) {
-    if(addr) return T(hs.memimg.raw(addr));
+    if(addr) return T(hs().mem().raw(addr));
     else return T(0);
 }
 // template <typename T = uint64_t*>
 // T accessAddress(cpu::HartState& hs, uint64_t addr, bool checkStack = true) {
-//     if(checkStack && addr >= hs.memory_locations["stack_start"] &&
-//        addr <= hs.memory_locations["stack_end"]) {
+//     if(checkStack && addr >= hs().memory_locations["stack_start"] &&
+//        addr <= hs().memory_locations["stack_end"]) {
 //         return T(addr);
 //     } else if(addr == 0) return T(0);
-//     else return T(hs.memimg.raw(addr));
+//     else return T(hs().mem().raw(addr));
 // }
 
 int64_t
@@ -73,7 +73,7 @@ bool emulateSyscall(
 } // namespace internal
 
 void emulate(cpu::HartState& hs) {
-    uint64_t riscv64_syscall_number = hs.rf.GPR[17];
+    uint64_t riscv64_syscall_number = hs().rf().GPR[17];
     uint64_t result;
 
     int64_t x86_64_syscall_number =
@@ -85,12 +85,12 @@ void emulate(cpu::HartState& hs) {
     }
 
 #ifdef __x86_64
-    uint64_t arg0 = hs.rf.GPR[10];
-    uint64_t arg1 = hs.rf.GPR[11];
-    uint64_t arg2 = hs.rf.GPR[12];
-    uint64_t arg3 = hs.rf.GPR[13];
-    uint64_t arg4 = hs.rf.GPR[14];
-    uint64_t arg5 = hs.rf.GPR[15];
+    uint64_t arg0 = hs().rf().GPR[10];
+    uint64_t arg1 = hs().rf().GPR[11];
+    uint64_t arg2 = hs().rf().GPR[12];
+    uint64_t arg3 = hs().rf().GPR[13];
+    uint64_t arg4 = hs().rf().GPR[14];
+    uint64_t arg5 = hs().rf().GPR[15];
     asm volatile(
     #if(defined(__clang__) && defined(__clang_major__) &&                      \
         __clang_major__ >= 14) ||                                              \
@@ -126,19 +126,19 @@ void emulate(cpu::HartState& hs) {
         : "rax", "rdi", "rsi", "rdx", "r10", "r8", "r9");
 #else
     //     #ifdef __EMSCRIPTEN__
-    //     uint64_t arg0 = hs.rf.GPR[10];
-    //     uint64_t arg1 = hs.rf.GPR[11];
-    //     uint64_t arg2 = hs.rf.GPR[12];
-    //     uint64_t arg3 = hs.rf.GPR[13];
-    //     uint64_t arg4 = hs.rf.GPR[14];
-    //     uint64_t arg5 = hs.rf.GPR[15];
+    //     uint64_t arg0 = hs().rf().GPR[10];
+    //     uint64_t arg1 = hs().rf().GPR[11];
+    //     uint64_t arg2 = hs().rf().GPR[12];
+    //     uint64_t arg3 = hs().rf().GPR[13];
+    //     uint64_t arg4 = hs().rf().GPR[14];
+    //     uint64_t arg5 = hs().rf().GPR[15];
 
     //     result = __syscall_emscripten(x86_64_syscall_number, arg0, arg1,
     //     arg2, arg3, arg4, arg5); #else
     throw SyscallUnimplementedException(riscv64_syscall_number);
 // #endif
 #endif
-    hs.rf.GPR[10] = result;
+    hs().rf().GPR[10] = result;
 }
 
 } // namespace sys

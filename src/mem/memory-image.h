@@ -77,10 +77,13 @@ class MemoryImage {
         MemoryRegion(uint64_t address, uint64_t size, uint8_t* buffer)
             : address(address), size(size), buffer(buffer) {}
 
-        uint8_t* raw(uint64_t addr) {
+        const uint8_t* raw(uint64_t addr) const {
             if(addr >= address && addr < address + size)
                 return buffer + (addr - address);
             else throw OutOfBoundsException(addr, address, address + size);
+        }
+        uint8_t* raw(uint64_t addr) {
+return const_cast<uint8_t*>(std::as_const(*this).raw(addr));
         }
         // uint8_t& at(uint64_t addr) { return *((uint8_t*)this->get(addr)); }
         uint8_t& byte(uint64_t addr) { return *((uint8_t*)this->raw(addr)); }
@@ -119,13 +122,16 @@ class MemoryImage {
         return memory_map.back();
     }
 
-    MemoryRegion* getMemoryRegion(uint64_t addr) {
+    const MemoryRegion* getMemoryRegion(uint64_t addr) const {
         for(auto& mr : memory_map) {
             if(addr >= mr.address && addr < mr.address + mr.size) {
                 return &mr;
             }
         }
         return nullptr;
+    }
+    MemoryRegion* getMemoryRegion(uint64_t addr) {
+        return const_cast<MemoryRegion*>(std::as_const(*this).getMemoryRegion(addr));
     }
 
     template <typename T> struct MemoryCellProxy {
@@ -187,11 +193,14 @@ class MemoryImage {
     MemoryCellProxy<uint64_t> doubleword(uint64_t addr) {
         return MemoryCellProxy<uint64_t>(this, addr);
     }
-    uint8_t* raw(uint64_t addr) {
+    const uint8_t* raw(uint64_t addr) const {
         auto mr = getMemoryRegion(addr);
         if(mr) {
             return mr->raw(addr);
         } else return nullptr;
+    }
+    uint8_t* raw(uint64_t addr) {
+        return const_cast<uint8_t*>(std::as_const(*this).raw(addr));
     }
     template <typename T> void addReadListener(T&& arg) {
         event_read.addListener(std::forward<T>(arg));
