@@ -2,12 +2,13 @@
 #define ZIRCON_ELF_ELF_H_
 
 #include "mem/memory-image.h"
+
 #include <cstdint>
 #include <cstring>
 #include <fstream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-#include <unordered_map>
 
 namespace elf {
 
@@ -78,7 +79,7 @@ static_assert(
 ssize_t parseSectionHeader(std::ifstream&, SectionHeader&);
 bool validateSectionHeader(SectionHeader&);
 
-struct __attribute__((packed))  SymbolTableEntry {
+struct __attribute__((packed)) SymbolTableEntry {
     uint32_t st_name;
     uint8_t st_info;
     uint8_t st_other;

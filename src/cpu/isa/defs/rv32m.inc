@@ -14,7 +14,8 @@ R_TYPE(rv32m,
        0b0000001,
        0b001,
        hs().rf().GPR[RD] =
-           ((SIGNEXT128(hs().rf().GPR[RS1], 64) * SIGNEXT128(hs().rf().GPR[RS2], 64)) >>
+           ((SIGNEXT128(hs().rf().GPR[RS1], 64) *
+             SIGNEXT128(hs().rf().GPR[RS2], 64)) >>
             64);
        hs().pc += 4;
        , 0)
@@ -24,7 +25,8 @@ R_TYPE(rv32m,
        0b0000001,
        0b010,
        hs().rf().GPR[RD] =
-           ((__int128_t(hs().rf().GPR[RS1]) * __int128_t(hs().rf().GPR[RS2])) >> 64);
+           ((__int128_t(hs().rf().GPR[RS1]) * __int128_t(hs().rf().GPR[RS2])) >>
+            64);
        hs().pc += 4;
        , 0)
 R_TYPE(rv32m,
@@ -33,7 +35,8 @@ R_TYPE(rv32m,
        0b0000001,
        0b011,
        hs().rf().GPR[RD] =
-           ((SIGNEXT128(hs().rf().GPR[RS1], 64) * __int128_t(hs().rf().GPR[RS2])) >>
+           ((SIGNEXT128(hs().rf().GPR[RS1], 64) *
+             __int128_t(hs().rf().GPR[RS2])) >>
             64);
        hs().pc += 4;
        , 0)
@@ -43,7 +46,7 @@ R_TYPE(rv32m,
        0b0000001,
        0b100,
        hs().rf().GPR[RD] = SIGNEXT64(hs().rf().GPR[RS1], 64) /
-                       SIGNEXT64(hs().rf().GPR[RS2], 64);
+                           SIGNEXT64(hs().rf().GPR[RS2], 64);
        hs().pc += 4;
        , 0)
 R_TYPE(rv32m,
@@ -60,7 +63,7 @@ R_TYPE(rv32m,
        0b0000001,
        0b110,
        hs().rf().GPR[RD] = SIGNEXT64(hs().rf().GPR[RS1], 64) %
-                       SIGNEXT64(hs().rf().GPR[RS2], 64);
+                           SIGNEXT64(hs().rf().GPR[RS2], 64);
        hs().pc += 4;
        , 0)
 R_TYPE(rv32m,

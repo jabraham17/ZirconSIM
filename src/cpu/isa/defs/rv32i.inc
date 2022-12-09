@@ -1,6 +1,7 @@
 #include "isa-begin.inc"
 
-U_TYPE(rv32i, lui, 0b0110111, hs().rf().GPR[RD] = IMM_U_TYPE_SEXT64; hs().pc += 4, 0)
+U_TYPE(rv32i, lui, 0b0110111, hs().rf().GPR[RD] = IMM_U_TYPE_SEXT64;
+       hs().pc += 4, 0)
 U_TYPE(rv32i, auipc, 0b0010111, hs().rf().GPR[RD] = IMM_U_TYPE_SEXT64 + hs().pc;
        hs().pc += 4, 0)
 J_TYPE(rv32i, jal, 0b1101111, hs().rf().GPR[RD] = hs().pc + 4;
@@ -40,13 +41,21 @@ B_TYPE(
     } else { hs().pc += 4; },
     0)
 B_TYPE(
-    rv32i, bltu, 0b1100011, 0b110, uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
+    rv32i,
+    bltu,
+    0b1100011,
+    0b110,
+    uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
     if(uint64_t(hs().rf().GPR[RS1]) < uint64_t(hs().rf().GPR[RS2])) {
         hs().pc = target;
     } else { hs().pc += 4; },
     0)
 B_TYPE(
-    rv32i, bgeu, 0b1100011, 0b111, uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
+    rv32i,
+    bgeu,
+    0b1100011,
+    0b111,
+    uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
     if(uint64_t(hs().rf().GPR[RS1]) >= uint64_t(hs().rf().GPR[RS2])) {
         hs().pc = target;
     } else { hs().pc += 4; },
@@ -126,15 +135,17 @@ I_TYPE(rv32i,
        slti,
        0b0010011,
        0b010,
-       hs().rf().GPR[RD] = SIGNEXT64(hs().rf().GPR[RS1], 64) < IMM_I_TYPE_SEXT64 ? 1
-                                                                         : 0;
+       hs().rf().GPR[RD] = SIGNEXT64(hs().rf().GPR[RS1], 64) < IMM_I_TYPE_SEXT64
+                               ? 1
+                               : 0;
        hs().pc += 4;
        , 0)
 I_TYPE(rv32i,
        sltiu,
        0b0010011,
        0b011,
-       hs().rf().GPR[RD] = hs().rf().GPR[RS1] < uint64_t(IMM_I_TYPE_SEXT64) ? 1 : 0;
+       hs().rf().GPR[RD] = hs().rf().GPR[RS1] < uint64_t(IMM_I_TYPE_SEXT64) ? 1
+                                                                            : 0;
        hs().pc += 4;
        , 0)
 I_TYPE(rv32i,
@@ -212,9 +223,9 @@ R_TYPE(rv32i,
        0b0000000,
        0b010,
        hs().rf().GPR[RD] = SIGNEXT64(hs().rf().GPR[RS1], 64) <
-                               SIGNEXT64(hs().rf().GPR[RS2], 64)
-                           ? 1
-                           : 0;
+                                   SIGNEXT64(hs().rf().GPR[RS2], 64)
+                               ? 1
+                               : 0;
        hs().pc += 4;
        , 0)
 R_TYPE(rv32i,
@@ -297,7 +308,6 @@ CUSTOM(rv32i,
        ,
        return internal::colorOpcode(color) + "ebreak" +
               internal::colorReset(color);
-       , 
-       hs().executing = false;
+       , hs().executing = false;
        hs().pc += 4;
        , 0)

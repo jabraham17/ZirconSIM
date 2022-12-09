@@ -1,6 +1,8 @@
 #include "inst.h"
-#include "instruction_match.h"
+
 #include <sstream>
+
+#include "instruction_match.h"
 
 namespace isa {
 

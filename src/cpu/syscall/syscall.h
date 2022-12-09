@@ -2,6 +2,7 @@
 #define SRC_CPU_SYSCALL_SYSCALL_H_
 
 #include "cpu/cpu.h"
+
 #include <cstdint>
 #include <cstring>
 #include <exception>

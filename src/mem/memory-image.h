@@ -4,6 +4,7 @@
 #define ZIRCON_MEM_MEMORY_IMAGE_H_
 
 #include "event/event.h"
+
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
@@ -83,7 +84,7 @@ class MemoryImage {
             else throw OutOfBoundsException(addr, address, address + size);
         }
         uint8_t* raw(uint64_t addr) {
-return const_cast<uint8_t*>(std::as_const(*this).raw(addr));
+            return const_cast<uint8_t*>(std::as_const(*this).raw(addr));
         }
         // uint8_t& at(uint64_t addr) { return *((uint8_t*)this->get(addr)); }
         uint8_t& byte(uint64_t addr) { return *((uint8_t*)this->raw(addr)); }
@@ -131,7 +132,8 @@ return const_cast<uint8_t*>(std::as_const(*this).raw(addr));
         return nullptr;
     }
     MemoryRegion* getMemoryRegion(uint64_t addr) {
-        return const_cast<MemoryRegion*>(std::as_const(*this).getMemoryRegion(addr));
+        return const_cast<MemoryRegion*>(
+            std::as_const(*this).getMemoryRegion(addr));
     }
 
     template <typename T> struct MemoryCellProxy {

@@ -4,6 +4,7 @@
 
 #include "common/format.h"
 #include "event/event.h"
+
 #include <array>
 #include <bitset>
 #include <cassert>

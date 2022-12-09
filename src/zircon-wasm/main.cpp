@@ -5,12 +5,12 @@
 #include "cpu/isa/inst.h"
 #include "elf/elf.h"
 #include "mem/memory-image.h"
-#include <fstream>
-#include <iomanip>
-#include <iostream>
 
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 
 void emulate_impl(std::string filename) {
     std::ifstream is(filename, std::ios::binary);

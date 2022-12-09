@@ -1,9 +1,9 @@
 #ifndef SRC_CPU_ISA_INST_H_
 #define SRC_CPU_ISA_INST_H_
 
-#include <string>
-
 #include "cpu/cpu.h"
+
+#include <string>
 
 namespace isa {
 

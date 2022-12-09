@@ -1,10 +1,11 @@
 #include "lexer.h"
+
 #include "cpu/isa/rf.h"
 #include "event/event.h"
-#include <algorithm>
-#include <sstream>
 
+#include <algorithm>
 #include <iostream>
+#include <sstream>
 namespace controller {
 namespace parser {
 

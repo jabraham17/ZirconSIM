@@ -1,4 +1,5 @@
 #include "command.h"
+
 #include "color/color.h"
 #include "common/format.h"
 #include "cpu/isa/inst.h"

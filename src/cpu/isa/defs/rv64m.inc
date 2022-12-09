@@ -6,7 +6,8 @@ R_TYPE(rv64m,
        0b0000001,
        0b000,
        hs().rf().GPR[RD] = SIGNEXT64(
-           SIGNEXT32(hs().rf().GPR[RS1], 32) * SIGNEXT32(hs().rf().GPR[RS2], 32),
+           SIGNEXT32(hs().rf().GPR[RS1], 32) *
+               SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
        hs().pc += 4;
        , 0)
@@ -16,7 +17,8 @@ R_TYPE(rv64m,
        0b0000001,
        0b100,
        hs().rf().GPR[RD] = SIGNEXT64(
-           SIGNEXT32(hs().rf().GPR[RS1], 32) / SIGNEXT32(hs().rf().GPR[RS2], 32),
+           SIGNEXT32(hs().rf().GPR[RS1], 32) /
+               SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
        hs().pc += 4;
        , 0)
@@ -37,7 +39,8 @@ R_TYPE(rv64m,
        0b0000001,
        0b110,
        hs().rf().GPR[RD] = SIGNEXT64(
-           SIGNEXT32(hs().rf().GPR[RS1], 32) % SIGNEXT32(hs().rf().GPR[RS2], 32),
+           SIGNEXT32(hs().rf().GPR[RS1], 32) %
+               SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
        hs().pc += 4;
        , 0)

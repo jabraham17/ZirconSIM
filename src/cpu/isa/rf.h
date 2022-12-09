@@ -2,6 +2,7 @@
 #define SRC_CPU_ISA_RF_H_
 
 #include "event/event.h"
+
 #include "register.h"
 
 namespace isa {

@@ -1,15 +1,16 @@
 #include "cpu.h"
+
+#include "event/event.h"
 #include "isa/inst.h"
 #include "isa/instruction_match.h"
 #include "isa/rf.h"
 #include "syscall/syscall.h"
+
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
-
-#include "event/event.h"
-#include <fstream>
 
 namespace cpu {
 
@@ -151,7 +152,8 @@ void Hart::init_stack(
     // allocate a stack region at 0x7fffffff00000000-0x7fffffff00010000
     hs().setMemLocation("stack_start", 0x7fffffff00000000);
     uint64_t stack_size = 0x10000;
-    hs().setMemLocation("stack_end",
+    hs().setMemLocation(
+        "stack_end",
         hs().getMemLocation("stack_start") + stack_size);
     hs().mem().allocate(hs().getMemLocation("stack_start"), stack_size);
     auto sp = hs().getMemLocation("stack_end");

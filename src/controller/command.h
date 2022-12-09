@@ -6,6 +6,7 @@
 #include "cpu/isa/register.h"
 #include "event/event.h"
 #include "mem/memory-image.h"
+
 #include <memory>
 #include <optional>
 

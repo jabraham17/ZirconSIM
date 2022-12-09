@@ -1,8 +1,10 @@
 #include "color/color.h"
 #include "cpu/syscall/syscall.h"
+
+#include <sstream>
+
 #include "inst.h"
 #include "instruction_match.h"
-#include <sstream>
 
 namespace isa {
 namespace inst {

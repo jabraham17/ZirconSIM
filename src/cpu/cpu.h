@@ -21,7 +21,7 @@ class HartState {
     mem::MemoryImage& mem() { return *memimg_; }
     const isa::rf::RegisterFile& rf() const { return *rf_; }
     const mem::MemoryImage& mem() const { return *memimg_; }
-    
+
     uint64_t getMemLocation(const std::string& name) {
         if(auto it = memory_locations_.find(name);
            it != memory_locations_.end())

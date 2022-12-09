@@ -3,11 +3,13 @@
 
 #include "controller/command.h"
 #include "cpu/isa/rf.h"
-#include "lexer.h"
+
 #include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
+
+#include "lexer.h"
 
 namespace controller {
 
