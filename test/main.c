@@ -55,7 +55,8 @@ int main() {
     fflush(stdout);
     printf("Enter char: ");
     fflush(stdout);
-    char c = getc(stdin);
+    // char c = getc(stdin);
+    char c = 'a';
     printf("I got: '%c'\n", c);
     return 0;
 }
