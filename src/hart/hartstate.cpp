@@ -9,6 +9,6 @@ uint32_t HartState::getInstWord() const {
 
 HartState::HartState(std::shared_ptr<mem::MemoryImage> m)
     : rf_(std::make_unique<isa::rf::RegisterFile>()), memimg_(m),
-      executing(true) {}
+      execution_state(ExecutionState::STOPPED) {}
 
 } // namespace hart

@@ -9,6 +9,8 @@
 #include "isa/rf.h"
 #include "mem/memory-image.h"
 
+#include <thread>
+
 namespace hart {
 
 struct HartException : public std::runtime_error {
@@ -49,7 +51,6 @@ class Hart {
     void init(
         std::vector<std::string> argv = {},
         common::ordered_map<std::string, std::string> envp = {});
-    void execute(uint64_t start_address);
 
     template <typename T> void addBeforeExecuteListener(T&& arg) {
         event_before_execute.addListener(std::forward<T>(arg));
@@ -64,6 +65,23 @@ class Hart {
         hs().rf().addWriteListener(std::forward<T>(arg));
     }
     HartState& hs() { return *hs_; }
+
+    void wait_till_done() {
+        bool done = false;
+        while(!done) {
+            hs().waitForExecutionStateChange([this, &done]() {
+                if(this->hs().getExecutionState() == ExecutionState::STOPPED ||
+                   this->hs().getExecutionState() == ExecutionState::INVALID_STATE) {
+                    done = true;
+                }
+            });
+        }
+        execution_thread.join();
+    }
+
+  private:
+    std::thread execution_thread;
+    void execute();
 };
 
 } // namespace hart

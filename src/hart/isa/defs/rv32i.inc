@@ -308,6 +308,6 @@ CUSTOM(rv32i,
        ,
        return internal::colorOpcode(color) + "ebreak" +
               internal::colorReset(color);
-       , hs().executing = false;
+       , hs().pause();
        hs().pc += 4;
        , 0)

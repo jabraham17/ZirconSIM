@@ -4,17 +4,32 @@
 #include "isa/rf.h"
 #include "mem/memory-image.h"
 
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 
 namespace hart {
 
+enum class ExecutionState {
+    INVALID_STATE,
+    STOPPED,
+    RUNNING,
+    PAUSED,
+};
+
+class Hart;
 class HartState {
+    friend Hart;
   private:
     std::unique_ptr<isa::rf::RegisterFile> rf_;
     std::shared_ptr<mem::MemoryImage> memimg_;
 
     std::unordered_map<std::string, uint64_t> memory_locations_;
+
+    std::mutex lock_es;
+    std::condition_variable signal_es;
+    ExecutionState execution_state;
 
   public:
     isa::rf::RegisterFile& rf() { return *rf_; }
@@ -68,12 +83,59 @@ class HartState {
     // use raw(addr) so we don't log mem access
     uint32_t getInstWord() const;
 
-    bool executing;
-
     HartState(std::shared_ptr<mem::MemoryImage> m);
 
     HartState& operator()() { return *this; }
     const HartState& operator()() const { return *this; }
+
+    void start(uint64_t start_address) {
+        pc = start_address;
+        setExecutionState(ExecutionState::RUNNING);
+    }
+    void stop() { setExecutionState(ExecutionState::STOPPED); }
+    void pause() { setExecutionState(ExecutionState::PAUSED); }
+    void resume() { setExecutionState(ExecutionState::RUNNING); }
+    ExecutionState getExecutionState() { return execution_state; }
+    bool isRunning() { return execution_state == ExecutionState::RUNNING; }
+    bool isPaused() { return execution_state == ExecutionState::PAUSED; }
+
+    void setExecutionState(ExecutionState es) {
+        if(!isValidExecutionStateTransition(es))
+            es = ExecutionState::INVALID_STATE;
+        {
+            std::unique_lock lk(lock_es);
+            execution_state = es;
+        }
+        signal_es.notify_all();
+    }
+    template<typename Callable, typename ... Args>
+    void waitForExecutionStateChange(Callable func, Args... args) {
+        {
+            std::unique_lock lk(lock_es);
+            signal_es.wait(lk);
+            func(args...);
+        }
+    }
+    void waitForExecutionStateChange() {
+        std::unique_lock lk(lock_es);
+        signal_es.wait(lk);
+    }
+
+  private:
+    bool isValidExecutionStateTransition(ExecutionState new_es) {
+        if(new_es == ExecutionState::INVALID_STATE) return true;
+        switch(execution_state) {
+            case ExecutionState::INVALID_STATE: return false;
+            case ExecutionState::PAUSED:
+                return new_es == ExecutionState::RUNNING ||
+                       new_es == ExecutionState::STOPPED;
+            case ExecutionState::RUNNING:
+                return new_es == ExecutionState::STOPPED ||
+                       new_es == ExecutionState::PAUSED;
+            case ExecutionState::STOPPED:
+                return new_es == ExecutionState::RUNNING;
+        }
+    }
 };
 
 } // namespace hart

@@ -188,8 +188,8 @@ EMULATE_SYSCALL(
         convertToRealAddress<struct timezone*>(hs, hs().rf().GPR[11]);
     hs().rf().GPR[10] = gettimeofday(tv, tz);)
 
-EMULATE_SYSCALL(exit, 93, hs().executing = false;)
-EMULATE_SYSCALL(exit_group, 94, hs().executing = false;)
+EMULATE_SYSCALL(exit, 93, hs().stop();)
+EMULATE_SYSCALL(exit_group, 94, hs().stop();)
 
 #ifndef __EMSCRIPTEN__
 EMULATE_SYSCALL(set_tid_address,

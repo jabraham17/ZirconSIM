@@ -18,8 +18,6 @@ Hart::Hart(std::shared_ptr<mem::MemoryImage> m)
     : hs_(std::make_unique<HartState>(m)) {}
 
 bool Hart::shouldHalt() {
-    // halt if no longer executing
-    if(!hs().executing) return true;
     // if pc is beyond the bounds of memory , return true
     if(hs().mem().raw(hs().pc) == nullptr) return true;
     // if the instruction just executed was a jmp to itself, halt
@@ -211,23 +209,34 @@ void Hart::init(
     common::ordered_map<std::string, std::string> envp) {
     init_heap();
     init_stack(argv, envp);
+
+    // start execution thread
+    execution_thread = std::thread(&Hart::execute, this);
 }
 
-void Hart::execute(uint64_t start_address) {
-    hs().pc = start_address;
+void Hart::execute() {
     while(1) {
-        try {
-            event_before_execute(hs());
-            auto inst = hs().getInstWord();
-            isa::inst::executeInstruction(inst, hs());
-            event_after_execute(hs());
+        if(hs().isRunning()) {
+            try {
+                event_before_execute(hs());
+                auto inst = hs().getInstWord();
+                isa::inst::executeInstruction(inst, hs());
+                event_after_execute(hs());
 
-            if(shouldHalt()) break;
-        } catch(const std::exception& e) {
-            std::cerr << "Exception Occurred: " << e.what() << std::endl;
+                if(shouldHalt()) hs().stop();
+            } catch(const std::exception& e) {
+                std::cerr << "Exception Occurred: " << e.what() << std::endl;
+                hs().setExecutionState(ExecutionState::INVALID_STATE);
+            }
+        }
+        else if(hs().isPaused()) {
+            hs().waitForExecutionStateChange();
+        }
+        else {
             break;
         }
     }
+    // execution_thread.join();
 }
 
 } // namespace hart

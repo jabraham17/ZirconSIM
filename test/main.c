@@ -37,6 +37,10 @@ int main() {
     printf("ack(3,4)=%d\n",ack(3,4));
     fflush(stdout);
 
+    #ifdef __riscv 
+    asm("ebreak");
+    #endif
+
     int* x = (int*)malloc(4*10);
     x[0] = 10;
     if(x == 0) {
@@ -45,6 +49,9 @@ int main() {
         printf("err %d\n", errsv);
         return 0;
     }
+    #ifdef __riscv 
+    asm("ebreak");
+    #endif
     printf("%p\n", x);
     for(int i = 0; i < 10; i++) {
         x[i] = i * i;
