@@ -2,31 +2,39 @@
 #define ZIRCON_ZIRCON_ARGUMENTS_H_
 
 #include "common/argparse.hpp"
-#include "cpu/cpu.h"
 #include "common/ordered_map.h"
-#include <iostream>
-#include <fstream>
-#include "elf/elf.h"
 #include "controller/command.h"
+#include "elf/elf.h"
+#include "hart/hart.h"
+
+#include <exception>
+#include <fstream>
+#include <iostream>
 
 namespace arguments {
 
+struct ArgumentException : public std::runtime_error {
+    ArgumentException() : std::runtime_error("Unknown Argument Exception") {}
+    ArgumentException(std::string message) : std::runtime_error(message) {}
+};
 
 class MainArguments {
-    public:
+  public:
     void parse(int argc, const char** argv, const char** envp = nullptr);
-    const argparse::ArgumentParser& accessRawArguments() {return program_args;}
-    std::ifstream& getInputFile();
-    void addCallbacks(cpu::Hart& hart, elf::File& elf);
-    void addControllerCallbacks(cpu::Hart& hart);
+    const argparse::ArgumentParser& accessRawArguments() {
+        return program_args;
+    }
+    std::ifstream getInputFile();
+    void addCallbacks(hart::Hart& hart, elf::File& elf);
+    void addControllerCallbacks(hart::Hart& hart);
     std::vector<std::string> getArgV();
     common::ordered_map<std::string, std::string> getEnvVars();
 
-    private:
+  private:
     MainArguments();
     argparse::ArgumentParser program_args;
     std::vector<std::string> simulated_argv;
-        common::ordered_map<std::string, std::string> simulated_env;
+    common::ordered_map<std::string, std::string> simulated_env;
 
     std::ifstream* input;
     std::ostream* inst_log;
@@ -35,12 +43,9 @@ class MainArguments {
 
     controller::ControlList parsed_commands;
 
-
-    public:
+  public:
     static MainArguments getMainArguments();
-
 };
 
-
-}
+} // namespace arguments
 #endif

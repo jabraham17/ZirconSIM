@@ -1,9 +1,11 @@
 #include "arguments.h"
+
 #include "color/color.h"
 #include "common/format.h"
 #include "controller/parser/parser.h"
-#include "cpu/isa/inst.h"
 #include "event/event.h"
+#include "hart/isa/inst.h"
+
 #include <algorithm>
 #include <iomanip>
 #include <sys/stat.h>
@@ -166,9 +168,8 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     try {
         program_args.parse_args(newargc, argv);
     } catch(const std::runtime_error& err) {
-        std::cerr << err.what() << std::endl;
-        std::cerr << program_args;
-        // FIXME: throw a new exceptioon
+        throw ArgumentException("Bad arguments: " +
+            std::string(err.what()) + "\n" + program_args.help().str());
     }
 
     std::string filename = program_args.get<std::string>("file");
@@ -202,18 +203,14 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
         try {
             parsed_commands = parser.parse();
         } catch(const controller::parser::ParseException& err) {
-            // TODO: throw new exception here
-            std::cerr << "Invalid arguments for '-control': " << err.what()
-                      << std::endl;
-            std::cerr << program_args;
-            // return 1;
+            throw ArgumentException(
+                "Invalid arguments for '-control': " + std::string(err.what()) + "\n" + program_args.help().str());
         }
     }
 
     input = (new std::ifstream(filename, std::ios::binary));
     if(!input) {
-        // FIXME: throw exception here
-        std::cerr << "Failed to open '" << filename << "'" << std::endl;
+        throw ArgumentException("Failed to open '" + filename + "'");
     }
 
     auto inst_log = getFileStreamIfTrue(
@@ -221,11 +218,9 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
         program_args.present<std::string>("--inst-log"),
         std::cout);
     if(!inst_log) {
-        // TODO: throw exceptions
-        std::cerr << "Failed to open '"
-                  << *program_args.present<std::string>("--inst-log") << "'"
-                  << std::endl;
-        // return 1;
+        throw ArgumentException(
+            "Failed to open '" +
+            *program_args.present<std::string>("--inst-log") + "'");
     }
 
     auto mem_log = getFileStreamIfTrue(
@@ -233,11 +228,9 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
         program_args.present<std::string>("--mem-log"),
         std::cout);
     if(!mem_log) {
-        // TODO: throw exceptions
-        std::cerr << "Failed to open '"
-                  << *program_args.present<std::string>("--mem-log") << "'"
-                  << std::endl;
-        // return 1;
+        throw ArgumentException(
+            "Failed to open '" +
+            *program_args.present<std::string>("--mem-log") + "'");
     }
 
     auto reg_log = getFileStreamIfTrue(
@@ -245,19 +238,17 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
         program_args.present<std::string>("--reg-log"),
         std::cout);
     if(!reg_log) {
-        // TODO throw exceptions
-        std::cerr << "Failed to open '"
-                  << *program_args.present<std::string>("--reg-log") << "'"
-                  << std::endl;
-        // return 1;
+        throw ArgumentException(
+            "Failed to open '" +
+            *program_args.present<std::string>("--reg-log") + "'");
     }
 }
 
-std::ifstream& MainArguments::getInputFile() {
-    if(input) return *input;
-    // TODO: ADD THROW HERE
+std::ifstream MainArguments::getInputFile() {
+    if(input) return std::move(*input);
+    throw ArgumentException("No valid input file");
 }
-void MainArguments::addCallbacks(cpu::Hart& hart, elf::File& elf) {
+void MainArguments::addCallbacks(hart::Hart& hart, elf::File& elf) {
 
     bool useColor = program_args.get<bool>("--color");
     auto elf_symbols = elf.getSymbolTable();
@@ -267,7 +258,7 @@ void MainArguments::addCallbacks(cpu::Hart& hart, elf::File& elf) {
             hart.addBeforeExecuteListener([this,
                                            useColor,
 
-                                           elf_symbols](cpu::HartState& hs) {
+                                           elf_symbols](hart::HartState& hs) {
                 auto inst = hs().getInstWord();
 
                 *this->inst_log
@@ -284,7 +275,8 @@ void MainArguments::addCallbacks(cpu::Hart& hart, elf::File& elf) {
                 *this->inst_log << std::endl;
             });
         } else {
-            hart.addBeforeExecuteListener([this, useColor](cpu::HartState& hs) {
+            hart.addBeforeExecuteListener([this,
+                                           useColor](hart::HartState& hs) {
                 auto inst = hs().getInstWord();
                 *this->inst_log
                     << "PC[" << colorAddr(useColor)
@@ -389,7 +381,7 @@ void MainArguments::addCallbacks(cpu::Hart& hart, elf::File& elf) {
         }
     }
 }
-void MainArguments::addControllerCallbacks(cpu::Hart& hart) {
+void MainArguments::addControllerCallbacks(hart::Hart& hart) {
     bool useColor = program_args.get<bool>("--color");
     for(auto a : parsed_commands.allActions()) {
         a->setHS(&hart.hs());
@@ -406,11 +398,11 @@ void MainArguments::addControllerCallbacks(cpu::Hart& hart) {
         switch(c->getEventType()) {
             case event::EventType::HART_AFTER_EXECUTE:
                 hart.addAfterExecuteListener(
-                    [c](cpu::HartState&) { c->doit(&std::cout); });
+                    [c](hart::HartState&) { c->doit(&std::cout); });
                 break;
             case event::EventType::HART_BEFORE_EXECUTE:
                 hart.addBeforeExecuteListener(
-                    [c](cpu::HartState&) { c->doit(&std::cout); });
+                    [c](hart::HartState&) { c->doit(&std::cout); });
                 break;
             case event::EventType::MEM_READ:
                 hart.hs().mem().addReadListener(
@@ -443,8 +435,8 @@ void MainArguments::addControllerCallbacks(cpu::Hart& hart) {
     }
     for(auto w : parsed_commands.watches) {
         w->setColor(useColor);
-        hart.addBeforeExecuteListener([w](cpu::HartState&) { w->update(); });
-        hart.addAfterExecuteListener([w](cpu::HartState&) { w->update(); });
+        hart.addBeforeExecuteListener([w](hart::HartState&) { w->update(); });
+        hart.addAfterExecuteListener([w](hart::HartState&) { w->update(); });
     }
 }
 std::vector<std::string> MainArguments::getArgV() { return simulated_argv; }
