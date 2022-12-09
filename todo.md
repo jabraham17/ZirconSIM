@@ -40,7 +40,6 @@
 
 ## refactor
 
-- refactor cpu to be Hart
 - cleanup instruction specification, CUSTOM instructions are getting messy
 - refactor the cpu subdir, inconsistent namespace usage, inconsistent variable naming, better structure
 - fix makefile depens for headers and inc

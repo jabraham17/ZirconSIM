@@ -2,12 +2,11 @@
 #ifndef ZIRCON_TRACE_STATS_H_
 #define ZIRCON_TRACE_STATS_H_
 
-#include "hart/hartstate.h"
 
 #include <map>
 #include <string>
 
-namespace cpu {
+namespace hart {
 class HartState;
 }
 

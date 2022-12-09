@@ -12,8 +12,8 @@ Note: the exact line numbers may not be up-to-date, but the file names should be
 |        mem |          event_write |                       Fires when memory is written |                 (address, value written, old value, n bytes) | src/mem/memory-image.h:86 |
 |        mem |      event_exception |                            Currently unimplemented |                                                              | src/mem/memory-image.h:90 |
 |        mem |     event_allocation |                     Fires when memory is allocated |                              (base address, allocation size) | src/mem/memory-image.h:94 |
-| reg_$CLASS |           event_read |                      Fires when a register is read |                 (register class, register index, value read) | src/cpu/isa/register.h:95 |
-| reg_$CLASS |          event_write |                   Fires when a register is written |   (register class, register index, value written, old value) | src/cpu/isa/register.h:99 |
-|       hart | event_before_execute |  Fires just before current instruction is executed |                                          (Hart State object) |          src/cpu/hart.h:74 |
-|       hart |  event_after_execute |   Fires just after current instruction is executed |                                          (Hart State object) |          src/cpu/hart.h:78 |
+| reg_$CLASS |           event_read |                      Fires when a register is read |                 (register class, register index, value read) | src/hart/isa/register.h:95 |
+| reg_$CLASS |          event_write |                   Fires when a register is written |   (register class, register index, value written, old value) | src/hart/isa/register.h:99 |
+|       hart | event_before_execute |  Fires just before current instruction is executed |                                          (Hart State object) |          src/hart/hart.h:74 |
+|       hart |  event_after_execute |   Fires just after current instruction is executed |                                          (Hart State object) |          src/hart/hart.h:78 |
 
