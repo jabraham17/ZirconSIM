@@ -1,9 +1,9 @@
 
 
 #include "common/format.h"
-#include "cpu/cpu.h"
-#include "cpu/isa/inst.h"
 #include "elf/elf.h"
+#include "hart/hart.h"
+#include "hart/isa/inst.h"
 #include "mem/memory-image.h"
 
 #include <emscripten.h>
@@ -24,12 +24,12 @@ void emulate_impl(std::string filename) {
     f.buildMemoryImage(memimg);
     auto start = f.getStartAddress();
 
-    cpu::Hart hart(memimg);
+    hart::Hart hart(memimg);
 
     std::ostream* inst_log = &std::cout;
     std::ostream* reg_log = &std::cout;
 
-    hart.addBeforeExecuteListener([inst_log](cpu::HartState& hs) {
+    hart.addBeforeExecuteListener([inst_log](hart::HartState& hs) {
         auto inst = hs().getInstWord();
         *inst_log << "PC[" << common::Format::doubleword << hs().pc
                   << "] = " << common::Format::word << inst << "; "

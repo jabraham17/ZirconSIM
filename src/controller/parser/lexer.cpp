@@ -1,7 +1,7 @@
 #include "lexer.h"
 
-#include "cpu/isa/rf.h"
 #include "event/event.h"
+#include "hart/isa/rf.h"
 
 #include <algorithm>
 #include <iostream>

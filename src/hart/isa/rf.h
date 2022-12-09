@@ -1,9 +1,9 @@
-#ifndef SRC_CPU_ISA_RF_H_
-#define SRC_CPU_ISA_RF_H_
-
-#include "event/event.h"
+#ifndef ZIRCON_HART_ISA_RF_H_
+#define ZIRCON_HART_ISA_RF_H_
 
 #include "register.h"
+
+#include "event/event.h"
 
 namespace isa {
 namespace rf {

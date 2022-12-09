@@ -1,7 +1,7 @@
-#ifndef SRC_CPU_ISA_INST_H_
-#define SRC_CPU_ISA_INST_H_
+#ifndef ZIRCON_HART_ISA_INST_H_
+#define ZIRCON_HART_ISA_INST_H_
 
-#include "cpu/cpu.h"
+#include "hart/hart.h"
 
 #include <string>
 
@@ -47,7 +47,7 @@ struct Opcode {
 
 Opcode decodeInstruction(uint32_t bits);
 std::string fields(uint32_t bits);
-void executeInstruction(uint32_t bits, cpu::HartState& hs);
+void executeInstruction(uint32_t bits, hart::HartState& hs);
 std::string disassemble(uint32_t bits, uint32_t pc = 0, bool color = false);
 
 }; // namespace inst

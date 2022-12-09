@@ -20,7 +20,8 @@ namespace sys {
 namespace internal {
 
 // template <typename T>
-// T convertAddress(cpu::HartState& hs, uint64_t addr, bool checkStack = true) {
+// T convertAddress(hart::HartState& hs, uint64_t addr, bool checkStack = true)
+// {
 //     // if address is within the range of the stack, it needs no change
 //     // if the address is no in the range of the stack and it is NOT null,
 //     // convert through the memory interface
@@ -35,12 +36,12 @@ namespace internal {
 
 // takes a simulated address and converts it to a real address
 template <typename T>
-T convertToRealAddress(cpu::HartState& hs, uint64_t addr) {
+T convertToRealAddress(hart::HartState& hs, uint64_t addr) {
     if(addr) return T(hs().mem().raw(addr));
     else return T(0);
 }
 // template <typename T = uint64_t*>
-// T accessAddress(cpu::HartState& hs, uint64_t addr, bool checkStack = true) {
+// T accessAddress(hart::HartState& hs, uint64_t addr, bool checkStack = true) {
 //     if(checkStack && addr >= hs().memory_locations["stack_start"] &&
 //        addr <= hs().memory_locations["stack_end"]) {
 //         return T(addr);
@@ -58,7 +59,7 @@ getMappedSyscallNumber([[maybe_unused]] int64_t riscv64_syscall_number) {
 
 bool emulateSyscall(
     [[maybe_unused]] uint64_t sys,
-    [[maybe_unused]] cpu::HartState& hs) {
+    [[maybe_unused]] hart::HartState& hs) {
 #define EMULATE_SYSCALL(name, riscv64, execution, ...)                         \
     if(sys == riscv64) {                                                       \
         do {                                                                   \
@@ -72,7 +73,7 @@ bool emulateSyscall(
 
 } // namespace internal
 
-void emulate(cpu::HartState& hs) {
+void emulate(hart::HartState& hs) {
     uint64_t riscv64_syscall_number = hs().rf().GPR[17];
     uint64_t result;
 

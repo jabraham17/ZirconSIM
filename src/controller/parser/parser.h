@@ -1,15 +1,15 @@
 #ifndef ZIRCON_CONTROLLER_PARSER_PARSER_H_
 #define ZIRCON_CONTROLLER_PARSER_PARSER_H_
 
+#include "lexer.h"
+
 #include "controller/command.h"
-#include "cpu/isa/rf.h"
+#include "hart/isa/rf.h"
 
 #include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
-
-#include "lexer.h"
 
 namespace controller {
 

@@ -22,10 +22,10 @@ IndentPPDirectives: BeforeHash
 SortIncludes: CaseSensitive
 IncludeBlocks: Regroup
 IncludeCategories: 
-  - Regex:           '^"[[:alnum:]]+"$'
+  - Regex:           '^"[[:alnum:].]+"$'
     Priority:        1
     CaseSensitive:   true
-  - Regex:           '^"[[:alnum:]]+/'
+  - Regex:           '^"[[:alnum:].]+/'
     Priority:        2
     CaseSensitive:   true
   - Regex:           '^<'

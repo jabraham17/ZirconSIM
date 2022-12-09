@@ -12,7 +12,7 @@ namespace internal {
 extern const std::string& getOpcodeNameFromTable(Opcode op);
 extern const std::string& getOpcodeNiceNameFromTable(Opcode op);
 extern Opcode decodeInstruction(uint32_t bits);
-extern void executeInstruction(uint32_t bits, cpu::HartState& hs);
+extern void executeInstruction(uint32_t bits, hart::HartState& hs);
 extern std::string disassemble(uint32_t bits, uint32_t pc, bool color);
 
 extern std::string colorReset(bool doColor);
@@ -72,7 +72,7 @@ std::string fields(uint32_t bits) {
     ss << "\n";
     return ss.str();
 }
-void executeInstruction(uint32_t bits, cpu::HartState& hs) {
+void executeInstruction(uint32_t bits, hart::HartState& hs) {
     Opcode op = decodeInstruction(bits);
     switch(op) {
         default: break;

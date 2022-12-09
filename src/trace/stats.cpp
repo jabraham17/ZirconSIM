@@ -1,16 +1,16 @@
 #include "stats.h"
 
-#include "cpu/cpu.h"
-#include "cpu/isa/inst.h"
+#include "hart/isa/inst.h"
 
 #include <functional>
 #include <iomanip>
 #include <sstream>
 
 namespace internal {
-static std::
-    map<std::string, std::function<void(const cpu::HartState&, float& counter)>>
-        counter_funcs;
+static std::map<
+    std::string,
+    std::function<void(const hart::HartState&, float& counter)>>
+    counter_funcs;
 static std::string counter_names[] = {
 #define COUNTER(name, ...) name,
 #include "stats.inc"
@@ -23,7 +23,7 @@ static size_t number_counters = 0
 void initCounterMap(std::map<std::string, float>& m) {
 #define COUNTER(name, expression)                                              \
     m[name] = 0;                                                               \
-    counter_funcs[name] = []([[maybe_unused]] const cpu::HartState& hs,        \
+    counter_funcs[name] = []([[maybe_unused]] const hart::HartState& hs,       \
                              [[maybe_unused]] float& counter) {                \
         do {                                                                   \
             expression;                                                        \
@@ -35,7 +35,7 @@ void initCounterMap(std::map<std::string, float>& m) {
 static std::map<
     std::string,
     std::function<
-        float(const cpu::HartState&, const std::map<std::string, float>&)>>
+        float(const hart::HartState&, const std::map<std::string, float>&)>>
     computed_funcs;
 static std::string computed_names[] = {
 #define COMPUTED(name, ...) name,
@@ -50,7 +50,7 @@ void initComputedMap(std::map<std::string, float>& m) {
 #define COMPUTED(name, expression)                                             \
     m[name] = 0;                                                               \
     computed_funcs[name] =                                                     \
-        []([[maybe_unused]] const cpu::HartState& hs,                          \
+        []([[maybe_unused]] const hart::HartState& hs,                         \
            [[maybe_unused]] std::map<std::string, float> counters) -> float {  \
         do {                                                                   \
             expression;                                                        \
@@ -62,12 +62,12 @@ void initComputedMap(std::map<std::string, float>& m) {
 
 // std::map<std::string, uint64_t> getComputed(
 //     const std::map<std::string, uint64_t>& counters,
-//     const cpu::HartState& hs) {
+//     const hart::HartState& hs) {
 //     std::map<std::string, uint64_t> computed;
 // #define COMPUTED(name, expression)
 //     computed[name] =
 //         []([[maybe_unused]] const std::map<std::string, uint64_t>& counters
-//            [[maybe_unused]] const cpu::HartState& hs) {
+//            [[maybe_unused]] const hart::HartState& hs) {
 //             do {
 //                 expression;
 //             } while(0);
@@ -84,7 +84,7 @@ Stats::Stats() {
     internal::initComputedMap(computed_counters);
 }
 
-void Stats::count(const cpu::HartState& hs) {
+void Stats::count(const hart::HartState& hs) {
     for(size_t idx = 0; idx < internal::number_counters; idx++) {
         const auto& key = internal::counter_names[idx];
         auto& counter_value = counters[key];

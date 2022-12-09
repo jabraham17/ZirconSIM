@@ -1,9 +1,10 @@
+#include "inst.h"
+
 #include "color/color.h"
-#include "cpu/syscall/syscall.h"
+#include "hart/syscall/syscall.h"
 
 #include <sstream>
 
-#include "inst.h"
 #include "instruction_match.h"
 
 namespace isa {
@@ -202,10 +203,10 @@ Opcode decodeInstruction(uint32_t bits) {
     return matched;
 }
 
-void executeInstruction(uint32_t bits, cpu::HartState& hs) {
+void executeInstruction(uint32_t bits, hart::HartState& hs) {
     Opcode op = decodeInstruction(bits);
     switch(op) {
-        default: throw cpu::IllegalInstructionException();
+        default: throw hart::IllegalInstructionException(bits);
 
 #define SIMPLE_EXECUTION(prefix, name, execution)                              \
     case Opcode::prefix##_##name: do { execution;                              \

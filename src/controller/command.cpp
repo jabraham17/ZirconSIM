@@ -2,7 +2,7 @@
 
 #include "color/color.h"
 #include "common/format.h"
-#include "cpu/isa/inst.h"
+#include "hart/isa/inst.h"
 
 namespace controller {
 

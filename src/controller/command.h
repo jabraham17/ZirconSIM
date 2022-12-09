@@ -2,9 +2,9 @@
 #ifndef ZIRCON_CONTROLLER_COMMAND_H_
 #define ZIRCON_CONTROLLER_COMMAND_H_
 
-#include "cpu/cpu.h"
-#include "cpu/isa/register.h"
 #include "event/event.h"
+#include "hart/hart.h"
+#include "hart/isa/register.h"
 #include "mem/memory-image.h"
 
 #include <memory>
@@ -32,14 +32,14 @@ class ActionInterface {
     ActionType at;
 
   protected:
-    cpu::HartState* hs;
+    hart::HartState* hs;
     size_t indent;
     bool useColor = false;
 
   public:
     ActionInterface(
         ActionType at = ActionType::NONE,
-        cpu::HartState* hs = nullptr)
+        hart::HartState* hs = nullptr)
         : at(at), hs(hs), indent(0) {}
     virtual ~ActionInterface() = default;
 
@@ -51,7 +51,7 @@ class ActionInterface {
         assert(this->isa<U>());
         return static_cast<U*>(this);
     }
-    virtual void setHS(cpu::HartState* hs) { this->hs = hs; }
+    virtual void setHS(hart::HartState* hs) { this->hs = hs; }
     virtual void increaseIndent(size_t indent = 2) { this->indent += indent; }
     // FIXME: possible sign underflow may occur here
     virtual void decreaseIndent(size_t indent = 2) { this->indent -= indent; }
@@ -64,7 +64,7 @@ class DumpRegisterClass : public ActionInterface {
 
     DumpRegisterClass(isa::rf::RegisterClassType regtype)
         : DumpRegisterClass(nullptr, regtype) {}
-    DumpRegisterClass(cpu::HartState* hs, isa::rf::RegisterClassType regtype)
+    DumpRegisterClass(hart::HartState* hs, isa::rf::RegisterClassType regtype)
         : ActionInterface(ActionType::DUMP_REG_CLASS, hs), regtype(regtype) {}
     virtual ~DumpRegisterClass() = default;
 
@@ -82,7 +82,7 @@ class DumpRegister : public ActionInterface {
     DumpRegister(isa::rf::RegisterClassType regtype, RegisterIndex idx)
         : DumpRegister(nullptr, regtype, idx) {}
     DumpRegister(
-        cpu::HartState* hs,
+        hart::HartState* hs,
         isa::rf::RegisterClassType regtype,
         RegisterIndex idx)
         : ActionInterface(ActionType::DUMP_REG, hs), regtype(regtype),
@@ -99,7 +99,7 @@ class DumpPC : public ActionInterface {
   public:
     SignedInteger offset;
     DumpPC(SignedInteger offset) : DumpPC(nullptr, offset) {}
-    DumpPC(cpu::HartState* hs, SignedInteger offset)
+    DumpPC(hart::HartState* hs, SignedInteger offset)
         : ActionInterface(ActionType::DUMP_PC, hs), offset(offset) {}
     virtual ~DumpPC() = default;
 
@@ -114,7 +114,7 @@ class DumpMemoryAddress : public ActionInterface {
     Address addr;
 
     DumpMemoryAddress(Address addr) : DumpMemoryAddress(nullptr, addr) {}
-    DumpMemoryAddress(cpu::HartState* hs, Address addr)
+    DumpMemoryAddress(hart::HartState* hs, Address addr)
         : ActionInterface(ActionType::DUMP_MEM_ADDR, hs), addr(addr) {}
     virtual ~DumpMemoryAddress() = default;
 
@@ -127,7 +127,7 @@ class DumpMemoryAddress : public ActionInterface {
 class Stop : public ActionInterface {
   public:
     Stop() : Stop(nullptr) {}
-    Stop(cpu::HartState* hs) : ActionInterface(ActionType::STOP, hs) {}
+    Stop(hart::HartState* hs) : ActionInterface(ActionType::STOP, hs) {}
     virtual ~Stop() = default;
 
     void action(std::ostream* o = nullptr) override;
@@ -144,7 +144,7 @@ class ActionGroup : public ActionInterface {
     ActionGroup(std::vector<std::shared_ptr<action::ActionInterface>> actions)
         : ActionGroup(nullptr, actions) {}
     ActionGroup(
-        cpu::HartState* hs,
+        hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions)
         : ActionInterface(ActionType::GROUP, hs), actions(actions) {}
     virtual ~ActionGroup() = default;
@@ -154,7 +154,7 @@ class ActionGroup : public ActionInterface {
     static bool classof(const ActionInterface* ai) {
         return ai->at == ActionType::GROUP;
     }
-    virtual void setHS(cpu::HartState* hs) override {
+    virtual void setHS(hart::HartState* hs) override {
         ActionInterface::setHS(hs);
         updateActions();
     }
@@ -237,12 +237,12 @@ class ConditionInterface {
     ConditionType ct;
 
   protected:
-    cpu::HartState* hs;
+    hart::HartState* hs;
 
   public:
     ConditionInterface(
         ConditionType ct = ConditionType::NONE,
-        cpu::HartState* hs = nullptr)
+        hart::HartState* hs = nullptr)
         : ct(ct), hs(hs) {}
     virtual ~ConditionInterface() = default;
 
@@ -253,7 +253,7 @@ class ConditionInterface {
         assert(this->isa<U>());
         return static_cast<U*>(this);
     }
-    virtual void setHS(cpu::HartState* hs) { this->hs = hs; }
+    virtual void setHS(hart::HartState* hs) { this->hs = hs; }
 };
 class MemAddrCompare : public ConditionInterface {
   public:
@@ -264,7 +264,7 @@ class MemAddrCompare : public ConditionInterface {
     MemAddrCompare(Address addr, Integer i, ComparisonType ct)
         : MemAddrCompare(nullptr, addr, i, ct) {}
     MemAddrCompare(
-        cpu::HartState* hs,
+        hart::HartState* hs,
         Address addr,
         Integer i,
         ComparisonType ct)
@@ -294,7 +294,7 @@ class RegisterCompare : public ConditionInterface {
         ComparisonType ct)
         : RegisterCompare(nullptr, regtype, idx, i, ct) {}
     RegisterCompare(
-        cpu::HartState* hs,
+        hart::HartState* hs,
         isa::rf::RegisterClassType regtype,
         RegisterIndex idx,
         Integer i,
@@ -325,7 +325,7 @@ class PCCompare : public ConditionInterface {
     PCCompare(SignedInteger offset, Address addr, ComparisonType ct)
         : PCCompare(nullptr, offset, addr, ct) {}
     PCCompare(
-        cpu::HartState* hs,
+        hart::HartState* hs,
         SignedInteger offset,
         Address addr,
         ComparisonType ct)
@@ -424,12 +424,12 @@ class Watch : public ControlBase {
   protected:
     std::optional<uint64_t> previous;
     std::ostream* out;
-    cpu::HartState* hs;
+    hart::HartState* hs;
     std::vector<std::shared_ptr<action::ActionInterface>> actions;
 
   public:
     Watch(
-        cpu::HartState* hs = nullptr,
+        hart::HartState* hs = nullptr,
         std::vector<std::shared_ptr<action::ActionInterface>> actions = {})
         : previous(), out(nullptr), hs(hs), actions(actions) {
         this->updateActions();
@@ -437,7 +437,7 @@ class Watch : public ControlBase {
     virtual ~Watch() = default;
 
     void setLog(std::ostream* o) { this->out = o; }
-    virtual void setHS(cpu::HartState* hs) {
+    virtual void setHS(hart::HartState* hs) {
         this->hs = hs;
         this->updateActions();
     }
@@ -482,7 +482,7 @@ class WatchRegister : public Watch {
     WatchRegister(isa::rf::RegisterClassType regtype, RegisterIndex idx)
         : WatchRegister(nullptr, {}, regtype, idx) {}
     WatchRegister(
-        cpu::HartState* hs,
+        hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
         isa::rf::RegisterClassType regtype,
         RegisterIndex idx)
@@ -509,7 +509,7 @@ class WatchMemoryAddress : public Watch {
 
     WatchMemoryAddress(Address addr) : WatchMemoryAddress(nullptr, {}, addr) {}
     WatchMemoryAddress(
-        cpu::HartState* hs,
+        hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
         Address addr)
         : Watch(hs, actions), addr(addr) {}

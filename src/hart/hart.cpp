@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include "hart.h"
 
 #include "event/event.h"
 #include "isa/inst.h"
@@ -12,17 +12,7 @@
 #include <sstream>
 #include <string>
 
-namespace cpu {
-
-// use raw(addr) so we don't log mem access
-uint32_t HartState::getInstWord() const {
-    auto ptr = mem().raw(pc);
-    return *((uint32_t*)ptr);
-}
-
-HartState::HartState(std::shared_ptr<mem::MemoryImage> m)
-    : rf_(std::make_unique<isa::rf::RegisterFile>()), memimg_(m),
-      executing(true) {}
+namespace hart {
 
 Hart::Hart(std::shared_ptr<mem::MemoryImage> m)
     : hs_(std::make_unique<HartState>(m)) {}
@@ -240,4 +230,4 @@ void Hart::execute(uint64_t start_address) {
     }
 }
 
-} // namespace cpu
+} // namespace hart

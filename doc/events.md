@@ -14,6 +14,6 @@ Note: the exact line numbers may not be up-to-date, but the file names should be
 |        mem |     event_allocation |                     Fires when memory is allocated |                              (base address, allocation size) | src/mem/memory-image.h:94 |
 | reg_$CLASS |           event_read |                      Fires when a register is read |                 (register class, register index, value read) | src/cpu/isa/register.h:95 |
 | reg_$CLASS |          event_write |                   Fires when a register is written |   (register class, register index, value written, old value) | src/cpu/isa/register.h:99 |
-|       hart | event_before_execute |  Fires just before current instruction is executed |                                          (Hart State object) |          src/cpu/cpu.h:74 |
-|       hart |  event_after_execute |   Fires just after current instruction is executed |                                          (Hart State object) |          src/cpu/cpu.h:78 |
+|       hart | event_before_execute |  Fires just before current instruction is executed |                                          (Hart State object) |          src/cpu/hart.h:74 |
+|       hart |  event_after_execute |   Fires just after current instruction is executed |                                          (Hart State object) |          src/cpu/hart.h:78 |
 

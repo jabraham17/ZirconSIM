@@ -1,7 +1,6 @@
 #ifndef ZIRCON_EVENT_EVENT_H_
 #define ZIRCON_EVENT_EVENT_H_
 
-// #include "cpu/cpu.h"
 #include <algorithm>
 #include <functional>
 #include <memory>
