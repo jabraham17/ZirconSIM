@@ -101,7 +101,7 @@ Parser::parse_action_list() {
     }
 }
 
-// action -> REGISTER_CLASS | register | pc | mem | STOP
+// action -> REGISTER_CLASS | register | pc | mem | STOP | PAUSE
 std::shared_ptr<action::ActionInterface> Parser::parse_action() {
     if(lexer.peek().token_type == TokenType::REGISTER_CLASS) {
         if(lexer.peek(2).token_type == TokenType::LBRACK) {
@@ -124,6 +124,9 @@ std::shared_ptr<action::ActionInterface> Parser::parse_action() {
     } else if(lexer.peek().token_type == TokenType::STOP) {
         expect(TokenType::STOP);
         return std::make_shared<action::Stop>();
+        } else if(lexer.peek().token_type == TokenType::PAUSE) {
+        expect(TokenType::PAUSE);
+        return std::make_shared<action::Pause>();
     } else throw ParseException("Unknown Action");
 }
 

@@ -13,6 +13,7 @@
     F(REGISTER_CLASS)                                                          \
     F(MEM)                                                                     \
     F(STOP)                                                                    \
+    F(PAUSE) \
     F(PC)                                                                      \
     F(COLON)                                                                   \
     F(COMMA)                                                                   \

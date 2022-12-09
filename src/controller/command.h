@@ -24,6 +24,7 @@ enum class ActionType {
     DUMP_MEM_ADDR,
     DUMP_PC,
     STOP,
+    PAUSE,
     GROUP,
     NONE,
 };
@@ -134,6 +135,18 @@ class Stop : public ActionInterface {
 
     static bool classof(const ActionInterface* ai) {
         return ai->at == ActionType::STOP;
+    }
+};
+class Pause : public ActionInterface {
+  public:
+    Pause() : Pause(nullptr) {}
+    Pause(hart::HartState* hs) : ActionInterface(ActionType::PAUSE, hs) {}
+    virtual ~Pause() = default;
+
+    void action(std::ostream* o = nullptr) override;
+
+    static bool classof(const ActionInterface* ai) {
+        return ai->at == ActionType::PAUSE;
     }
 };
 class ActionGroup : public ActionInterface {

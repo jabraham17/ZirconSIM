@@ -91,7 +91,10 @@ void DumpMemoryAddress::action(std::ostream* o) {
     *o << std::endl;
 }
 void Stop::action([[maybe_unused]] std::ostream* o) {
-    if(hs) hs->executing = false;
+    if(hs) hs->stop();
+}
+void Pause::action([[maybe_unused]] std::ostream* o) {
+    if(hs) hs->pause();
 }
 void ActionGroup::action([[maybe_unused]] std::ostream* o) {
     if(hs && !actions.empty()) {

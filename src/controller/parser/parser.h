@@ -40,7 +40,7 @@ class Parser {
     event_cond_action -> event cond_list action_list
     event             -> SUBSYSTEM COLON EVENT
     action_list       -> action | action COMMA action_list
-    action            -> REGISTER_CLASS | register | pc | mem | STOP
+    action            -> REGISTER_CLASS | register | pc | mem | STOP | PAUSE
     cond_list         -> cond | cond COMMA cond_list
     cond              -> register EQUALS NUM | mem EQUALS NUM | pc EQUALS NUM
     cond_op           -> EQUALS | NOTEQUAL
