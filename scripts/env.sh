@@ -1,14 +1,14 @@
 realpath() {
-  OURPWD=$PWD
-  cd "$(dirname "$1")"
-  LINK=$(readlink "$(basename "$1")")
-  while [ "$LINK" ]; do
-    cd "$(dirname "$LINK")"
+    OURPWD=$PWD
+    cd "$(dirname "$1")"
     LINK=$(readlink "$(basename "$1")")
-  done
-  REALPATH="$PWD/$(basename "$1")"
-  cd "$OURPWD"
-  echo "$REALPATH"
+    while [ "$LINK" ]; do
+        cd "$(dirname "$LINK")"
+        LINK=$(readlink "$(basename "$1")")
+    done
+    REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
 }
 SCRIPT_NAME=
 if [ -z $BASH_SOURCE ]; then
@@ -42,3 +42,26 @@ export ZIRCON_RV64IMA_MUSL=$ZIRCON_TOOLCHAINS/rv64ima-musl
 export ZIRCON_RV64IMA_MUSL_DEBUG=$ZIRCON_TOOLCHAINS/rv64ima-musl-debug
 
 
+check_toolchain() {
+    if [[ $1 == "elf" ]] \
+        && [ -f "$ZIRCON_RV64IMA_ELF/bin/riscv64-unknown-elf-gcc" ]; then
+        return 0
+    elif [[ $1 == "elf-debug" ]] \
+        && [ -f "$ZIRCON_RV64IMA_ELF_DEBUG/bin/riscv64-unknown-elf-gcc" ]; then
+       return 0
+    elif [[ $1 == "linux" ]] \
+        && [ -f "$ZIRCON_RV64IMA_LINUX/bin/riscv64-unknown-linux-gnu-gcc" ]; then
+        return 0
+    elif [[ $1 == "linux-debug" ]] \
+        && [ -f "$ZIRCON_RV64IMA_LINUX_DEBUG/bin/riscv64-unknown-linux-gnu-gcc" ]; then
+        return 0
+    elif [[ $1 == "musl" ]] \
+        && [ -f "$ZIRCON_RV64IMA_MUSL/bin/riscv64-unknown-linux-musl-gcc" ]; then
+        return 0
+    elif [[ $1 == "musl-debug" ]] \
+        && [ -f "$ZIRCON_RV64IMA_ELF_DEBUG/bin/riscv64-unknown-linux-musl-gcc" ]; then
+        return 0
+    fi
+    # if we get here, either invalid toolchain or not installed
+    return 1
+}
