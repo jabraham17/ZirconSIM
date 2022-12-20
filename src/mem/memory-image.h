@@ -4,6 +4,7 @@
 #define ZIRCON_MEM_MEMORY_IMAGE_H_
 
 #include "event/event.h"
+#include "hart/types.h"
 
 #include <cstdint>
 #include <cstring>
