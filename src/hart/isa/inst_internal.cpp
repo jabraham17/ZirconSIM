@@ -79,6 +79,12 @@ bool Opcode::isCustomType() const {
     }
 }
 
+int Opcode::getInstructionSize() const {
+    switch(this->_value) {
+        default: return 4;
+    }
+}
+
 namespace internal {
 
 std::string colorReset(bool doColor) {
@@ -204,8 +210,8 @@ Opcode decodeInstruction(uint32_t bits) {
 }
 
 void executeInstruction(uint32_t bits, hart::HartState& hs) {
-    Opcode op = decodeInstruction(bits);
-    switch(op) {
+    Opcode opcode = decodeInstruction(bits);
+    switch(opcode) {
         default: throw hart::IllegalInstructionException(bits);
 
 #define SIMPLE_EXECUTION(prefix, name, execution)                              \

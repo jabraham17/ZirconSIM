@@ -21,7 +21,7 @@ bool Hart::shouldHalt() {
     // if pc is beyond the bounds of memory , return true
     if(hs().mem().raw(hs().pc) == nullptr) return true;
     // if the instruction just executed was a jmp to itself, halt
-    uint32_t inst = hs().getInstWord();
+    auto inst = hs().getInstWord();
     auto op = isa::inst::decodeInstruction(inst);
     auto jmp_target =
         instruction::signext64<20>(instruction::getJTypeImm(inst)) + hs().pc;

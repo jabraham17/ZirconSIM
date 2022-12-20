@@ -66,5 +66,11 @@
 #define IMM_J_TYPE_SEXT32                                                      \
     (instruction::signext32<20>(instruction::getJTypeImm(bits)))
 
+#define INSTRUCTION_WIDTH (opcode.getInstructionSize())
+#define NEXT_INSTRUCTION                                                       \
+    do {                                                                       \
+        hs().pc += INSTRUCTION_WIDTH;                                          \
+    } while(0)
+
 #define COMMA ,
 #endif

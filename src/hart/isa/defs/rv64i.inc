@@ -6,7 +6,7 @@ I_TYPE(rv64i,
        0b110,
        types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = hs().mem().word(address);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 I_TYPE(rv64i,
        ld,
@@ -14,7 +14,7 @@ I_TYPE(rv64i,
        0b011,
        types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = hs().mem().doubleword(address);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 S_TYPE(rv64i,
        sd,
@@ -22,7 +22,7 @@ S_TYPE(rv64i,
        0b011,
        types::Address address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().mem().doubleword(address) = hs().rf().GPR[RS2] & 0xFFFFFFFFFFFFFFFF;
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 CUSTOM(rv64i,
        slli,
@@ -41,7 +41,7 @@ CUSTOM(rv64i,
           << internal::colorReset(color);
        return ss.str();
        , hs().rf().GPR[RD] = hs().rf().GPR[RS1] << SHAMT6;
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 CUSTOM(rv64i,
        srli,
@@ -60,7 +60,7 @@ CUSTOM(rv64i,
           << internal::colorReset(color);
        return ss.str();
        , hs().rf().GPR[RD] = hs().rf().GPR[RS1] >> SHAMT6;
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 CUSTOM(rv64i,
        srai,
@@ -79,7 +79,7 @@ CUSTOM(rv64i,
           << internal::colorReset(color);
        return ss.str();
        , hs().rf().GPR[RD] = hs().rf().GPR[RS1] >> SHAMT6;
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 I_TYPE(rv64i,
        addiw,
@@ -87,7 +87,7 @@ I_TYPE(rv64i,
        0b000,
        hs().rf().GPR[RD] =
            SIGNEXT64(IMM_I_TYPE_SEXT32 + SIGNEXT32(hs().rf().GPR[RS1], 32), 32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        slliw,
@@ -95,7 +95,7 @@ R_TYPE(rv64i,
        0b0000000,
        0b001,
        hs().rf().GPR[RD] = SIGNEXT32(hs().rf().GPR[RS1], 32) << SHAMT5;
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        srliw,
@@ -103,7 +103,7 @@ R_TYPE(rv64i,
        0b0000000,
        0b101,
        hs().rf().GPR[RD] = SIGNEXT32(hs().rf().GPR[RS1], 32) >> SHAMT5;
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        sraiw,
@@ -111,7 +111,7 @@ R_TYPE(rv64i,
        0b0100000,
        0b101,
        hs().rf().GPR[RD] = SIGNEXT32(hs().rf().GPR[RS1], 32) >> SHAMT5;
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        addw,
@@ -122,7 +122,7 @@ R_TYPE(rv64i,
            SIGNEXT32(hs().rf().GPR[RS1], 32) +
                SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        subw,
@@ -133,7 +133,7 @@ R_TYPE(rv64i,
            SIGNEXT32(hs().rf().GPR[RS1], 32) -
                SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        sllw,
@@ -144,7 +144,7 @@ R_TYPE(rv64i,
            SIGNEXT32(hs().rf().GPR[RS1], 32)
                << SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        srlw,
@@ -155,7 +155,7 @@ R_TYPE(rv64i,
            SIGNEXT32(hs().rf().GPR[RS1], 32) >>
                SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        sraw,
@@ -166,7 +166,7 @@ R_TYPE(rv64i,
            SIGNEXT32(hs().rf().GPR[RS1], 32) >>
                SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 
 /*overload sll,srl,sra from RV32I so they are defined with 6 bits*/
@@ -176,7 +176,7 @@ R_TYPE(rv64i,
        0b0000000,
        0b001,
        hs().rf().GPR[RD] = hs().rf().GPR[RS1] << (hs().rf().GPR[RS2] & 0x3F);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        srl,
@@ -184,7 +184,7 @@ R_TYPE(rv64i,
        0b0000000,
        0b101,
        hs().rf().GPR[RD] = hs().rf().GPR[RS1] >> (hs().rf().GPR[RS2] & 0x3F);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64i,
        sra,
@@ -192,5 +192,5 @@ R_TYPE(rv64i,
        0b0100000,
        0b101,
        hs().rf().GPR[RD] = hs().rf().GPR[RS1] >> (hs().rf().GPR[RS2] & 0x3F);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)

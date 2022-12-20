@@ -2,7 +2,7 @@
 
 namespace hart {
 // use raw(addr) so we don't log mem access
-uint32_t HartState::getInstWord() const {
+types::InstructionWord HartState::getInstWord() const {
     auto ptr = mem().raw(pc);
     return *((uint32_t*)ptr);
 }

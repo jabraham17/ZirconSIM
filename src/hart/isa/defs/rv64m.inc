@@ -9,7 +9,7 @@ R_TYPE(rv64m,
            SIGNEXT32(hs().rf().GPR[RS1], 32) *
                SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64m,
        divw,
@@ -20,7 +20,7 @@ R_TYPE(rv64m,
            SIGNEXT32(hs().rf().GPR[RS1], 32) /
                SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64m,
        divuw,
@@ -31,7 +31,7 @@ R_TYPE(rv64m,
            (hs().rf().GPR[RS1] & instruction::getMask<32>()) /
                (hs().rf().GPR[RS2] & instruction::getMask<32>()),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64m,
        remw,
@@ -42,7 +42,7 @@ R_TYPE(rv64m,
            SIGNEXT32(hs().rf().GPR[RS1], 32) %
                SIGNEXT32(hs().rf().GPR[RS2], 32),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv64m,
        remuw,
@@ -53,5 +53,5 @@ R_TYPE(rv64m,
            (hs().rf().GPR[RS1] & instruction::getMask<32>()) %
                (hs().rf().GPR[RS2] & instruction::getMask<32>()),
            32);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)

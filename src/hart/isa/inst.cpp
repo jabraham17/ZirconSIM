@@ -42,6 +42,7 @@ Opcode decodeInstruction(uint32_t bits) {
     // custom logic
     return op;
 }
+
 std::string fields(uint32_t bits) {
     // print func separated as R, I, S, B, U, J
     std::stringstream ss;

@@ -6,7 +6,7 @@ R_TYPE(rv32m,
        0b0000001,
        0b000,
        hs().rf().GPR[RD] = hs().rf().GPR[RS1] * hs().rf().GPR[RS2];
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv32m,
        mulh,
@@ -17,7 +17,7 @@ R_TYPE(rv32m,
            ((SIGNEXT128(hs().rf().GPR[RS1], 64) *
              SIGNEXT128(hs().rf().GPR[RS2], 64)) >>
             64);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv32m,
        mulhsu,
@@ -27,7 +27,7 @@ R_TYPE(rv32m,
        hs().rf().GPR[RD] =
            ((__int128_t(hs().rf().GPR[RS1]) * __int128_t(hs().rf().GPR[RS2])) >>
             64);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv32m,
        mulhu,
@@ -38,7 +38,7 @@ R_TYPE(rv32m,
            ((SIGNEXT128(hs().rf().GPR[RS1], 64) *
              __int128_t(hs().rf().GPR[RS2])) >>
             64);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv32m,
        div,
@@ -47,7 +47,7 @@ R_TYPE(rv32m,
        0b100,
        hs().rf().GPR[RD] = SIGNEXT64(hs().rf().GPR[RS1], 64) /
                            SIGNEXT64(hs().rf().GPR[RS2], 64);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv32m,
        divu,
@@ -55,7 +55,7 @@ R_TYPE(rv32m,
        0b0000001,
        0b101,
        hs().rf().GPR[RD] = hs().rf().GPR[RS1] / hs().rf().GPR[RS2];
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv32m,
        rem,
@@ -64,7 +64,7 @@ R_TYPE(rv32m,
        0b110,
        hs().rf().GPR[RD] = SIGNEXT64(hs().rf().GPR[RS1], 64) %
                            SIGNEXT64(hs().rf().GPR[RS2], 64);
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)
 R_TYPE(rv32m,
        remu,
@@ -72,5 +72,5 @@ R_TYPE(rv32m,
        0b0000001,
        0b111,
        hs().rf().GPR[RD] = hs().rf().GPR[RS1] % hs().rf().GPR[RS2];
-       hs().pc += 4;
+       NEXT_INSTRUCTION;
        , 0)

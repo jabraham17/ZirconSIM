@@ -43,6 +43,8 @@ struct Opcode {
     bool isUType() const;
     bool isJType() const;
     bool isCustomType() const;
+
+    int getInstructionSize() const;
 };
 
 Opcode decodeInstruction(uint32_t bits);
