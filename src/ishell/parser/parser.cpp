@@ -4,7 +4,7 @@
 
 #include <utility>
 
-namespace controller {
+namespace ishell {
 namespace parser {
 
 Token Parser::expect(TokenType tt) {

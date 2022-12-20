@@ -3,7 +3,7 @@
 
 #include "common/argparse.hpp"
 #include "common/ordered_map.h"
-#include "controller/command.h"
+#include "command/command.h"
 #include "elf/elf.h"
 #include "hart/hart.h"
 
@@ -41,7 +41,7 @@ class MainArguments {
     std::ostream* mem_log;
     std::ostream* reg_log;
 
-    controller::ControlList parsed_commands;
+    command::ControlList parsed_commands;
 
   public:
     static MainArguments getMainArguments();

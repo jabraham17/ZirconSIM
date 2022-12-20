@@ -1,18 +1,17 @@
-#ifndef ZIRCON_CONTROLLER_PARSER_PARSER_H_
-#define ZIRCON_CONTROLLER_PARSER_PARSER_H_
+#ifndef ZIRCON_COMMAND_PARSER_PARSER_H_
+#define ZIRCON_COMMAND_PARSER_PARSER_H_
 
 #include "lexer.h"
 
 #include "command/command.h"
 #include "hart/isa/rf.h"
-#include "hart/types.h"
 
 #include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
 
-namespace controller {
+namespace ishell {
 
 namespace parser {
 struct ParseException : public std::runtime_error {
@@ -75,6 +74,6 @@ class Parser {
 };
 
 } // namespace parser
-} // namespace controller
+} // namespace COMMAND
 
 #endif

@@ -4,7 +4,7 @@
 #include "common/format.h"
 #include "hart/isa/inst.h"
 
-namespace controller {
+namespace command {
 
 static std::string colorAddr(bool useColor) {
     return useColor

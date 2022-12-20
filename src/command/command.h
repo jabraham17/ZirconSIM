@@ -1,21 +1,17 @@
 
-#ifndef ZIRCON_CONTROLLER_COMMAND_H_
-#define ZIRCON_CONTROLLER_COMMAND_H_
+#ifndef ZIRCON_COMMAND_COMMAND_H_
+#define ZIRCON_COMMAND_COMMAND_H_
 
 #include "event/event.h"
 #include "hart/hart.h"
 #include "hart/isa/register.h"
 #include "mem/memory-image.h"
+#include "hart/types.h"
 
 #include <memory>
 #include <optional>
 
-namespace controller {
-
-using Address = uint64_t;
-using RegisterIndex = uint64_t;
-using Integer = uint64_t;
-using SignedInteger = int64_t;
+namespace command {
 
 namespace action {
 enum class ActionType {
@@ -78,14 +74,14 @@ class DumpRegisterClass : public ActionInterface {
 class DumpRegister : public ActionInterface {
   public:
     isa::rf::RegisterClassType regtype;
-    RegisterIndex idx;
+    types::RegisterIndex idx;
 
-    DumpRegister(isa::rf::RegisterClassType regtype, RegisterIndex idx)
+    DumpRegister(isa::rf::RegisterClassType regtype, types::RegisterIndex idx)
         : DumpRegister(nullptr, regtype, idx) {}
     DumpRegister(
         hart::HartState* hs,
         isa::rf::RegisterClassType regtype,
-        RegisterIndex idx)
+        types::RegisterIndex idx)
         : ActionInterface(ActionType::DUMP_REG, hs), regtype(regtype),
           idx(idx) {}
     virtual ~DumpRegister() = default;
@@ -98,9 +94,9 @@ class DumpRegister : public ActionInterface {
 };
 class DumpPC : public ActionInterface {
   public:
-    SignedInteger offset;
-    DumpPC(SignedInteger offset) : DumpPC(nullptr, offset) {}
-    DumpPC(hart::HartState* hs, SignedInteger offset)
+    types::SignedInteger offset;
+    DumpPC(types::SignedInteger offset) : DumpPC(nullptr, offset) {}
+    DumpPC(hart::HartState* hs, types::SignedInteger offset)
         : ActionInterface(ActionType::DUMP_PC, hs), offset(offset) {}
     virtual ~DumpPC() = default;
 
@@ -112,10 +108,10 @@ class DumpPC : public ActionInterface {
 };
 class DumpMemoryAddress : public ActionInterface {
   public:
-    Address addr;
+    types::Address addr;
 
-    DumpMemoryAddress(Address addr) : DumpMemoryAddress(nullptr, addr) {}
-    DumpMemoryAddress(hart::HartState* hs, Address addr)
+    DumpMemoryAddress(types::Address addr) : DumpMemoryAddress(nullptr, addr) {}
+    DumpMemoryAddress(hart::HartState* hs, types::Address addr)
         : ActionInterface(ActionType::DUMP_MEM_ADDR, hs), addr(addr) {}
     virtual ~DumpMemoryAddress() = default;
 
@@ -270,16 +266,16 @@ class ConditionInterface {
 };
 class MemAddrCompare : public ConditionInterface {
   public:
-    Address addr;
-    Integer i;
+    types::Address addr;
+    types::Integer i;
     ComparisonType ct;
 
-    MemAddrCompare(Address addr, Integer i, ComparisonType ct)
+    MemAddrCompare(types::Address addr, types::Integer i, ComparisonType ct)
         : MemAddrCompare(nullptr, addr, i, ct) {}
     MemAddrCompare(
         hart::HartState* hs,
-        Address addr,
-        Integer i,
+        types::Address addr,
+        types::Integer i,
         ComparisonType ct)
         : ConditionInterface(ConditionType::MEM_ADDR_CMP, hs), addr(addr), i(i),
           ct(ct) {}
@@ -296,21 +292,21 @@ class MemAddrCompare : public ConditionInterface {
 class RegisterCompare : public ConditionInterface {
   public:
     isa::rf::RegisterClassType regtype;
-    RegisterIndex idx;
-    Integer i;
+    types::RegisterIndex idx;
+    types::Integer i;
     ComparisonType ct;
 
     RegisterCompare(
         isa::rf::RegisterClassType regtype,
-        RegisterIndex idx,
-        Integer i,
+        types::RegisterIndex idx,
+        types::Integer i,
         ComparisonType ct)
         : RegisterCompare(nullptr, regtype, idx, i, ct) {}
     RegisterCompare(
         hart::HartState* hs,
         isa::rf::RegisterClassType regtype,
-        RegisterIndex idx,
-        Integer i,
+        types::RegisterIndex idx,
+        types::Integer i,
         ComparisonType ct)
         : ConditionInterface(ConditionType::REG_CMP, hs), regtype(regtype),
           idx(idx), i(i), ct(ct) {}
@@ -331,16 +327,16 @@ class RegisterCompare : public ConditionInterface {
 
 class PCCompare : public ConditionInterface {
   public:
-    SignedInteger offset;
-    Address addr;
+    types::SignedInteger offset;
+    types::Address addr;
     ComparisonType ct;
 
-    PCCompare(SignedInteger offset, Address addr, ComparisonType ct)
+    PCCompare(types::SignedInteger offset, types::Address addr, ComparisonType ct)
         : PCCompare(nullptr, offset, addr, ct) {}
     PCCompare(
         hart::HartState* hs,
-        SignedInteger offset,
-        Address addr,
+        types::SignedInteger offset,
+        types::Address addr,
         ComparisonType ct)
         : ConditionInterface(ConditionType::PC_CMP, hs), offset(offset),
           addr(addr), ct(ct) {}
@@ -490,15 +486,15 @@ class Watch : public ControlBase {
 class WatchRegister : public Watch {
   public:
     isa::rf::RegisterClassType regtype;
-    RegisterIndex idx;
+    types::RegisterIndex idx;
 
-    WatchRegister(isa::rf::RegisterClassType regtype, RegisterIndex idx)
+    WatchRegister(isa::rf::RegisterClassType regtype, types::RegisterIndex idx)
         : WatchRegister(nullptr, {}, regtype, idx) {}
     WatchRegister(
         hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
         isa::rf::RegisterClassType regtype,
-        RegisterIndex idx)
+        types::RegisterIndex idx)
         : Watch(hs, actions), regtype(regtype), idx(idx) {}
     virtual ~WatchRegister() = default;
 
@@ -518,13 +514,13 @@ class WatchRegister : public Watch {
 
 class WatchMemoryAddress : public Watch {
   public:
-    Address addr;
+    types::Address addr;
 
-    WatchMemoryAddress(Address addr) : WatchMemoryAddress(nullptr, {}, addr) {}
+    WatchMemoryAddress(types::Address addr) : WatchMemoryAddress(nullptr, {}, addr) {}
     WatchMemoryAddress(
         hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        Address addr)
+        types::Address addr)
         : Watch(hs, actions), addr(addr) {}
     virtual ~WatchMemoryAddress() = default;
 
