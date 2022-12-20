@@ -8,6 +8,7 @@
 #include "event/event.h"
 #include "isa/rf.h"
 #include "mem/memory-image.h"
+#include "types.h"
 
 #include <thread>
 
@@ -20,7 +21,7 @@ struct HartException : public std::runtime_error {
 };
 struct IllegalInstructionException : public HartException {
     IllegalInstructionException() : HartException("Illegal Instruction") {}
-    IllegalInstructionException(uint64_t bits)
+    IllegalInstructionException(types::InstructionWord bits)
         : HartException("Illegal Instruction [" + std::to_string(bits)) {}
 };
 
@@ -29,8 +30,8 @@ class Hart {
     std::unique_ptr<HartState> hs_;
 
   private:
-    uint64_t alloc(size_t n);
-    void copyToHart(void* src, uint64_t dst, size_t n);
+    types::Address alloc(size_t n);
+    void copyToHart(void* src, types::Address dst, size_t n);
 
     void init_heap();
     void init_stack(

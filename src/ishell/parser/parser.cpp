@@ -148,7 +148,7 @@ std::shared_ptr<command::condition::ConditionInterface> Parser::parse_cond() {
         return std::make_shared<command::condition::RegisterCompare>(
             reg_class,
             reg_idx,
-            types::strToInteger(num.lexeme),
+            types::strToUnsignedInteger(num.lexeme),
             ct);
 
     } else if(lexer.peek().token_type == TokenType::MEM) {
@@ -157,7 +157,7 @@ std::shared_ptr<command::condition::ConditionInterface> Parser::parse_cond() {
         auto num = expect(TokenType::NUM);
         return std::make_shared<command::condition::MemAddrCompare>(
             addr,
-            types::strToInteger(num.lexeme),
+            types::strToUnsignedInteger(num.lexeme),
             ct);
 
     } else if(lexer.peek().token_type == TokenType::PC) {

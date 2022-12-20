@@ -4,7 +4,7 @@ I_TYPE(rv64i,
        lwu,
        0b0000011,
        0b110,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = hs().mem().word(address);
        hs().pc += 4;
        , 0)
@@ -12,7 +12,7 @@ I_TYPE(rv64i,
        ld,
        0b0000011,
        0b011,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = hs().mem().doubleword(address);
        hs().pc += 4;
        , 0)
@@ -20,7 +20,7 @@ S_TYPE(rv64i,
        sd,
        0b0100011,
        0b011,
-       uint64_t address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().mem().doubleword(address) = hs().rf().GPR[RS2] & 0xFFFFFFFFFFFFFFFF;
        hs().pc += 4;
        , 0)

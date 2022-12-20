@@ -25,7 +25,7 @@ class HartState {
     std::unique_ptr<isa::rf::RegisterFile> rf_;
     std::shared_ptr<mem::MemoryImage> memimg_;
 
-    std::unordered_map<std::string, uint64_t> memory_locations_;
+    std::unordered_map<std::string, types::Address> memory_locations_;
 
     std::mutex lock_es;
     std::condition_variable signal_es;
@@ -37,18 +37,18 @@ class HartState {
     const isa::rf::RegisterFile& rf() const { return *rf_; }
     const mem::MemoryImage& mem() const { return *memimg_; }
 
-    uint64_t getMemLocation(const std::string& name) {
+    types::Address getMemLocation(const std::string& name) {
         if(auto it = memory_locations_.find(name);
            it != memory_locations_.end())
             return it->second;
         else return 0;
     }
-    void setMemLocation(const std::string& name, uint64_t val) {
+    void setMemLocation(const std::string& name, types::UnsignedInteger val) {
         memory_locations_.insert_or_assign(name, val);
     }
 
     struct PCProxy {
-        using T = uint64_t;
+        using T = types::Address;
 
       private:
         T current_pc;
@@ -81,14 +81,14 @@ class HartState {
     PCProxy pc;
 
     // use raw(addr) so we don't log mem access
-    uint32_t getInstWord() const;
+    types::InstructionWord getInstWord() const;
 
     HartState(std::shared_ptr<mem::MemoryImage> m);
 
     HartState& operator()() { return *this; }
     const HartState& operator()() const { return *this; }
 
-    void start(uint64_t start_address) {
+    void start(types::Address start_address) {
         pc = start_address;
         setExecutionState(ExecutionState::RUNNING);
     }

@@ -11,32 +11,32 @@ I_TYPE(rv32i,
        jalr,
        0b1100111,
        0b000,
-       uint64_t new_pc = (IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1]) &
+       types::Address new_pc = (IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1]) &
                          (~(1)); // clear LSB
        hs().rf().GPR[RD] = hs().pc + 4;
        hs().pc = new_pc;
        , 0)
 B_TYPE(
-    rv32i, beq, 0b1100011, 0b000, uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
+    rv32i, beq, 0b1100011, 0b000, types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
     if(hs().rf().GPR[RS1] == hs().rf().GPR[RS2]) { hs().pc = target; } else {
         hs().pc += 4;
     },
     0)
 B_TYPE(
-    rv32i, bne, 0b1100011, 0b001, uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
+    rv32i, bne, 0b1100011, 0b001, types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
     if(hs().rf().GPR[RS1] != hs().rf().GPR[RS2]) { hs().pc = target; } else {
         hs().pc += 4;
     },
     0)
 B_TYPE(
-    rv32i, blt, 0b1100011, 0b100, uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
-    if(int64_t(hs().rf().GPR[RS1]) < int64_t(hs().rf().GPR[RS2])) {
+    rv32i, blt, 0b1100011, 0b100, types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
+    if(types::SignedInteger(hs().rf().GPR[RS1]) < types::SignedInteger(hs().rf().GPR[RS2])) {
         hs().pc = target;
     } else { hs().pc += 4; },
     0)
 B_TYPE(
-    rv32i, bge, 0b1100011, 0b101, uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
-    if(int64_t(hs().rf().GPR[RS1]) >= int64_t(hs().rf().GPR[RS2])) {
+    rv32i, bge, 0b1100011, 0b101, types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
+    if(types::SignedInteger(hs().rf().GPR[RS1]) >= types::SignedInteger(hs().rf().GPR[RS2])) {
         hs().pc = target;
     } else { hs().pc += 4; },
     0)
@@ -45,8 +45,8 @@ B_TYPE(
     bltu,
     0b1100011,
     0b110,
-    uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
-    if(uint64_t(hs().rf().GPR[RS1]) < uint64_t(hs().rf().GPR[RS2])) {
+    types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
+    if(types::UnsignedInteger(hs().rf().GPR[RS1]) < types::UnsignedInteger(hs().rf().GPR[RS2])) {
         hs().pc = target;
     } else { hs().pc += 4; },
     0)
@@ -55,8 +55,8 @@ B_TYPE(
     bgeu,
     0b1100011,
     0b111,
-    uint64_t target = IMM_B_TYPE_SEXT64 + hs().pc;
-    if(uint64_t(hs().rf().GPR[RS1]) >= uint64_t(hs().rf().GPR[RS2])) {
+    types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
+    if(types::UnsignedInteger(hs().rf().GPR[RS1]) >= types::UnsignedInteger(hs().rf().GPR[RS2])) {
         hs().pc = target;
     } else { hs().pc += 4; },
     0)
@@ -64,7 +64,7 @@ I_TYPE(rv32i,
        lb,
        0b0000011,
        0b000,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = SIGNEXT64(hs().mem().byte(address), 8);
        hs().pc += 4;
        , 0)
@@ -72,7 +72,7 @@ I_TYPE(rv32i,
        lh,
        0b0000011,
        0b001,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = SIGNEXT64(hs().mem().halfword(address), 16);
        hs().pc += 4;
        , 0)
@@ -80,7 +80,7 @@ I_TYPE(rv32i,
        lw,
        0b0000011,
        0b010,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = SIGNEXT64(hs().mem().word(address), 32);
        hs().pc += 4;
        , 0)
@@ -88,7 +88,7 @@ I_TYPE(rv32i,
        lbu,
        0b0000011,
        0b100,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = hs().mem().byte(address);
        hs().pc += 4;
        , 0)
@@ -96,7 +96,7 @@ I_TYPE(rv32i,
        lhu,
        0b0000011,
        0b101,
-       uint64_t address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().rf().GPR[RD] = hs().mem().halfword(address);
        hs().pc += 4;
        , 0)
@@ -104,7 +104,7 @@ S_TYPE(rv32i,
        sb,
        0b0100011,
        0b000,
-       uint64_t address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().mem().byte(address) = hs().rf().GPR[RS2] & 0xFF;
        hs().pc += 4;
        , 0)
@@ -112,7 +112,7 @@ S_TYPE(rv32i,
        sh,
        0b0100011,
        0b001,
-       uint64_t address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().mem().halfword(address) = hs().rf().GPR[RS2] & 0xFFFF;
        hs().pc += 4;
        , 0)
@@ -120,7 +120,7 @@ S_TYPE(rv32i,
        sw,
        0b0100011,
        0b010,
-       uint64_t address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
+       types::Address address = IMM_S_TYPE_SEXT64 + hs().rf().GPR[RS1];
        hs().mem().word(address) = hs().rf().GPR[RS2] & 0xFFFFFFFF;
        hs().pc += 4;
        , 0)
@@ -144,7 +144,7 @@ I_TYPE(rv32i,
        sltiu,
        0b0010011,
        0b011,
-       hs().rf().GPR[RD] = hs().rf().GPR[RS1] < uint64_t(IMM_I_TYPE_SEXT64) ? 1
+       hs().rf().GPR[RD] = hs().rf().GPR[RS1] < types::UnsignedInteger(IMM_I_TYPE_SEXT64) ? 1
                                                                             : 0;
        hs().pc += 4;
        , 0)

@@ -267,22 +267,22 @@ class ConditionInterface {
 class MemAddrCompare : public ConditionInterface {
   public:
     types::Address addr;
-    types::Integer i;
+    types::UnsignedInteger i;
     ComparisonType ct;
 
-    MemAddrCompare(types::Address addr, types::Integer i, ComparisonType ct)
+    MemAddrCompare(types::Address addr, types::UnsignedInteger i, ComparisonType ct)
         : MemAddrCompare(nullptr, addr, i, ct) {}
     MemAddrCompare(
         hart::HartState* hs,
         types::Address addr,
-        types::Integer i,
+        types::UnsignedInteger i,
         ComparisonType ct)
         : ConditionInterface(ConditionType::MEM_ADDR_CMP, hs), addr(addr), i(i),
           ct(ct) {}
     virtual ~MemAddrCompare() = default;
 
     bool check() override {
-        return hs && ct((*(uint64_t*)(hs->mem().raw(addr))), i);
+        return hs && ct((*(types::Address*)(hs->mem().raw(addr))), i);
     }
 
     static bool classof(const ConditionInterface* ci) {
@@ -293,20 +293,20 @@ class RegisterCompare : public ConditionInterface {
   public:
     isa::rf::RegisterClassType regtype;
     types::RegisterIndex idx;
-    types::Integer i;
+    types::UnsignedInteger i;
     ComparisonType ct;
 
     RegisterCompare(
         isa::rf::RegisterClassType regtype,
         types::RegisterIndex idx,
-        types::Integer i,
+        types::UnsignedInteger i,
         ComparisonType ct)
         : RegisterCompare(nullptr, regtype, idx, i, ct) {}
     RegisterCompare(
         hart::HartState* hs,
         isa::rf::RegisterClassType regtype,
         types::RegisterIndex idx,
-        types::Integer i,
+        types::UnsignedInteger i,
         ComparisonType ct)
         : ConditionInterface(ConditionType::REG_CMP, hs), regtype(regtype),
           idx(idx), i(i), ct(ct) {}
@@ -315,7 +315,7 @@ class RegisterCompare : public ConditionInterface {
 
     bool check() override {
         if(this->regtype == isa::rf::RegisterClassType::GPR) {
-            return hs && ct(uint64_t(this->hs->rf().GPR.rawreg(idx)), i);
+            return hs && ct(types::Address(this->hs->rf().GPR.rawreg(idx)), i);
         }
         return false;
     }
@@ -343,7 +343,7 @@ class PCCompare : public ConditionInterface {
     virtual ~PCCompare() = default;
 
     bool check() override {
-        return hs && ct(uint64_t(hs->pc + offset * 4), addr);
+        return hs && ct(types::Address(hs->pc + offset * 4), addr);
     }
 
     static bool classof(const ConditionInterface* ci) {
@@ -431,7 +431,7 @@ class ConditionalCommand : public Command {
 
 class Watch : public ControlBase {
   protected:
-    std::optional<uint64_t> previous;
+    std::optional<types::Address> previous;
     std::ostream* out;
     hart::HartState* hs;
     std::vector<std::shared_ptr<action::ActionInterface>> actions;
@@ -461,7 +461,7 @@ class Watch : public ControlBase {
     }
 
     virtual bool hasChanged() {
-        std::optional<uint64_t> value = readCurrentValue();
+        std::optional<types::Address> value = readCurrentValue();
         // no current value, no change
         if(!value.has_value()) return false;
         // no previous value, no change
@@ -471,7 +471,7 @@ class Watch : public ControlBase {
     }
     virtual void update();
     virtual std::string name() = 0;
-    virtual std::optional<uint64_t> readCurrentValue() = 0;
+    virtual std::optional<types::UnsignedInteger> readCurrentValue() = 0;
 
   private:
     void updateActions() {
@@ -502,7 +502,7 @@ class WatchRegister : public Watch {
         return isa::rf::getRegisterClassString(this->regtype) + "[" +
                std::to_string(this->idx) + "]";
     }
-    virtual std::optional<uint64_t> readCurrentValue() override {
+    virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
         if(hs) {
             if(this->regtype == isa::rf::RegisterClassType::GPR) {
                 return this->hs->rf().GPR.rawreg(idx).get();
@@ -529,10 +529,10 @@ class WatchMemoryAddress : public Watch {
         ss << "MEM[" << common::Format::doubleword << this->addr << "]";
         return ss.str();
     }
-    virtual std::optional<uint64_t> readCurrentValue() override {
+    virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
         if(hs) {
             auto converted_addr = hs->mem().raw(addr);
-            if(converted_addr) return *(uint64_t*)(converted_addr);
+            if(converted_addr) return *(types::Address*)(converted_addr);
         }
         return std::nullopt;
     }

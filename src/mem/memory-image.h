@@ -26,9 +26,9 @@ struct MemoryException : public std::runtime_error {
 };
 
 struct ReallocationMemoryException : public MemoryException {
-    uint64_t addr;
-    uint64_t size;
-    ReallocationMemoryException(uint64_t addr, uint64_t size = 0)
+    types::Address addr;
+    types::UnsignedInteger size;
+    ReallocationMemoryException(types::Address addr, types::UnsignedInteger size = 0)
         : MemoryException("Reallocation", ""), addr(addr), size(size) {}
     const char* what() const noexcept {
         std::stringstream ss;
@@ -45,13 +45,13 @@ struct ReallocationMemoryException : public MemoryException {
 //     MemoryException("OutOfMemory", message) {}
 // };
 struct OutOfBoundsException : public MemoryException {
-    uint64_t addr;
-    uint64_t range_lower;
-    uint64_t range_upper;
+    types::Address addr;
+    types::Address range_lower;
+    types::Address range_upper;
     OutOfBoundsException(
-        uint64_t addr,
-        uint64_t range_lower = 0,
-        uint64_t range_upper = 0)
+        types::Address addr,
+        types::Address range_lower = 0,
+        types::Address range_upper = 0)
         : MemoryException("OutOfBounds", ""), addr(addr),
           range_lower(range_lower), range_upper(range_upper) {}
     const char* what() const noexcept {
@@ -72,27 +72,26 @@ class MemoryImage {
 
   private:
     struct MemoryRegion {
-        uint64_t address;
-        uint64_t size;
+        types::Address address;
+        types::UnsignedInteger size;
         uint8_t* buffer;
-        MemoryRegion(uint64_t address, uint64_t size, uint8_t* buffer)
+        MemoryRegion(types::Address address, types::UnsignedInteger size, uint8_t* buffer)
             : address(address), size(size), buffer(buffer) {}
 
-        const uint8_t* raw(uint64_t addr) const {
+        const uint8_t* raw(types::Address addr) const {
             if(addr >= address && addr < address + size)
                 return buffer + (addr - address);
             else throw OutOfBoundsException(addr, address, address + size);
         }
-        uint8_t* raw(uint64_t addr) {
+        uint8_t* raw(types::Address addr) {
             return const_cast<uint8_t*>(std::as_const(*this).raw(addr));
         }
-        // uint8_t& at(uint64_t addr) { return *((uint8_t*)this->get(addr)); }
-        uint8_t& byte(uint64_t addr) { return *((uint8_t*)this->raw(addr)); }
-        uint16_t& halfword(uint64_t addr) {
+        uint8_t& byte(types::Address addr) { return *((uint8_t*)this->raw(addr)); }
+        uint16_t& halfword(types::Address addr) {
             return *((uint16_t*)this->raw(addr));
         }
-        uint32_t& word(uint64_t addr) { return *((uint32_t*)this->raw(addr)); }
-        uint64_t& doubleword(uint64_t addr) {
+        uint32_t& word(types::Address addr) { return *((uint32_t*)this->raw(addr)); }
+        uint64_t& doubleword(types::Address addr) {
             return *((uint64_t*)this->raw(addr));
         }
     };
@@ -102,11 +101,11 @@ class MemoryImage {
     // Subsystem: mem
     // Description: Fires when memory is read
     // Parameters: (address, value read, n bytes)
-    event::Event<uint64_t, uint64_t, size_t> event_read;
+    event::Event<types::Address, uint64_t, size_t> event_read;
     // Subsystem: mem
     // Description: Fires when memory is written
     // Parameters: (address, value written, old value, n bytes)
-    event::Event<uint64_t, uint64_t, uint64_t, size_t> event_write;
+    event::Event<types::Address, uint64_t, uint64_t, size_t> event_write;
     // Subsystem: mem
     // Description: Currently unimplemented
     // Parameters:
@@ -114,16 +113,16 @@ class MemoryImage {
     // Subsystem: mem
     // Description: Fires when memory is allocated
     // Parameters: (base address, allocation size)
-    event::Event<uint64_t, uint64_t> event_allocation;
+    event::Event<types::Address, uint64_t> event_allocation;
 
-    MemoryRegion& allocateMemoryRegion(uint64_t addr, uint64_t size = 8) {
+    MemoryRegion& allocateMemoryRegion(types::Address addr, uint64_t size = 8) {
         uint8_t* ptr = (uint8_t*)malloc(sizeof(*ptr) * size);
         MemoryRegion mr(addr, size, ptr);
         memory_map.push_back(mr);
         return memory_map.back();
     }
 
-    const MemoryRegion* getMemoryRegion(uint64_t addr) const {
+    const MemoryRegion* getMemoryRegion(types::Address addr) const {
         for(auto& mr : memory_map) {
             if(addr >= mr.address && addr < mr.address + mr.size) {
                 return &mr;
@@ -131,7 +130,7 @@ class MemoryImage {
         }
         return nullptr;
     }
-    MemoryRegion* getMemoryRegion(uint64_t addr) {
+    MemoryRegion* getMemoryRegion(types::Address addr) {
         return const_cast<MemoryRegion*>(
             std::as_const(*this).getMemoryRegion(addr));
     }
@@ -139,7 +138,7 @@ class MemoryImage {
     template <typename T> struct MemoryCellProxy {
       private:
         MemoryImage* mi;
-        uint64_t addr;
+        types::Address addr;
         friend MemoryImage;
         auto constexpr getSize() {
             if(std::is_same<T, uint8_t>::value) return 1;
@@ -157,7 +156,7 @@ class MemoryImage {
       public:
         T read();
         void write(T v);
-        MemoryCellProxy(MemoryImage* mi, uint64_t addr) : mi(mi), addr(addr) {}
+        MemoryCellProxy(MemoryImage* mi, types::Address addr) : mi(mi), addr(addr) {}
         operator T() {
             T v = read();
             mi->event_read(addr, v, getSize());
@@ -174,7 +173,7 @@ class MemoryImage {
   public:
     MemoryImage() = default;
 
-    void allocate(uint64_t addr, uint64_t size) {
+    void allocate(types::Address addr, uint64_t size) {
         if(size == 0) return;
         event_allocation(addr, size);
         if(getMemoryRegion(addr)) {
@@ -183,25 +182,25 @@ class MemoryImage {
         allocateMemoryRegion(addr, size);
     }
 
-    MemoryCellProxy<uint8_t> byte(uint64_t addr) {
+    MemoryCellProxy<uint8_t> byte(types::Address addr) {
         return MemoryCellProxy<uint8_t>(this, addr);
     }
-    MemoryCellProxy<uint16_t> halfword(uint64_t addr) {
+    MemoryCellProxy<uint16_t> halfword(types::Address addr) {
         return MemoryCellProxy<uint16_t>(this, addr);
     }
-    MemoryCellProxy<uint32_t> word(uint64_t addr) {
+    MemoryCellProxy<uint32_t> word(types::Address addr) {
         return MemoryCellProxy<uint32_t>(this, addr);
     }
-    MemoryCellProxy<uint64_t> doubleword(uint64_t addr) {
+    MemoryCellProxy<uint64_t> doubleword(types::Address addr) {
         return MemoryCellProxy<uint64_t>(this, addr);
     }
-    const uint8_t* raw(uint64_t addr) const {
+    const uint8_t* raw(types::Address addr) const {
         auto mr = getMemoryRegion(addr);
         if(mr) {
             return mr->raw(addr);
         } else return nullptr;
     }
-    uint8_t* raw(uint64_t addr) {
+    uint8_t* raw(types::Address addr) {
         return const_cast<uint8_t*>(std::as_const(*this).raw(addr));
     }
     template <typename T> void addReadListener(T&& arg) {

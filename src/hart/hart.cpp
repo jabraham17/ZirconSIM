@@ -29,13 +29,13 @@ bool Hart::shouldHalt() {
         op == isa::inst::Opcode::rv32i_jal && jmp_target == hs().pc.previous());
 }
 
-uint64_t Hart::alloc(size_t n) {
+types::Address Hart::alloc(size_t n) {
     auto ptr = hs().getMemLocation("heap_end");
     hs().mem().allocate(ptr, n);
     hs().setMemLocation("heap_end", ptr + n);
     return ptr;
 }
-void Hart::copyToHart(void* src, uint64_t dst, size_t n) {
+void Hart::copyToHart(void* src, types::Address dst, size_t n) {
     for(size_t i = 0; i < n; i++) {
         hs().mem().byte(dst + i) = ((char*)src)[i];
     }

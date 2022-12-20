@@ -19,35 +19,13 @@ namespace sys {
 
 namespace internal {
 
-// template <typename T>
-// T convertAddress(hart::HartState& hs, uint64_t addr, bool checkStack = true)
-// {
-//     // if address is within the range of the stack, it needs no change
-//     // if the address is no in the range of the stack and it is NOT null,
-//     // convert through the memory interface
-//     // FIXME: this is likely very very fragile and will possibly break in the
-//     // future
-//     if(checkStack && addr >= hs().memory_locations["stack_start"] &&
-//        addr <= hs().memory_locations["stack_end"]) {
-//         return T(addr);
-//     } else if(addr == 0) return T(0);
-//     else return T(hs().mem().raw(addr));
-// }
 
 // takes a simulated address and converts it to a real address
 template <typename T>
-T convertToRealAddress(hart::HartState& hs, uint64_t addr) {
+T convertToRealAddress(hart::HartState& hs, types::Address addr) {
     if(addr) return T(hs().mem().raw(addr));
     else return T(0);
 }
-// template <typename T = uint64_t*>
-// T accessAddress(hart::HartState& hs, uint64_t addr, bool checkStack = true) {
-//     if(checkStack && addr >= hs().memory_locations["stack_start"] &&
-//        addr <= hs().memory_locations["stack_end"]) {
-//         return T(addr);
-//     } else if(addr == 0) return T(0);
-//     else return T(hs().mem().raw(addr));
-// }
 
 int64_t
 getMappedSyscallNumber([[maybe_unused]] int64_t riscv64_syscall_number) {

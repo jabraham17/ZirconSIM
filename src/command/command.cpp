@@ -56,7 +56,7 @@ void DumpRegister::action(std::ostream* o) {
 
 void DumpPC::action(std::ostream* o) {
     if(o && hs) {
-        uint64_t pc = hs->pc + offset * 4;
+        types::Address pc = hs->pc + offset * 4;
         uint32_t inst = 0;
         uint32_t* inst_ptr = reinterpret_cast<uint32_t*>(hs->mem().raw(pc));
         if(inst_ptr) inst = *inst_ptr;
@@ -74,7 +74,7 @@ void DumpMemoryAddress::action(std::ostream* o) {
            << addr << colorReset(useColor) << "] = ";
         auto converted_addr = hs->mem().raw(addr);
         if(converted_addr) {
-            auto value = *(uint64_t*)(converted_addr);
+            auto value = *(types::Address*)(converted_addr);
             *o << colorNew(useColor) << common::Format::doubleword << value
                << colorReset(useColor);
             if(isa::inst::decodeInstruction(*(uint32_t*)(converted_addr)) !=
@@ -108,7 +108,7 @@ void ActionGroup::action([[maybe_unused]] std::ostream* o) {
 } // namespace action
 
 void Watch::update() {
-    std::optional<uint64_t> current = readCurrentValue();
+    std::optional<types::UnsignedInteger> current = readCurrentValue();
     if(!current.has_value()) return;
     bool updated = false;
     auto colorWatch = [](bool useColor) {
