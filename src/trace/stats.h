@@ -2,7 +2,6 @@
 #ifndef ZIRCON_TRACE_STATS_H_
 #define ZIRCON_TRACE_STATS_H_
 
-
 #include <map>
 #include <string>
 

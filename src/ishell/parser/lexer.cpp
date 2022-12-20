@@ -227,4 +227,4 @@ char Lexer::getChar() {
 }
 
 } // namespace parser
-} // namespace controller
+} // namespace ishell

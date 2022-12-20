@@ -13,7 +13,7 @@
     F(REGISTER_CLASS)                                                          \
     F(MEM)                                                                     \
     F(STOP)                                                                    \
-    F(PAUSE) \
+    F(PAUSE)                                                                   \
     F(PC)                                                                      \
     F(COLON)                                                                   \
     F(COMMA)                                                                   \
@@ -114,5 +114,5 @@ class Lexer {
 };
 
 } // namespace parser
-} // namespace controller
+} // namespace ishell
 #endif

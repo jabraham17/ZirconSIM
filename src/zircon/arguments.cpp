@@ -168,8 +168,9 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     try {
         program_args.parse_args(newargc, argv);
     } catch(const std::runtime_error& err) {
-        throw ArgumentException("Bad arguments: " +
-            std::string(err.what()) + "\n" + program_args.help().str());
+        throw ArgumentException(
+            "Bad arguments: " + std::string(err.what()) + "\n" +
+            program_args.help().str());
     }
 
     std::string filename = program_args.get<std::string>("file");
@@ -204,7 +205,8 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
             parsed_commands = parser.parse();
         } catch(const controller::parser::ParseException& err) {
             throw ArgumentException(
-                "Invalid arguments for '-control': " + std::string(err.what()) + "\n" + program_args.help().str());
+                "Invalid arguments for '-control': " + std::string(err.what()) +
+                "\n" + program_args.help().str());
         }
     }
 

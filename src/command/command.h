@@ -5,8 +5,8 @@
 #include "event/event.h"
 #include "hart/hart.h"
 #include "hart/isa/register.h"
-#include "mem/memory-image.h"
 #include "hart/types.h"
+#include "mem/memory-image.h"
 
 #include <memory>
 #include <optional>
@@ -270,7 +270,10 @@ class MemAddrCompare : public ConditionInterface {
     types::UnsignedInteger i;
     ComparisonType ct;
 
-    MemAddrCompare(types::Address addr, types::UnsignedInteger i, ComparisonType ct)
+    MemAddrCompare(
+        types::Address addr,
+        types::UnsignedInteger i,
+        ComparisonType ct)
         : MemAddrCompare(nullptr, addr, i, ct) {}
     MemAddrCompare(
         hart::HartState* hs,
@@ -331,7 +334,10 @@ class PCCompare : public ConditionInterface {
     types::Address addr;
     ComparisonType ct;
 
-    PCCompare(types::SignedInteger offset, types::Address addr, ComparisonType ct)
+    PCCompare(
+        types::SignedInteger offset,
+        types::Address addr,
+        ComparisonType ct)
         : PCCompare(nullptr, offset, addr, ct) {}
     PCCompare(
         hart::HartState* hs,
@@ -516,7 +522,8 @@ class WatchMemoryAddress : public Watch {
   public:
     types::Address addr;
 
-    WatchMemoryAddress(types::Address addr) : WatchMemoryAddress(nullptr, {}, addr) {}
+    WatchMemoryAddress(types::Address addr)
+        : WatchMemoryAddress(nullptr, {}, addr) {}
     WatchMemoryAddress(
         hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
@@ -579,6 +586,6 @@ struct ControlList {
     ControlList& operator=(const ControlList& other) = default;
 };
 
-} // namespace controller
+} // namespace command
 
 #endif

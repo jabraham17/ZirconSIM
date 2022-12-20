@@ -3,12 +3,12 @@
 #define ZIRCON_HART_HART_H_
 
 #include "hartstate.h"
+#include "types.h"
 
 #include "common/ordered_map.h"
 #include "event/event.h"
 #include "isa/rf.h"
 #include "mem/memory-image.h"
-#include "types.h"
 
 #include <thread>
 
@@ -72,7 +72,8 @@ class Hart {
         while(!done) {
             hs().waitForExecutionStateChange([this, &done]() {
                 if(this->hs().getExecutionState() == ExecutionState::STOPPED ||
-                   this->hs().getExecutionState() == ExecutionState::INVALID_STATE) {
+                   this->hs().getExecutionState() ==
+                       ExecutionState::INVALID_STATE) {
                     done = true;
                 }
             });

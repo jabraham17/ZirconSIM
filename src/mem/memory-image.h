@@ -28,7 +28,9 @@ struct MemoryException : public std::runtime_error {
 struct ReallocationMemoryException : public MemoryException {
     types::Address addr;
     types::UnsignedInteger size;
-    ReallocationMemoryException(types::Address addr, types::UnsignedInteger size = 0)
+    ReallocationMemoryException(
+        types::Address addr,
+        types::UnsignedInteger size = 0)
         : MemoryException("Reallocation", ""), addr(addr), size(size) {}
     const char* what() const noexcept {
         std::stringstream ss;
@@ -75,7 +77,10 @@ class MemoryImage {
         types::Address address;
         types::UnsignedInteger size;
         uint8_t* buffer;
-        MemoryRegion(types::Address address, types::UnsignedInteger size, uint8_t* buffer)
+        MemoryRegion(
+            types::Address address,
+            types::UnsignedInteger size,
+            uint8_t* buffer)
             : address(address), size(size), buffer(buffer) {}
 
         const uint8_t* raw(types::Address addr) const {
@@ -86,11 +91,15 @@ class MemoryImage {
         uint8_t* raw(types::Address addr) {
             return const_cast<uint8_t*>(std::as_const(*this).raw(addr));
         }
-        uint8_t& byte(types::Address addr) { return *((uint8_t*)this->raw(addr)); }
+        uint8_t& byte(types::Address addr) {
+            return *((uint8_t*)this->raw(addr));
+        }
         uint16_t& halfword(types::Address addr) {
             return *((uint16_t*)this->raw(addr));
         }
-        uint32_t& word(types::Address addr) { return *((uint32_t*)this->raw(addr)); }
+        uint32_t& word(types::Address addr) {
+            return *((uint32_t*)this->raw(addr));
+        }
         uint64_t& doubleword(types::Address addr) {
             return *((uint64_t*)this->raw(addr));
         }
@@ -156,7 +165,8 @@ class MemoryImage {
       public:
         T read();
         void write(T v);
-        MemoryCellProxy(MemoryImage* mi, types::Address addr) : mi(mi), addr(addr) {}
+        MemoryCellProxy(MemoryImage* mi, types::Address addr)
+            : mi(mi), addr(addr) {}
         operator T() {
             T v = read();
             mi->event_read(addr, v, getSize());

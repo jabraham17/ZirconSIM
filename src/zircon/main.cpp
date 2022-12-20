@@ -41,8 +41,7 @@ int main(int argc, const char** argv, const char** envp) {
                 if(input == "stop") {
                     hart.hs().stop();
                     break;
-                }
-                else if(input == "resume") hart.hs().resume();
+                } else if(input == "resume") hart.hs().resume();
             } else if(
                 hart.hs().getExecutionState() ==
                     hart::ExecutionState::STOPPED ||

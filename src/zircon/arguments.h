@@ -1,9 +1,9 @@
 #ifndef ZIRCON_ZIRCON_ARGUMENTS_H_
 #define ZIRCON_ZIRCON_ARGUMENTS_H_
 
+#include "command/command.h"
 #include "common/argparse.hpp"
 #include "common/ordered_map.h"
-#include "command/command.h"
 #include "elf/elf.h"
 #include "hart/hart.h"
 

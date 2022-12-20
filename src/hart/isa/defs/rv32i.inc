@@ -12,33 +12,51 @@ I_TYPE(rv32i,
        0b1100111,
        0b000,
        types::Address new_pc = (IMM_I_TYPE_SEXT64 + hs().rf().GPR[RS1]) &
-                         (~(1)); // clear LSB
+                               (~(1)); // clear LSB
        hs().rf().GPR[RD] = hs().pc + 4;
        hs().pc = new_pc;
        , 0)
 B_TYPE(
-    rv32i, beq, 0b1100011, 0b000, types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
+    rv32i,
+    beq,
+    0b1100011,
+    0b000,
+    types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
     if(hs().rf().GPR[RS1] == hs().rf().GPR[RS2]) { hs().pc = target; } else {
         hs().pc += 4;
     },
     0)
 B_TYPE(
-    rv32i, bne, 0b1100011, 0b001, types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
+    rv32i,
+    bne,
+    0b1100011,
+    0b001,
+    types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
     if(hs().rf().GPR[RS1] != hs().rf().GPR[RS2]) { hs().pc = target; } else {
         hs().pc += 4;
     },
     0)
 B_TYPE(
-    rv32i, blt, 0b1100011, 0b100, types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
-    if(types::SignedInteger(hs().rf().GPR[RS1]) < types::SignedInteger(hs().rf().GPR[RS2])) {
-        hs().pc = target;
-    } else { hs().pc += 4; },
+    rv32i,
+    blt,
+    0b1100011,
+    0b100,
+    types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
+    if(types::SignedInteger(hs().rf().GPR[RS1]) <
+       types::SignedInteger(hs().rf().GPR[RS2])) { hs().pc = target; } else {
+        hs().pc += 4;
+    },
     0)
 B_TYPE(
-    rv32i, bge, 0b1100011, 0b101, types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
-    if(types::SignedInteger(hs().rf().GPR[RS1]) >= types::SignedInteger(hs().rf().GPR[RS2])) {
-        hs().pc = target;
-    } else { hs().pc += 4; },
+    rv32i,
+    bge,
+    0b1100011,
+    0b101,
+    types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
+    if(types::SignedInteger(hs().rf().GPR[RS1]) >=
+       types::SignedInteger(hs().rf().GPR[RS2])) { hs().pc = target; } else {
+        hs().pc += 4;
+    },
     0)
 B_TYPE(
     rv32i,
@@ -46,9 +64,10 @@ B_TYPE(
     0b1100011,
     0b110,
     types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
-    if(types::UnsignedInteger(hs().rf().GPR[RS1]) < types::UnsignedInteger(hs().rf().GPR[RS2])) {
-        hs().pc = target;
-    } else { hs().pc += 4; },
+    if(types::UnsignedInteger(hs().rf().GPR[RS1]) <
+       types::UnsignedInteger(hs().rf().GPR[RS2])) { hs().pc = target; } else {
+        hs().pc += 4;
+    },
     0)
 B_TYPE(
     rv32i,
@@ -56,9 +75,10 @@ B_TYPE(
     0b1100011,
     0b111,
     types::Address target = IMM_B_TYPE_SEXT64 + hs().pc;
-    if(types::UnsignedInteger(hs().rf().GPR[RS1]) >= types::UnsignedInteger(hs().rf().GPR[RS2])) {
-        hs().pc = target;
-    } else { hs().pc += 4; },
+    if(types::UnsignedInteger(hs().rf().GPR[RS1]) >=
+       types::UnsignedInteger(hs().rf().GPR[RS2])) { hs().pc = target; } else {
+        hs().pc += 4;
+    },
     0)
 I_TYPE(rv32i,
        lb,
@@ -144,8 +164,10 @@ I_TYPE(rv32i,
        sltiu,
        0b0010011,
        0b011,
-       hs().rf().GPR[RD] = hs().rf().GPR[RS1] < types::UnsignedInteger(IMM_I_TYPE_SEXT64) ? 1
-                                                                            : 0;
+       hs().rf().GPR[RD] = hs().rf().GPR[RS1] <
+                                   types::UnsignedInteger(IMM_I_TYPE_SEXT64)
+                               ? 1
+                               : 0;
        hs().pc += 4;
        , 0)
 I_TYPE(rv32i,

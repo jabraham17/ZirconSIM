@@ -228,11 +228,9 @@ void Hart::execute() {
                 std::cerr << "Exception Occurred: " << e.what() << std::endl;
                 hs().setExecutionState(ExecutionState::INVALID_STATE);
             }
-        }
-        else if(hs().isPaused()) {
+        } else if(hs().isPaused()) {
             hs().waitForExecutionStateChange();
-        }
-        else {
+        } else {
             break;
         }
     }

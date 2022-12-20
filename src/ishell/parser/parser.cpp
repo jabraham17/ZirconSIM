@@ -66,9 +66,13 @@ std::shared_ptr<command::ConditionalCommand> Parser::parse_event_cond_action() {
     auto act = parse_action_list();
     // turn actions into action group if more than 1
     if(act.size() > 1) {
-        std::vector<std::shared_ptr<command::action::ActionInterface>> action_group = {
-            std::make_shared<command::action::ActionGroup>(act)};
-        return std::make_shared<command::ConditionalCommand>(ev, cond, action_group);
+        std::vector<std::shared_ptr<command::action::ActionInterface>>
+            action_group = {
+                std::make_shared<command::action::ActionGroup>(act)};
+        return std::make_shared<command::ConditionalCommand>(
+            ev,
+            cond,
+            action_group);
     } else return std::make_shared<command::ConditionalCommand>(ev, cond, act);
 }
 
@@ -101,14 +105,17 @@ std::shared_ptr<command::action::ActionInterface> Parser::parse_action() {
     if(lexer.peek().token_type == TokenType::REGISTER_CLASS) {
         if(lexer.peek(2).token_type == TokenType::LBRACK) {
             auto [reg_class, idx] = parse_register();
-            return std::make_shared<command::action::DumpRegister>(reg_class, idx);
+            return std::make_shared<command::action::DumpRegister>(
+                reg_class,
+                idx);
         } else {
             auto reg_class = expect(TokenType::REGISTER_CLASS);
             auto reg_class_type =
                 isa::rf::getRegisterClassType(reg_class.lexeme);
             if(reg_class_type == isa::rf::RegisterClassType::NONE)
                 throw ParseException("Invalid Register Class Type");
-            return std::make_shared<command::action::DumpRegisterClass>(reg_class_type);
+            return std::make_shared<command::action::DumpRegisterClass>(
+                reg_class_type);
         }
     } else if(lexer.peek().token_type == TokenType::PC) {
         auto pc_offset = parse_pc();
@@ -119,7 +126,7 @@ std::shared_ptr<command::action::ActionInterface> Parser::parse_action() {
     } else if(lexer.peek().token_type == TokenType::STOP) {
         expect(TokenType::STOP);
         return std::make_shared<command::action::Stop>();
-        } else if(lexer.peek().token_type == TokenType::PAUSE) {
+    } else if(lexer.peek().token_type == TokenType::PAUSE) {
         expect(TokenType::PAUSE);
         return std::make_shared<command::action::Pause>();
     } else throw ParseException("Unknown Action");
@@ -178,10 +185,13 @@ command::condition::ComparisonType Parser::parse_cond_op() {
     auto t = lexer.getToken();
     switch(t.token_type) {
         case TokenType::EQUALS: return command::condition::ComparisonType::EQ;
-        case TokenType::NOTEQUAL: return command::condition::ComparisonType::NEQ;
+        case TokenType::NOTEQUAL:
+            return command::condition::ComparisonType::NEQ;
         case TokenType::LESSTHAN: return command::condition::ComparisonType::LT;
-        case TokenType::LESSTHAN_EQUALTO: return command::condition::ComparisonType::LTE;
-        case TokenType::GREATERTHAN: return command::condition::ComparisonType::GT;
+        case TokenType::LESSTHAN_EQUALTO:
+            return command::condition::ComparisonType::LTE;
+        case TokenType::GREATERTHAN:
+            return command::condition::ComparisonType::GT;
         case TokenType::GREATERTHAN_EQUALTO:
             return command::condition::ComparisonType::GTE;
         default: throw ParseException("Unknown Comparison Op");
@@ -194,7 +204,8 @@ bool Parser::is_cond_op(TokenType tt) {
 }
 
 // register -> REGISTER_CLASS LBRACK NUM RBRACK
-std::pair<isa::rf::RegisterClassType, types::RegisterIndex> Parser::parse_register() {
+std::pair<isa::rf::RegisterClassType, types::RegisterIndex>
+Parser::parse_register() {
     auto reg_file = expect(TokenType::REGISTER_CLASS);
     expect(TokenType::LBRACK);
     auto num = expect(TokenType::NUM);
@@ -242,7 +253,8 @@ std::shared_ptr<command::Watch> Parser::parse_watch_stmt() {
     if(watch) {
         // turn actions into action group if more than 1
         if(actions.size() > 1) {
-            auto action_group = std::make_shared<command::action::ActionGroup>(actions);
+            auto action_group =
+                std::make_shared<command::action::ActionGroup>(actions);
             watch->setActions({action_group});
         } else {
             watch->setActions(actions);
@@ -270,4 +282,4 @@ types::SignedInteger Parser::parse_pc() {
 }
 
 } // namespace parser
-} // namespace controller
+} // namespace ishell

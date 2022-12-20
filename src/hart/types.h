@@ -11,11 +11,11 @@ using UnsignedInteger = uint64_t;
 using SignedInteger = int64_t;
 using InstructionWord = uint32_t;
 
-Address strToAddress(const std::string& s) ;
+Address strToAddress(const std::string& s);
 RegisterIndex strToRegisterIndex(const std::string& s);
-UnsignedInteger strToUnsignedInteger(const std::string& s) ;
+UnsignedInteger strToUnsignedInteger(const std::string& s);
 SignedInteger strToSignedInteger(const std::string& s);
 
-}
+} // namespace types
 
 #endif

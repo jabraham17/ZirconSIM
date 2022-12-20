@@ -60,20 +60,22 @@ class Parser {
     std::shared_ptr<command::Command> parse_event_action();
     std::shared_ptr<command::ConditionalCommand> parse_event_cond_action();
     event::EventType parse_event();
-    std::vector<std::shared_ptr<command::action::ActionInterface>> parse_action_list();
+    std::vector<std::shared_ptr<command::action::ActionInterface>>
+    parse_action_list();
     std::shared_ptr<command::action::ActionInterface> parse_action();
     std::vector<std::shared_ptr<command::condition::ConditionInterface>>
     parse_cond_list();
     std::shared_ptr<command::condition::ConditionInterface> parse_cond();
     command::condition::ComparisonType parse_cond_op();
     bool is_cond_op(TokenType tt);
-    std::pair<isa::rf::RegisterClassType, types::RegisterIndex> parse_register();
+    std::pair<isa::rf::RegisterClassType, types::RegisterIndex>
+    parse_register();
     types::Address parse_mem();
     std::shared_ptr<command::Watch> parse_watch_stmt();
     types::SignedInteger parse_pc();
 };
 
 } // namespace parser
-} // namespace COMMAND
+} // namespace ishell
 
 #endif

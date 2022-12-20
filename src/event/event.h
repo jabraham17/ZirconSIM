@@ -65,7 +65,7 @@ bool isEventSubsystemType(std::string s);
 
 EventSubsystemType getEventSubsystemType(std::string s);
 
-enum class EventType: uint64_t {
+enum class EventType : uint64_t {
 #define EVENT_NAME(sub, e) sub##_##e,
 #include "events.inc"
     NONE,

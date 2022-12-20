@@ -19,7 +19,6 @@ namespace sys {
 
 namespace internal {
 
-
 // takes a simulated address and converts it to a real address
 template <typename T>
 T convertToRealAddress(hart::HartState& hs, types::Address addr) {

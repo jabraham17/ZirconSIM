@@ -145,4 +145,4 @@ void Watch::update() {
     }
 }
 
-} // namespace controller
+} // namespace command

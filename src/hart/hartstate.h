@@ -21,6 +21,7 @@ enum class ExecutionState {
 class Hart;
 class HartState {
     friend Hart;
+
   private:
     std::unique_ptr<isa::rf::RegisterFile> rf_;
     std::shared_ptr<mem::MemoryImage> memimg_;
@@ -108,7 +109,7 @@ class HartState {
         }
         signal_es.notify_all();
     }
-    template<typename Callable, typename ... Args>
+    template <typename Callable, typename... Args>
     void waitForExecutionStateChange(Callable func, Args... args) {
         {
             std::unique_lock lk(lock_es);
