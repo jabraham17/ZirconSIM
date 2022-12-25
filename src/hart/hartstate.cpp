@@ -4,7 +4,7 @@ namespace hart {
 // use raw(addr) so we don't log mem access
 types::InstructionWord HartState::getInstWord() const {
     auto ptr = mem().raw(pc);
-    return *((uint32_t*)ptr);
+    return *((types::InstructionWord*)ptr);
 }
 
 HartState::HartState(std::shared_ptr<mem::MemoryImage> m)
