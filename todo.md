@@ -37,6 +37,16 @@
   - function similar to gdb
   - can use command line controller to kick into interactive after a time period, or just start in interactive
   - single stepping, breakpoints, etcetera
+- stack tracing
+  - trace call stack, function frames
+  - add debug info
+  - memory trace
+- elf symbols
+  - make symbols appear on left column, add to jumps/calls disasm
+- flag to enable disasm of instruction aliases like call and ret
+- better handling of elf32/elf63, this would allow us to run riscv32 binaries. perhaps as a separate arch
+- look at binary translation
+  - https://ieeexplore.ieee.org/document/671403
 
 ## refactor
 
@@ -44,6 +54,9 @@
 - refactor the cpu subdir, inconsistent namespace usage, inconsistent variable naming, better structure
 - fix makefile depens for headers and inc
 - cleanup exceptions, make more consistent
+- refactor riscv stuff/isa stuff to an arch directory outside of the hart
+  - select at compile time, but later add runtime support?
+  - 
 
 ## documentation
 
@@ -62,7 +75,7 @@
 
 - add full register state tracings
 - add ability to efficiently dump memory
-- add contoller !=
+- add controller !=
 
 ## wasm
 
