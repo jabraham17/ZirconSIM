@@ -5,10 +5,10 @@
 ## core features
 
 - load any instructions, not just ELF64 executable
-- add cmd line args and env args
 - improve elf support
   - better error checking
   - elf symbols
+  - better handling of elf32/elf63, this would allow us to run riscv32 binaries. perhaps as a separate arch
 - add permissions to memory, RWX
   - stack should be RW
   - code should be RX
@@ -26,27 +26,16 @@
   - method 1: lazy JIT, every time we jump to a new section of code compile, transpile to x86, then do the jump to the native x86 code. save that transpiled x86 code so we don't have to recompile it. this is essentially an optimizing compiler. we can then add heuristics of WHEN to do this. do we do it immediately or wait a couple of times to see if it is hot code?
   - method 2: eager JIT, transpile everything, then jump to start and just execute
   - method 3: conversion, transpile everything and write out a new executable that will run natively. this isn't really JIT, more like a transpiler.
-- convert main "execute" function into a CPU interface class that has more control over how the execution occurs
-  - allows us to things like single step, etcetera.
-  - maybe we want to have the single execute, but allow users to register callbacks
-  - this also simplifies stuff that has to be done on the wasm end of things
-- add controller that takes the place of tracing, controller enables tracing, controls formatting
-- cleanup and improve stack setup
-- factor out a memory allocation func
 - interactive mode
   - function similar to gdb
   - can use command line controller to kick into interactive after a time period, or just start in interactive
   - single stepping, breakpoints, etcetera
-- stack tracing
-  - trace call stack, function frames
-  - add debug info
-  - memory trace
 - elf symbols
   - make symbols appear on left column, add to jumps/calls disasm
 - flag to enable disasm of instruction aliases like call and ret
-- better handling of elf32/elf63, this would allow us to run riscv32 binaries. perhaps as a separate arch
 - look at binary translation
   - https://ieeexplore.ieee.org/document/671403
+- enable a mode that just runs a function with a given set of initial conditions
 
 ## refactor
 
@@ -75,7 +64,10 @@
 
 - add full register state tracings
 - add ability to efficiently dump memory
-- add controller !=
+- stack tracing
+  - trace call stack, function frames
+  - add debug info
+  - memory trace
 
 ## wasm
 
