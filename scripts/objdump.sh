@@ -20,7 +20,7 @@ else
     SCRIPT_NAME=${BASH_SOURCE[0]}
 fi
 SCRIPT_DIR=$(realpath "$(dirname "$SCRIPT_NAME")")
-source $SCRIPT_DIR/env_vars.sh
+source $SCRIPT_DIR/env.sh
 
 OBJDUMP=
 if [ -f "$ZIRCON_RV64IMA_ELF/bin/riscv64-unknown-elf-objdump" ]; then
