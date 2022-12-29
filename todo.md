@@ -5,6 +5,11 @@
 ## core features
 
 - load any instructions, not just ELF64 executable
+  - if we load just a relocatble object file, we could use relocations to setup stuff
+  - or we can compile with a dummy main and make it executable
+  - this will support testing
+    - we can do assembly checking, specify memory and register state, then run and state after
+    - ww can do functional checking, specify arguments and return value for a function, as well as memory conditions
 - improve elf support
   - better error checking
   - elf symbols
