@@ -25,10 +25,11 @@ bool elf::validateFileHeader(FileHeader& fh) {
     if(fh.e_ident.EI_VERSION != 1) {
         return false;
     }
-    // // check ABI, only allow SystemV
-    // if(fh.e_ident.EI_OSABI != 0x00) {
-    //     return false;
-    // }
+    // check ABI, only allow SystemV (0)
+    // TODO: ABI for linux is 3, but even musl has abi of SystemV
+    if(fh.e_ident.EI_OSABI != 0x00) {
+        return false;
+    }
     // check ELF is RISC-V
     if(fh.e_machine != 0xF3) {
         return false;
@@ -37,8 +38,8 @@ bool elf::validateFileHeader(FileHeader& fh) {
     if(fh.e_version != 1) {
         return false;
     }
-    // check version
-    if(fh.e_version != 1) {
+    // check if elf is executable
+    if(fh.e_type != 2) {
         return false;
     }
 

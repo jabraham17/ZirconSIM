@@ -6,3 +6,11 @@ https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-cc.adoc
 http://articles.manugarg.com/aboutelfauxiliaryvectors
 
 https://lwn.net/Articles/631631/
+
+
+to identify elfs
+os/abi
+readelf -p .comment
+compile with -Wl,-t
+
+https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-elf.adoc
