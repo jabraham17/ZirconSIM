@@ -5,30 +5,54 @@
 #include <vector>
 
 #define LEXER_TOKENS(F)                                                        \
+    /*MISC*/                                                                   \
     F(END_OF_FILE)                                                             \
     F(NONE)                                                                    \
     F(ERROR)                                                                   \
+    /*Event selection*/                                                        \
     F(SUBSYSTEM)                                                               \
     F(EVENT)                                                                   \
-    F(REGISTER_CLASS)                                                          \
-    F(MEM)                                                                     \
+    F(COLON)                                                                   \
+    /*keywords*/                                                               \
     F(STOP)                                                                    \
     F(PAUSE)                                                                   \
+    F(RESUME)                                                                  \
+    F(WATCH)                                                                   \
+    F(DUMP)                                                                    \
+    F(DISASM)                                                                  \
+    F(IF)                                                                      \
+    F(ON)                                                                      \
+    /*primaries, most are prefixed with $*/                                    \
+    F(NUM)                                                                     \
     F(PC)                                                                      \
-    F(COLON)                                                                   \
+    F(MEM)                                                                     \
+    F(REGISTER)                                                                \
     F(COMMA)                                                                   \
-    F(EQUALS)                                                                  \
-    F(LESSTHAN)                                                                \
-    F(LESSTHAN_EQUALTO)                                                        \
-    F(GREATERTHAN)                                                             \
-    F(GREATERTHAN_EQUALTO)                                                     \
-    F(NOTEQUAL)                                                                \
-    F(PLUS)                                                                    \
-    F(MINUS)                                                                   \
+    /*grouping*/                                                               \
+    F(LPAREN)                                                                  \
+    F(RPAREN)                                                                  \
     F(LBRACK)                                                                  \
     F(RBRACK)                                                                  \
-    F(NUM)                                                                     \
-    F(WATCH)
+    /*expr ops*/                                                               \
+    F(MULTIPLY)                                                                \
+    F(DIVIDE)                                                                  \
+    F(PLUS)                                                                    \
+    F(MINUS)                                                                   \
+    F(LSHIFT)                                                                  \
+    F(RSHIFT)                                                                  \
+    F(LT)                                                                      \
+    F(LTEQ)                                                                    \
+    F(GT)                                                                      \
+    F(GTEQ)                                                                    \
+    F(EQ)                                                                      \
+    F(NEQ)                                                                     \
+    F(BW_AND)                                                                  \
+    F(BW_OR)                                                                   \
+    F(AND)                                                                     \
+    F(OR)                                                                      \
+    F(NEGATE)                                                                  \
+    F(BW_NOT)                                                                  \
+    F(NOT)
 
 namespace ishell {
 
@@ -78,7 +102,7 @@ class Token {
 
 class Lexer {
   public:
-    Lexer(std::vector<std::string> input);
+    Lexer(std::string input);
     Token getToken();
     Token peek(unsigned ahead = 1);
     TokenType ungetToken(Token);
@@ -86,11 +110,6 @@ class Lexer {
   private:
     std::vector<Token> tokens;
     std::vector<char> input_buffer;
-
-    Token getID();
-
-    // get word
-    std::string getWord();
 
     // returns NUM
     Token getNUM();
@@ -101,9 +120,16 @@ class Lexer {
     bool isHexStart();
     bool isBinaryStart();
 
+    Token getKeyword();
+
+    Token getPrefixedPrimary();
+    bool isPrefixedPrimaryStart();
+
     Token getSymbol();
     bool isSymbol();
 
+    // helpers
+    std::string getWord();
     void skipWhitespace();
 
     // input buffer code

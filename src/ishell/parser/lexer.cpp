@@ -18,14 +18,8 @@ std::string Token::getString() {
     return const_cast<const Token*>(this)->getString();
 }
 
-Lexer::Lexer(std::vector<std::string> input) {
-    char c = 0;
-    for(auto s : input) {
-        if(c) input_buffer.push_back(c);
-        c = ' ';
-        input_buffer.insert(input_buffer.end(), s.begin(), s.end());
-    }
-    std::reverse(input_buffer.begin(), input_buffer.end());
+Lexer::Lexer(std::string input) {
+    input_buffer.insert(input_buffer.end(), input.rbegin(), input.rend());
 }
 
 Token Lexer::getToken() {
@@ -41,7 +35,8 @@ Token Lexer::getToken() {
 
     if(isSymbol()) return getSymbol();
     else if(isNUM()) return getNUM();
-    else return getID();
+    else if(isPrefixedPrimaryStart()) return getPrefixedPrimary();
+    else return getKeyword();
 }
 
 Token Lexer::peek(unsigned ahead) {
@@ -63,39 +58,6 @@ Token Lexer::peek(unsigned ahead) {
 TokenType Lexer::ungetToken(Token t) {
     tokens.push_back(t);
     return t.token_type;
-}
-
-Token Lexer::getID() {
-    Token t;
-    auto word = getWord();
-    auto toupper = [](std::string str) {
-        std::transform(
-            str.begin(),
-            str.end(),
-            str.begin(),
-            [](unsigned char c) { return std::toupper(c); });
-        return str;
-    };
-    t.lexeme = toupper(word);
-    if(t.lexeme == "PC") t.token_type = TokenType::PC;
-    else if(t.lexeme == "M") t.token_type = TokenType::MEM;
-    else if(t.lexeme == "STOP") t.token_type = TokenType::STOP;
-    else if(t.lexeme == "PAUSE") t.token_type = TokenType::PAUSE;
-    else if(t.lexeme == "WATCH") t.token_type = TokenType::WATCH;
-    else if(event::isEventSubsystemType(t.lexeme))
-        t.token_type = TokenType::SUBSYSTEM;
-    else if(event::isEventType(t.lexeme)) t.token_type = TokenType::EVENT;
-    else if(isa::rf::isRegisterClassType(t.lexeme))
-        t.token_type = TokenType::REGISTER_CLASS;
-
-    return t;
-}
-
-std::string Lexer::getWord() {
-    std::string s;
-    while(!endOfInput() && (std::isalnum(peekChar()) || peekChar() == '_'))
-        s += getChar();
-    return s;
 }
 
 // returns NUM
@@ -155,6 +117,45 @@ bool Lexer::isBinaryStart() {
     return c1 == '0' && c2 == 'b';
 }
 
+static std::string toupper(std::string str) {
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {
+        return std::toupper(c);
+    });
+    return str;
+}
+
+Token Lexer::getKeyword() {
+    Token t;
+    auto word = getWord();
+    t.lexeme = toupper(word);
+    if(t.lexeme == "STOP") t.token_type = TokenType::STOP;
+    else if(t.lexeme == "PAUSE") t.token_type = TokenType::PAUSE;
+    else if(t.lexeme == "RESUME") t.token_type = TokenType::RESUME;
+    else if(t.lexeme == "WATCH") t.token_type = TokenType::WATCH;
+    else if(t.lexeme == "DUMP") t.token_type = TokenType::DUMP;
+    else if(t.lexeme == "DISASM") t.token_type = TokenType::DISASM;
+    else if(t.lexeme == "IF") t.token_type = TokenType::IF;
+    else if(t.lexeme == "ON") t.token_type = TokenType::ON;
+    else if(event::isEventSubsystemType(t.lexeme))
+        t.token_type = TokenType::SUBSYSTEM;
+    else if(event::isEventType(t.lexeme)) t.token_type = TokenType::EVENT;
+
+    return t;
+}
+
+Token Lexer::getPrefixedPrimary() {
+    Token t;
+    if(getChar() == '$') {
+        auto word = getWord();
+        t.lexeme = toupper(word);
+        if(t.lexeme == "PC") t.token_type = TokenType::PC;
+        else if(t.lexeme == "M") t.token_type = TokenType::MEM;
+        else t.token_type = TokenType::REGISTER;
+    }
+    return t;
+}
+bool Lexer::isPrefixedPrimaryStart() { return peekChar() == '$'; }
+
 Token Lexer::getSymbol() {
     Token t;
 
@@ -164,41 +165,86 @@ Token Lexer::getSymbol() {
         switch(c) {
             case ':': t.token_type = TokenType::COLON; break;
             case ',': t.token_type = TokenType::COMMA; break;
-            case '=': t.token_type = TokenType::EQUALS; break;
-            case '!': {
-                c = getChar();
-                if(c == '=') t.token_type = TokenType::NOTEQUAL;
-                break;
-            }
+            case '[': t.token_type = TokenType::LBRACK; break;
+            case ']': t.token_type = TokenType::RBRACK; break;
+            case '(': t.token_type = TokenType::LPAREN; break;
+            case ')': t.token_type = TokenType::RPAREN; break;
+            case '*': t.token_type = TokenType::MULTIPLY; break;
+            case '/': t.token_type = TokenType::DIVIDE; break;
+            case '+': t.token_type = TokenType::PLUS; break;
+            case '-': t.token_type = TokenType::MINUS; break;
             case '<': {
                 if(peekChar() == '=') {
                     getChar();
-                    t.token_type = TokenType::LESSTHAN_EQUALTO;
-                } else t.token_type = TokenType::LESSTHAN;
+                    t.token_type = TokenType::LTEQ;
+                } else if(peekChar() == '<') {
+                    getChar();
+                    t.token_type = TokenType::LSHIFT;
+                } else t.token_type = TokenType::LT;
                 break;
             }
             case '>': {
                 if(peekChar() == '=') {
                     getChar();
-                    t.token_type = TokenType::GREATERTHAN_EQUALTO;
-                } else t.token_type = TokenType::GREATERTHAN;
+                    t.token_type = TokenType::GTEQ;
+                } else if(peekChar() == '>') {
+                    getChar();
+                    t.token_type = TokenType::RSHIFT;
+                } else t.token_type = TokenType::GT;
                 break;
             }
-            case '[': t.token_type = TokenType::LBRACK; break;
-            case ']': t.token_type = TokenType::RBRACK; break;
-            case '+': t.token_type = TokenType::PLUS; break;
-            case '-': t.token_type = TokenType::MINUS; break;
+            case '=': {
+                if(peekChar() == '=') {
+                    getChar();
+                    t.token_type = TokenType::EQ;
+                }
+                break;
+            }
+            case '!': {
+                                if(peekChar() == '=') {
+                    getChar();
+                    t.token_type = TokenType::NEQ;
+                }
+                else {
+                    t.token_type = TokenType::NOT;
+                }
+                break;
+            }
+            case '&': {
+                if(peekChar() == '&') {
+                    getChar();
+                    t.token_type = TokenType::AND;
+                } else t.token_type = TokenType::BW_AND;
+                break;
+            }
+            case '|': {
+                if(peekChar() == '|') {
+                    getChar();
+                    t.token_type = TokenType::OR;
+                } else t.token_type = TokenType::BW_OR;
+                break;
+            }
+            case '~': t.token_type == TokenType::BW_NOT; break;
+            // TODO: NEGATE, which is a prefixed MINUS, is not implemented
+
             default: break;
         }
     }
     return t;
 }
-
-// just need to check first one
 bool Lexer::isSymbol() {
     char c = peekChar();
-    return c == ':' || c == ',' || c == '=' || c == '<' || c == '>' ||
-           c == '!' || c == '[' || c == ']' || c == '+' || c == '-';
+    return c == ':' || c == ',' || c == '[' || c == ']' || c == '(' ||
+           c == ')' || c == '*' || c == '/' || c == '+' || c == '-' ||
+           c == '<' || c == '>' || c == '=' || c == '!' || c == '&' ||
+           c == '|' || c == '~';
+}
+
+std::string Lexer::getWord() {
+    std::string s;
+    while(!endOfInput() && (std::isalnum(peekChar()) || peekChar() == '_'))
+        s += getChar();
+    return s;
 }
 
 void Lexer::skipWhitespace() {
