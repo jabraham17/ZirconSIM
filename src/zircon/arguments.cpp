@@ -215,7 +215,7 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
         throw ArgumentException("Failed to open '" + filename + "'");
     }
 
-    auto inst_log = getFileStreamIfTrue(
+    inst_log = getFileStreamIfTrue(
         program_args.get<bool>("--inst") && program_args.present("--inst-log"),
         program_args.present<std::string>("--inst-log"),
         std::cout);
@@ -225,7 +225,7 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
             *program_args.present<std::string>("--inst-log") + "'");
     }
 
-    auto mem_log = getFileStreamIfTrue(
+    mem_log = getFileStreamIfTrue(
         program_args.get<bool>("--mem") && program_args.present("--mem-log"),
         program_args.present<std::string>("--mem-log"),
         std::cout);
@@ -235,7 +235,7 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
             *program_args.present<std::string>("--mem-log") + "'");
     }
 
-    auto reg_log = getFileStreamIfTrue(
+    reg_log = getFileStreamIfTrue(
         program_args.get<bool>("--reg") && program_args.present("--reg-log"),
         program_args.present<std::string>("--reg-log"),
         std::cout);
@@ -262,7 +262,6 @@ void MainArguments::addCallbacks(hart::Hart& hart, elf::File& elf) {
 
                                            elf_symbols](hart::HartState& hs) {
                 auto inst = hs().getInstWord();
-
                 *this->inst_log
                     << "PC[" << colorAddr(useColor)
                     << common::Format::doubleword << hs().pc
