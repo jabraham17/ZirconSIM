@@ -160,7 +160,7 @@ class Test:
             self.source_file,
             self.executable_file,
             tools={
-                "compiler": {"path": compiler, "args": []},
+                "compiler": {"path": compiler, "args": ["-static"]},
                 "assembler": {"path": TEST_ENV["ASSEMBLER"], "args": []},
                 "linker": {"path": TEST_ENV["LINKER"], "args": []},
                 },
