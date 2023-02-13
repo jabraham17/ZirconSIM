@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from enum import Enum, IntFlag, auto
 import glob
+import shlex
 import tempfile
 from typing import Callable, Dict, List, Set, Tuple
 import os
@@ -146,6 +147,9 @@ class Test:
         self.stdout_file = os.path.join(self.dirpath, self.basename + ".stdout")
         if not check_file_exists(self.stdout_file):
             self.stdout_file = None
+        self.args_file = os.path.join(self.dirpath, self.basename + ".args")
+        if not check_file_exists(self.args_file):
+            self.args_file = None
         self.state_file = os.path.join(self.dirpath, self.basename + ".state")
         if not check_file_exists(self.state_file):
             self.state_file = None
@@ -171,7 +175,13 @@ class Test:
         pass
 
     def run(self, simulator: str) -> str:
-        ret, stdout, stderr = execute([simulator, self.executable_file])
+        if self.args_file:
+            simulator_args = open(self.args_file, "r").read()
+            simulator_args = shlex.split(simulator_args)
+        else:
+            simulator_args = []
+        cmd = [simulator, self.executable_file] + simulator_args
+        ret, stdout, stderr = execute(cmd)
         return stdout
 
     def check_output(self, output: str) -> bool:
@@ -190,8 +200,7 @@ class Test:
         pass
 
     def name(self) -> str:
-        prefix = os.path.commonprefix([TEST_ENV["SCRIPT_DIR"], self._name])
-        name = self._name.removeprefix(prefix)
+        name = os.path.relpath(self._name)
         return name
 
 
