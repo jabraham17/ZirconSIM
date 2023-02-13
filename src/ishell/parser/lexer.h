@@ -85,6 +85,12 @@ struct TokenType {
         this->value_ = v;
         return *this;
     }
+    bool operator==(const TokenType& other) const {
+        return this->value_ == other.value_;
+    }
+        bool operator==(const ValueType& other) const {
+        return this->value_ == other;
+    }
 };
 
 class Token {
