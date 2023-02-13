@@ -22,6 +22,7 @@ OBJECTS:=$(addprefix $(OBJ_PATH),$(OBJECTS))
 DEPENDS:=$(addprefix $(OBJ_PATH),$(DEPENDS))
 
 override INCLUDE+= -I$(ROOT_PROJECT_DIRECTORY)src
+override INCLUDE+= -I$(OBJ_PATH) 
 LIBRARIES_FILE_NAMES=$(patsubst %,$(LIB_DIRECTORY)lib%.a,$(LIBRARIES))
 override LDLIBS+=$(patsubst %,-l%,$(LIBRARIES)) $(patsubst %,-l%,$(SYSTEM_LIBRARIES))
 
