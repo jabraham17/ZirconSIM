@@ -1,5 +1,3 @@
-#include "isa-begin.inc"
-
 U_TYPE(rv32i, lui, 0b0110111, hs().rf().GPR[RD] = IMM_U_TYPE_SEXT64;
        NEXT_INSTRUCTION, 0)
 U_TYPE(rv32i, auipc, 0b0010111, hs().rf().GPR[RD] = IMM_U_TYPE_SEXT64 + hs().pc;
@@ -333,3 +331,5 @@ CUSTOM(rv32i,
        , hs().pause();
        NEXT_INSTRUCTION;
        , 0)
+
+

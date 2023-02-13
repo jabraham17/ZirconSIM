@@ -1,5 +1,3 @@
-#include "isa-begin.inc"
-
 R_TYPE(rv32m,
        mul,
        0b0110011,
@@ -74,3 +72,5 @@ R_TYPE(rv32m,
        hs().rf().GPR[RD] = hs().rf().GPR[RS1] % hs().rf().GPR[RS2];
        NEXT_INSTRUCTION;
        , 0)
+
+

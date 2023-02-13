@@ -1,5 +1,3 @@
-#include "isa-begin.inc"
-
 R_TYPE(rv64m,
        mulw,
        0b0111011,
@@ -55,3 +53,5 @@ R_TYPE(rv64m,
            32);
        NEXT_INSTRUCTION;
        , 0)
+
+

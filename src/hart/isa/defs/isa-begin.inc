@@ -26,9 +26,6 @@
 #define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)
 #endif
 
-#ifndef ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_
-#define ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_
-
 #define OPCODE (instruction::getOpcode(bits))
 #define FUNCT7 (instruction::getFunct7(bits))
 #define FUNCT3 (instruction::getFunct3(bits))
@@ -73,4 +70,3 @@
     } while(0)
 
 #define COMMA ,
-#endif
