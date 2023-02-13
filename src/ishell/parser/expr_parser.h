@@ -64,17 +64,17 @@ struct Expr {
   private:
     ExprType type;
     ExprOperatorType op_type;
-    std::unique_ptr<Expr> left_expr;
-    std::unique_ptr<Expr> right_expr;
+    std::shared_ptr<Expr> left_expr;
+    std::shared_ptr<Expr> right_expr;
     std::string name;
     types::UnsignedInteger number;
 
   public:
-    Expr(std::unique_ptr<Expr> e1, ExprOperatorType op_type, std::unique_ptr<Expr> e2)
-        : type(ExprType::BINARY), op_type(op_type), left_expr(e1),
-          right_expr(e2), name(), number() {}
-    Expr(ExprOperatorType op_type, std::unique_ptr<Expr> e1)
-        : type(ExprType::UNARY), op_type(op_type), left_expr(e1),
+    Expr(std::shared_ptr<Expr> e1, ExprOperatorType op_type, std::shared_ptr<Expr> e2)
+        : type(ExprType::BINARY), op_type(op_type), left_expr(std::move(e1)),
+          right_expr(std::move(e2)), name(), number() {}
+    Expr(ExprOperatorType op_type, std::shared_ptr<Expr> e1)
+        : type(ExprType::UNARY), op_type(op_type), left_expr(std::move(e1)),
           right_expr(nullptr), name(), number() {}
     Expr(types::UnsignedInteger number)
         : type(ExprType::NUMBER), op_type(ExprOperatorType::NONE),
@@ -85,9 +85,15 @@ struct Expr {
     Expr()
         : type(ExprType::PC), op_type(ExprOperatorType::NONE),
           left_expr(nullptr), right_expr(nullptr), name(), number() {}
-    Expr(std::unique_ptr<Expr> address)
+    Expr(std::shared_ptr<Expr> address)
         : type(ExprType::MEMORY), op_type(ExprOperatorType::NONE),
-          left_expr(address), right_expr(nullptr), name(), number() {}
+          left_expr(std::move(address)), right_expr(nullptr), name(), number() {}
+
+    Expr(const Expr&) = delete; // copy construct
+    Expr(Expr&&) = default; // move construct
+    Expr& operator=(const Expr&) = delete; // copy assignment
+    Expr& operator=(Expr&&) = default; // move assignment
+    virtual ~Expr() = default; // destructor
 
     ExprType getType() { return type; }
     bool isBinary() { return type == ExprType::BINARY; }
@@ -100,13 +106,14 @@ struct Expr {
 
 class ExprParser {
   public:
-    using StackElm = std::variant<Token, std::unique_ptr<Expr>>;
-    ExprParser(std::vector<Token> input) : input(input), stack() {}
-    std::unique_ptr<Expr> parse();
+    using StackElm = std::variant<Token, std::shared_ptr<Expr>>;
+    ExprParser(std::vector<Token> input) : input(input) {}
+    std::shared_ptr<Expr> parse();
 
   private:
     bool isTerminal(const StackElm&);
     bool isExpression(const StackElm&);
+    const std::shared_ptr<Expr>& getExpression(const StackElm& se);
     bool isTokenOfType(const StackElm&, TokenType);
     // sees through non terminal
     Token peekStack(const std::vector<StackElm>& stack);
@@ -115,16 +122,16 @@ class ExprParser {
     Token getInputToken();
 
     bool isBinaryRule(const std::vector<StackElm>& rhs);
-    std::unique_ptr<Expr> reduceBinaryRule(const std::vector<StackElm>& rhs);
+    std::shared_ptr<Expr> reduceBinaryRule(const std::vector<StackElm>& rhs);
     bool isUnaryRule(const std::vector<StackElm>& rhs);
-    std::unique_ptr<Expr> reduceUnaryRule(const std::vector<StackElm>& rhs);
+    std::shared_ptr<Expr> reduceUnaryRule(const std::vector<StackElm>& rhs);
     bool isPrimaryRule(const std::vector<StackElm>& rhs);
-    std::unique_ptr<Expr> reducePrimaryRule(const std::vector<StackElm>& rhs);
+    std::shared_ptr<Expr> reducePrimaryRule(const std::vector<StackElm>& rhs);
     bool isParenRule(const std::vector<StackElm>& rhs);
-    std::unique_ptr<Expr> reduceParenRule(const std::vector<StackElm>& rhs);
+    std::shared_ptr<Expr> reduceParenRule(const std::vector<StackElm>& rhs);
 
     bool isValidRule(const std::vector<StackElm>& rhs);
-    std::unique_ptr<Expr> reduceRule(const std::vector<StackElm>& rhs);
+    std::shared_ptr<Expr> reduceRule(const std::vector<StackElm>& rhs);
 
   private:
     std::vector<Token> input;

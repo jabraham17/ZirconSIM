@@ -13,12 +13,16 @@ enum class Precedence {
     ERR,
     ACC
 };
-#include "expr_parser_table.inc"
+#include "parser/expr_parser_table.inc"
 bool ExprParser::isTerminal(const StackElm& se) {
     return std::holds_alternative<Token>(se);
 }
 bool ExprParser::isExpression(const StackElm& se) {
-    return std::holds_alternative<std::unique_ptr<Expr*>>(se);
+    return std::holds_alternative<std::shared_ptr<Expr>>(se);
+}
+const std::shared_ptr<Expr>& ExprParser::getExpression(const StackElm& se) {
+    assert(isExpression(se));
+    return std::get<std::shared_ptr<Expr>>(se);
 }
 bool ExprParser::isTokenOfType(const StackElm& se, TokenType tt) {
     return isTerminal(se) && std::get<Token>(se).token_type == tt;
@@ -71,7 +75,7 @@ bool ExprParser::isBinaryRule(const std::vector<StackElm>& rhs) {
     }
     return false;
 }
-std::unique_ptr<Expr*> reduceBinaryRule(const std::vector<StackElm>& rhs) {
+std::shared_ptr<Expr> ExprParser::reduceBinaryRule(const std::vector<StackElm>& rhs) {
     assert(isBinaryRule(rhs));
     auto op = ExprOperatorType::NONE;
     auto tt = std::get<Token>(rhs[1]).token_type;
@@ -94,9 +98,9 @@ std::unique_ptr<Expr*> reduceBinaryRule(const std::vector<StackElm>& rhs) {
         case TokenType::OR: op = ExprOperatorType::OR; break;
     }
     assert(op != ExprOperatorType::NONE);
-    auto left = std::get<std::unique_ptr<Expr>>(rhs[2]);
-    auto right = std::get<std::unique_ptr<Expr>>(rhs[0]);
-    return std::make_unique<Expr>(left, op, right);
+    auto& left = getExpression(rhs[2]);
+    auto& right = getExpression(rhs[0]);
+    return std::make_shared<Expr>(std::move(left), op, std::move(right));
 }
 
 bool ExprParser::isUnaryRule(const std::vector<StackElm>& rhs) {
@@ -110,7 +114,7 @@ bool ExprParser::isUnaryRule(const std::vector<StackElm>& rhs) {
     }
     return false;
 }
-std::unique_ptr<Expr>
+std::shared_ptr<Expr>
 ExprParser::reduceUnaryRule(const std::vector<StackElm>& rhs) {
     assert(isUnaryRule(rhs));
     auto op = ExprOperatorType::NONE;
@@ -121,8 +125,8 @@ ExprParser::reduceUnaryRule(const std::vector<StackElm>& rhs) {
         case TokenType::NOT: op = ExprOperatorType::NOT; break;
     }
     assert(op != ExprOperatorType::NONE);
-    auto e = std::get<std::unique_ptr<Expr>>(rhs[0]);
-    return std::make_unique<Expr>(op, e);
+    auto& e = getExpression(rhs[0]);
+    return std::make_shared<Expr>(op, std::move(e));
 }
 bool ExprParser::isPrimaryRule(const std::vector<StackElm>& rhs) {
     if(rhs.size() == 1) {
@@ -135,32 +139,33 @@ bool ExprParser::isPrimaryRule(const std::vector<StackElm>& rhs) {
                isExpression(rhs[1]) && isTokenOfType(rhs[0], TokenType::RBRACK);
     } else return false;
 }
-std::unique_ptr<Expr>
+std::shared_ptr<Expr>
 ExprParser::reducePrimaryRule(const std::vector<StackElm>& rhs) {
     assert(isPrimaryRule(rhs));
     if(rhs.size() == 1) {
         if(isTokenOfType(rhs[0], TokenType::REGISTER)) {
-            return std::make_unique<Expr>(std::get<Token>(rhs[0]).lexeme);
+            return std::make_shared<Expr>(std::get<Token>(rhs[0]).lexeme);
         } else if(isTokenOfType(rhs[0], TokenType::NUM)) {
-            return std::make_unique<Expr>(
+            return std::make_shared<Expr>(
                 types::strToUnsignedInteger(std::get<Token>(rhs[0]).lexeme));
         } else {
-            return std::make_unique<Expr>(); // PC
+            return std::make_shared<Expr>(); // PC
         }
     } else {
         // memory
-        auto e = std::get<std::unique_ptr<Expr>>(rhs[1]);
-        return std::make_unique<Expr>(e);
+        auto& e = getExpression(rhs[1]);
+        return std::make_shared<Expr>(std::move(e));
     }
 }
 bool ExprParser::isParenRule(const std::vector<StackElm>& rhs) {
     return rhs.size() == 3 && isTokenOfType(rhs[2], TokenType::LPAREN) &&
            isExpression(rhs[1]) && isTokenOfType(rhs[0], TokenType::RPAREN);
 }
-std::unique_ptr<Expr>
+std::shared_ptr<Expr>
 ExprParser::reduceParenRule(const std::vector<StackElm>& rhs) {
     assert(isParenRule(rhs));
-    return std::get<std::unique_ptr<Expr>>(rhs[1]);
+    auto& e = getExpression(rhs[1]);
+        return std::make_shared<Expr>(std::move(*e));
 }
 
 bool ExprParser::isValidRule(const std::vector<StackElm>& rhs) {
@@ -168,7 +173,7 @@ bool ExprParser::isValidRule(const std::vector<StackElm>& rhs) {
            isParenRule(rhs);
 }
 
-std::unique_ptr<Expr*> ExprParser::reduceRule(const std::vector<pp_elm>& rhs) {
+std::shared_ptr<Expr> ExprParser::reduceRule(const std::vector<StackElm>& rhs) {
     assert(isValidRule(rhs));
     if(isBinaryRule(rhs)) {
         return reduceBinaryRule(rhs);
@@ -183,7 +188,7 @@ std::unique_ptr<Expr*> ExprParser::reduceRule(const std::vector<pp_elm>& rhs) {
     }
 }
 
-std::unique_ptr<Expr*> ExprParser::parse() {
+std::shared_ptr<Expr> ExprParser::parse() {
     std::vector<StackElm> stack;
     while(true) {
         auto toi = peekInput();
@@ -194,17 +199,18 @@ std::unique_ptr<Expr*> ExprParser::parse() {
         auto action =
             precedence_table::getAction(tos.token_type, toi.token_type);
 
-        if(action == Precedence::YIELD || Precedence::action == SAME) { // shift
+        if(action == Precedence::YIELD || action == Precedence::SAME) { // shift
             toi = getInputToken();
             stack.push_back(toi);
-        } else if(action == TAKE) {
+        } else if(action == Precedence::TAKE) {
             std::vector<StackElm> rhs;
             Token last_popped_term;
             last_popped_term.token_type = TokenType::ERROR;
             while(true) {
-                auto stack_elm = stack.back();
+                // last of stack is added to rhs
+                rhs.push_back(std::move(stack.back()));
                 stack.pop_back();
-                rhs.push_back(stack_elm);
+                StackElm& stack_elm = rhs.back();
 
                 if(isTerminal(stack_elm)) {
                     last_popped_term = std::get<Token>(stack_elm);
@@ -213,7 +219,7 @@ std::unique_ptr<Expr*> ExprParser::parse() {
                 if(stack.empty()) break;
                 if(isTerminal(stack.back()) &&
                    last_popped_term.token_type != TokenType::ERROR &&
-                   getAction(
+                   precedence_table::getAction(
                        peekStack(stack).token_type,
                        last_popped_term.token_type) == Precedence::YIELD) {
                     break;
@@ -221,19 +227,20 @@ std::unique_ptr<Expr*> ExprParser::parse() {
             }
 
             if(isValidRule(rhs)) {
-                std::unique_ptr<Expr*> reduced = reduceRule(rhs);
-                stack.push_back(reduced);
+                auto reduced = reduceRule(rhs);
+                stack.push_back(std::move(reduced));
             } else {
                 throw ParseException("No Valid Rule to Reduce");
             }
         } else {
-            throw ParseException("Invalid Table Action")
+            throw ParseException("Invalid Table Action");
         }
     }
     if(stack.size() == 1 && isExpression(stack[0])) {
-        return std::get<std::unique_ptr<Expr*>>(stack[0]);
+        auto& e = getExpression(stack[0]);
+        return std::make_shared<Expr>(std::move(*e));
     } else {
-        throw ParseException("Not a Single Expression Left")
+        throw ParseException("Not a Single Expression Left");
     }
 }
 
