@@ -31,14 +31,10 @@ class Parser {
     command         -> action_command | watch_command
     watch_command   -> WATCH REGISTER action_list | WATCH MEM action_list
     action_command  -> action_list if_statement on_statement
-    if_statement    -> IF cond | EPSILON
+    if_statement    -> IF expr | EPSILON
     on_statement    -> ON event_list | EPSILON
     action_list     -> action | action COMMA action_list
     event_list      -> event | event COMMA event_list
-    cond            -> expr cond_op expr
-    cond_op         -> EQUALS | NOTEQUAL | LESSTHAN | LESSTHAN_EQUALTO
-    cond_op         -> GREATERTHAN | GREATERTHAN_EQUALTO
-    cond_op         -> BOOLEAN_AND | BOOLEAN_OR
     event           -> SUBSYSTEM COLON EVENT
     action          -> STOP | PAUSE | RESUME | DISASM expr | DUMP expr
 
@@ -48,8 +44,18 @@ class Parser {
   private:
     Token expect(TokenType tt);
 
-    void parse_expr();
 
+    void parse_command();
+    void parse_watch_command();
+    void parse_action_command();
+    void parse_if_statement();
+    void parse_on_statement();
+    void parse_action_list();
+    void parse_event_list();
+    void parse_event();
+    void parse_action();
+
+    void parse_expr();
 
 };
 
