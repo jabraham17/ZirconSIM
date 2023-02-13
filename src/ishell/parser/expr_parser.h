@@ -5,8 +5,8 @@
 
 #include "hart/types.h"
 
-#include <variant>
 #include <memory>
+#include <variant>
 #include <vector>
 
 namespace ishell {
@@ -70,7 +70,10 @@ struct Expr {
     types::UnsignedInteger number;
 
   public:
-    Expr(std::shared_ptr<Expr> e1, ExprOperatorType op_type, std::shared_ptr<Expr> e2)
+    Expr(
+        std::shared_ptr<Expr> e1,
+        ExprOperatorType op_type,
+        std::shared_ptr<Expr> e2)
         : type(ExprType::BINARY), op_type(op_type), left_expr(std::move(e1)),
           right_expr(std::move(e2)), name(), number() {}
     Expr(ExprOperatorType op_type, std::shared_ptr<Expr> e1)
@@ -87,13 +90,14 @@ struct Expr {
           left_expr(nullptr), right_expr(nullptr), name(), number() {}
     Expr(std::shared_ptr<Expr> address)
         : type(ExprType::MEMORY), op_type(ExprOperatorType::NONE),
-          left_expr(std::move(address)), right_expr(nullptr), name(), number() {}
+          left_expr(std::move(address)), right_expr(nullptr), name(), number() {
+    }
 
-    Expr(const Expr&) = delete; // copy construct
-    Expr(Expr&&) = default; // move construct
+    Expr(const Expr&) = delete;            // copy construct
+    Expr(Expr&&) = default;                // move construct
     Expr& operator=(const Expr&) = delete; // copy assignment
-    Expr& operator=(Expr&&) = default; // move assignment
-    virtual ~Expr() = default; // destructor
+    Expr& operator=(Expr&&) = default;     // move assignment
+    virtual ~Expr() = default;             // destructor
 
     ExprType getType() { return type; }
     bool isBinary() { return type == ExprType::BINARY; }

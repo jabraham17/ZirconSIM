@@ -75,7 +75,8 @@ bool ExprParser::isBinaryRule(const std::vector<StackElm>& rhs) {
     }
     return false;
 }
-std::shared_ptr<Expr> ExprParser::reduceBinaryRule(const std::vector<StackElm>& rhs) {
+std::shared_ptr<Expr>
+ExprParser::reduceBinaryRule(const std::vector<StackElm>& rhs) {
     assert(isBinaryRule(rhs));
     auto op = ExprOperatorType::NONE;
     auto tt = std::get<Token>(rhs[1]).token_type;
@@ -165,7 +166,7 @@ std::shared_ptr<Expr>
 ExprParser::reduceParenRule(const std::vector<StackElm>& rhs) {
     assert(isParenRule(rhs));
     auto& e = getExpression(rhs[1]);
-        return std::make_shared<Expr>(std::move(*e));
+    return std::make_shared<Expr>(std::move(*e));
 }
 
 bool ExprParser::isValidRule(const std::vector<StackElm>& rhs) {

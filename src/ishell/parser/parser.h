@@ -37,13 +37,10 @@ class Parser {
     event_list      -> event | event COMMA event_list
     event           -> SUBSYSTEM COLON EVENT
     action          -> STOP | PAUSE | RESUME | DISASM expr | DUMP expr
-
-
     */
 
   private:
     Token expect(TokenType tt);
-
 
     void parse_command();
     void parse_watch_command();
@@ -56,7 +53,6 @@ class Parser {
     void parse_action();
 
     void parse_expr();
-
 };
 
 } // namespace parser

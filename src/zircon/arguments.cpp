@@ -2,9 +2,9 @@
 
 #include "color/color.h"
 #include "common/format.h"
-#include "ishell/parser/parser.h"
 #include "event/event.h"
 #include "hart/isa/inst.h"
+#include "ishell/parser/parser.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -199,10 +199,10 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     // check for controller args
     auto control_args = program_args.get<std::vector<std::string>>("-control");
     // each string is its own control
-        for(auto s: control_args) {
+    for(auto s : control_args) {
         auto parser = ishell::parser::Parser(s);
         parser.parse();
-        }
+    }
 
     input = (new std::ifstream(filename, std::ios::binary));
     if(!input) {

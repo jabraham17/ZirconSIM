@@ -202,11 +202,10 @@ Token Lexer::getSymbol() {
                 break;
             }
             case '!': {
-                                if(peekChar() == '=') {
+                if(peekChar() == '=') {
                     getChar();
                     t.token_type = TokenType::NEQ;
-                }
-                else {
+                } else {
                     t.token_type = TokenType::NOT;
                 }
                 break;
@@ -225,8 +224,10 @@ Token Lexer::getSymbol() {
                 } else t.token_type = TokenType::BW_OR;
                 break;
             }
-            case '~': t.token_type = TokenType::BW_NOT; break;
-            // TODO: NEGATE, which is a prefixed MINUS, is not implemented
+            case '~':
+                t.token_type = TokenType::BW_NOT;
+                break;
+                // TODO: NEGATE, which is a prefixed MINUS, is not implemented
 
             default: break;
         }

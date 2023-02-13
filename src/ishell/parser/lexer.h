@@ -88,7 +88,7 @@ struct TokenType {
     bool operator==(const TokenType& other) const {
         return this->value_ == other.value_;
     }
-        bool operator==(const ValueType& other) const {
+    bool operator==(const ValueType& other) const {
         return this->value_ == other;
     }
 };
