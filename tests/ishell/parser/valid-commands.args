@@ -1,0 +1,9 @@
+-control 'stop' \
+-control 'pause' \
+-control 'resume' \
+-control 'disasm 8+9' \
+-control 'dump ($pc + 7) - $x1 + $m[99]' \
+-control 'watch $m[0x787]' \
+-control 'watch $a0 pause' \
+-control 'stop,pause if $a0 == 0 && $a1 == 7 on hart:before_execute'
+
