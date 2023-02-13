@@ -145,7 +145,8 @@ Token Lexer::getKeyword() {
 
 Token Lexer::getPrefixedPrimary() {
     Token t;
-    if(getChar() == '$') {
+    if(peekChar() == '$') {
+        getChar();
         auto word = getWord();
         t.lexeme = toupper(word);
         if(t.lexeme == "PC") t.token_type = TokenType::PC;
@@ -224,7 +225,7 @@ Token Lexer::getSymbol() {
                 } else t.token_type = TokenType::BW_OR;
                 break;
             }
-            case '~': t.token_type == TokenType::BW_NOT; break;
+            case '~': t.token_type = TokenType::BW_NOT; break;
             // TODO: NEGATE, which is a prefixed MINUS, is not implemented
 
             default: break;
