@@ -2,7 +2,7 @@
 
 #include "color/color.h"
 #include "common/format.h"
-#include "controller/parser/parser.h"
+#include "ishell/parser/parser.h"
 #include "event/event.h"
 #include "hart/isa/inst.h"
 
@@ -131,7 +131,6 @@ MainArguments::MainArguments()
         .help("dump runtime statistics");
 
     program_args.add_argument("-control")
-        .nargs(argparse::nargs_pattern::at_least_one)
         .append()
         .metavar("CONTROL")
         .help("a control sequence to apply\n\t\t\t  "
@@ -199,16 +198,11 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
 
     // check for controller args
     auto control_args = program_args.get<std::vector<std::string>>("-control");
-    if(!control_args.empty()) {
-        auto parser = controller::parser::Parser(control_args);
-        try {
-            parsed_commands = parser.parse();
-        } catch(const controller::parser::ParseException& err) {
-            throw ArgumentException(
-                "Invalid arguments for '-control': " + std::string(err.what()) +
-                "\n" + program_args.help().str());
+    // each string is its own control
+        for(auto s: control_args) {
+        auto parser = ishell::parser::Parser(s);
+        parser.parse();
         }
-    }
 
     input = (new std::ifstream(filename, std::ios::binary));
     if(!input) {
