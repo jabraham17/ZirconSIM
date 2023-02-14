@@ -192,5 +192,3 @@ R_TYPE(rv64i,
        hs().rf().GPR[RD] = hs().rf().GPR[RS1] >> (hs().rf().GPR[RS2] & 0x3F);
        NEXT_INSTRUCTION;
        , 0)
-
-

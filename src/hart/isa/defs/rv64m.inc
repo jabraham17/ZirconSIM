@@ -53,5 +53,3 @@ R_TYPE(rv64m,
            32);
        NEXT_INSTRUCTION;
        , 0)
-
-

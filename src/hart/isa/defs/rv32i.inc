@@ -331,5 +331,3 @@ CUSTOM(rv32i,
        , hs().pause();
        NEXT_INSTRUCTION;
        , 0)
-
-
