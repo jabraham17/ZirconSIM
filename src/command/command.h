@@ -2,6 +2,8 @@
 #ifndef ZIRCON_COMMAND_COMMAND_H_
 #define ZIRCON_COMMAND_COMMAND_H_
 
+#include "expr.h"
+
 #include "event/event.h"
 #include "hart/hart.h"
 #include "hart/isa/register.h"
@@ -15,12 +17,11 @@ namespace command {
 
 namespace action {
 enum class ActionType {
-    DUMP_REG,
-    DUMP_REG_CLASS,
-    DUMP_MEM_ADDR,
-    DUMP_PC,
     STOP,
     PAUSE,
+    RESUME,
+    DISASM,
+    DUMP,
     GROUP,
     NONE,
 };
@@ -55,96 +56,40 @@ class ActionInterface {
     virtual void setColor(bool useColor) { this->useColor = useColor; }
 };
 
-class DumpRegisterClass : public ActionInterface {
-  public:
-    isa::rf::RegisterClassType regtype;
+#define MAKE_ACTION_0_ARGS(ClassName, ActionTypeName)                          \
+    class ClassName : public ActionInterface {                                 \
+      public:                                                                  \
+        ClassName() : ClassName(nullptr) {}                                    \
+        ClassName(hart::HartState* hs)                                         \
+            : ActionInterface(ActionType::ActionTypeName, hs) {}               \
+        virtual ~ClassName() = default;                                        \
+        void action(std::ostream* o = nullptr) override;                       \
+        static bool classof(const ActionInterface* ai) {                       \
+            return ai->at == ActionType::ActionTypeName;                       \
+        }                                                                      \
+    };
+#define MAKE_ACTION_1_ARGS(ClassName, ActionTypeName)                          \
+    class ClassName : public ActionInterface {                                 \
+      private:                                                                 \
+        std::shared_ptr<Expr> expr;                                            \
+                                                                               \
+      public:                                                                  \
+        ClassName(std::shared_ptr<Expr> expr) : ClassName(nullptr, expr) {}    \
+        ClassName(hart::HartState* hs, std::shared_ptr<Expr> expr)             \
+            : ActionInterface(ActionType::ActionTypeName, hs), expr(expr) {}   \
+        virtual ~ClassName() = default;                                        \
+        void action(std::ostream* o = nullptr) override;                       \
+        static bool classof(const ActionInterface* ai) {                       \
+            return ai->at == ActionType::ActionTypeName;                       \
+        }                                                                      \
+    };
 
-    DumpRegisterClass(isa::rf::RegisterClassType regtype)
-        : DumpRegisterClass(nullptr, regtype) {}
-    DumpRegisterClass(hart::HartState* hs, isa::rf::RegisterClassType regtype)
-        : ActionInterface(ActionType::DUMP_REG_CLASS, hs), regtype(regtype) {}
-    virtual ~DumpRegisterClass() = default;
+MAKE_ACTION_0_ARGS(Stop, STOP)
+MAKE_ACTION_0_ARGS(Pause, PAUSE)
+MAKE_ACTION_0_ARGS(Resume, RESUME)
+MAKE_ACTION_1_ARGS(Disasm, DISASM)
+MAKE_ACTION_1_ARGS(Dump, DUMP)
 
-    void action(std::ostream* o = nullptr) override;
-
-    static bool classof(const ActionInterface* ai) {
-        return ai->at == ActionType::DUMP_REG_CLASS;
-    }
-};
-class DumpRegister : public ActionInterface {
-  public:
-    isa::rf::RegisterClassType regtype;
-    types::RegisterIndex idx;
-
-    DumpRegister(isa::rf::RegisterClassType regtype, types::RegisterIndex idx)
-        : DumpRegister(nullptr, regtype, idx) {}
-    DumpRegister(
-        hart::HartState* hs,
-        isa::rf::RegisterClassType regtype,
-        types::RegisterIndex idx)
-        : ActionInterface(ActionType::DUMP_REG, hs), regtype(regtype),
-          idx(idx) {}
-    virtual ~DumpRegister() = default;
-
-    void action(std::ostream* o = nullptr) override;
-
-    static bool classof(const ActionInterface* ai) {
-        return ai->at == ActionType::DUMP_REG;
-    }
-};
-class DumpPC : public ActionInterface {
-  public:
-    types::SignedInteger offset;
-    DumpPC(types::SignedInteger offset) : DumpPC(nullptr, offset) {}
-    DumpPC(hart::HartState* hs, types::SignedInteger offset)
-        : ActionInterface(ActionType::DUMP_PC, hs), offset(offset) {}
-    virtual ~DumpPC() = default;
-
-    void action(std::ostream* o = nullptr) override;
-
-    static bool classof(const ActionInterface* ai) {
-        return ai->at == ActionType::DUMP_PC;
-    }
-};
-class DumpMemoryAddress : public ActionInterface {
-  public:
-    types::Address addr;
-
-    DumpMemoryAddress(types::Address addr) : DumpMemoryAddress(nullptr, addr) {}
-    DumpMemoryAddress(hart::HartState* hs, types::Address addr)
-        : ActionInterface(ActionType::DUMP_MEM_ADDR, hs), addr(addr) {}
-    virtual ~DumpMemoryAddress() = default;
-
-    void action(std::ostream* o = nullptr) override;
-
-    static bool classof(const ActionInterface* ai) {
-        return ai->at == ActionType::DUMP_MEM_ADDR;
-    }
-};
-class Stop : public ActionInterface {
-  public:
-    Stop() : Stop(nullptr) {}
-    Stop(hart::HartState* hs) : ActionInterface(ActionType::STOP, hs) {}
-    virtual ~Stop() = default;
-
-    void action(std::ostream* o = nullptr) override;
-
-    static bool classof(const ActionInterface* ai) {
-        return ai->at == ActionType::STOP;
-    }
-};
-class Pause : public ActionInterface {
-  public:
-    Pause() : Pause(nullptr) {}
-    Pause(hart::HartState* hs) : ActionInterface(ActionType::PAUSE, hs) {}
-    virtual ~Pause() = default;
-
-    void action(std::ostream* o = nullptr) override;
-
-    static bool classof(const ActionInterface* ai) {
-        return ai->at == ActionType::PAUSE;
-    }
-};
 class ActionGroup : public ActionInterface {
   private:
     std::vector<std::shared_ptr<action::ActionInterface>> actions;
@@ -196,181 +141,26 @@ class ActionGroup : public ActionInterface {
 };
 } // namespace action
 
-namespace condition {
-enum class ConditionType {
-    MEM_ADDR_CMP,
-    REG_CMP,
-    PC_CMP,
-    ALWAYS_TRUE,
-    NONE,
-};
-class ComparisonType {
-  private:
-    using ValueType = int;
-    ValueType value_;
-
-  public:
-    static const ValueType NONE = 0;
-    static const ValueType EQ = 1;
-    static const ValueType NEQ = 2;
-    static const ValueType LT = 3;
-    static const ValueType GT = 4;
-    static const ValueType LTE = 5;
-    static const ValueType GTE = 6;
-
-  public:
-    ComparisonType(ValueType v) : value_(v) {}
-    ComparisonType() : value_(NONE) {}
-    ComparisonType& operator=(const ValueType& v) {
-        this->value_ = v;
-        return *this;
-    }
-    operator ValueType() const { return this->value_; }
-    template <typename T> bool compare(T a, T b) {
-        switch(this->value_) {
-            case ComparisonType::EQ: return a == b;
-            case ComparisonType::NEQ: return a != b;
-            case ComparisonType::LT: return a < b;
-            case ComparisonType::GT: return a > b;
-            case ComparisonType::LTE: return a <= b;
-            case ComparisonType::GTE: return a >= b;
-            case ComparisonType::NONE:
-            default: return false;
-        }
-    }
-    template <typename T> bool operator()(T a, T b) { return compare<T>(a, b); }
-};
-
-class ConditionInterface {
-  public:
-    ConditionType ct;
-
+class Condition {
   protected:
     hart::HartState* hs;
 
+  private:
+    std::shared_ptr<Expr> condition;
+
   public:
-    ConditionInterface(
-        ConditionType ct = ConditionType::NONE,
-        hart::HartState* hs = nullptr)
-        : ct(ct), hs(hs) {}
-    virtual ~ConditionInterface() = default;
+    Condition(hart::HartState* hs, std::shared_ptr<Expr> condition)
+        : hs(hs), condition(condition) {}
+    Condition(std::shared_ptr<Expr> condition)
+        : Condition(nullptr, condition) {}
+    Condition() : Condition(nullptr, nullptr) {}
+    virtual ~Condition() = default;
 
-    virtual bool check() = 0;
-
-    template <typename U> bool isa() { return U::classof(this); }
-    template <typename U> U* cast() {
-        assert(this->isa<U>());
-        return static_cast<U*>(this);
+    virtual bool check() {
+        return hs && condition && bool(condition->eval(hs));
     }
     virtual void setHS(hart::HartState* hs) { this->hs = hs; }
 };
-class MemAddrCompare : public ConditionInterface {
-  public:
-    types::Address addr;
-    types::UnsignedInteger i;
-    ComparisonType ct;
-
-    MemAddrCompare(
-        types::Address addr,
-        types::UnsignedInteger i,
-        ComparisonType ct)
-        : MemAddrCompare(nullptr, addr, i, ct) {}
-    MemAddrCompare(
-        hart::HartState* hs,
-        types::Address addr,
-        types::UnsignedInteger i,
-        ComparisonType ct)
-        : ConditionInterface(ConditionType::MEM_ADDR_CMP, hs), addr(addr), i(i),
-          ct(ct) {}
-    virtual ~MemAddrCompare() = default;
-
-    bool check() override {
-        return hs && ct((*(types::Address*)(hs->mem().raw(addr))), i);
-    }
-
-    static bool classof(const ConditionInterface* ci) {
-        return ci->ct == ConditionType::MEM_ADDR_CMP;
-    }
-};
-class RegisterCompare : public ConditionInterface {
-  public:
-    isa::rf::RegisterClassType regtype;
-    types::RegisterIndex idx;
-    types::UnsignedInteger i;
-    ComparisonType ct;
-
-    RegisterCompare(
-        isa::rf::RegisterClassType regtype,
-        types::RegisterIndex idx,
-        types::UnsignedInteger i,
-        ComparisonType ct)
-        : RegisterCompare(nullptr, regtype, idx, i, ct) {}
-    RegisterCompare(
-        hart::HartState* hs,
-        isa::rf::RegisterClassType regtype,
-        types::RegisterIndex idx,
-        types::UnsignedInteger i,
-        ComparisonType ct)
-        : ConditionInterface(ConditionType::REG_CMP, hs), regtype(regtype),
-          idx(idx), i(i), ct(ct) {}
-
-    virtual ~RegisterCompare() = default;
-
-    bool check() override {
-        if(this->regtype == isa::rf::RegisterClassType::GPR) {
-            return hs && ct(types::Address(this->hs->rf().GPR.rawreg(idx)), i);
-        }
-        return false;
-    }
-
-    static bool classof(const ConditionInterface* ci) {
-        return ci->ct == ConditionType::REG_CMP;
-    }
-};
-
-class PCCompare : public ConditionInterface {
-  public:
-    types::SignedInteger offset;
-    types::Address addr;
-    ComparisonType ct;
-
-    PCCompare(
-        types::SignedInteger offset,
-        types::Address addr,
-        ComparisonType ct)
-        : PCCompare(nullptr, offset, addr, ct) {}
-    PCCompare(
-        hart::HartState* hs,
-        types::SignedInteger offset,
-        types::Address addr,
-        ComparisonType ct)
-        : ConditionInterface(ConditionType::PC_CMP, hs), offset(offset),
-          addr(addr), ct(ct) {}
-    virtual ~PCCompare() = default;
-
-    bool check() override {
-        return hs && ct(types::Address(hs->pc + offset * 4), addr);
-    }
-
-    static bool classof(const ConditionInterface* ci) {
-        return ci->ct == ConditionType::PC_CMP;
-    }
-};
-class AlwaysTrue : public ConditionInterface {
-  public:
-    AlwaysTrue() : ConditionInterface(ConditionType::ALWAYS_TRUE) {}
-    virtual ~AlwaysTrue() = default;
-
-    bool check() override { return true; }
-
-    static bool classof(const ConditionInterface* ci) {
-        return ci->ct == ConditionType::ALWAYS_TRUE;
-    }
-};
-
-} // namespace condition
-
-struct ControlList;
 
 // empty class for inheritance
 class ControlBase {
@@ -380,54 +170,55 @@ class ControlBase {
   public:
     virtual ~ControlBase() = default;
     virtual void setColor(bool useColor) { this->useColor = useColor; }
+    virtual void setHS(hart::HartState* hs) = 0;
 };
 
 class Command : public ControlBase {
-    friend ControlList;
 
   private:
-    event::EventType et;
     std::vector<std::shared_ptr<action::ActionInterface>> actions;
+    std::vector<std::shared_ptr<Condition>> conditions;
+    std::vector<event::EventType> events;
 
   public:
     Command(
-        event::EventType et,
-        std::vector<std::shared_ptr<action::ActionInterface>> actions)
-        : et(et), actions(actions) {}
+        std::vector<std::shared_ptr<action::ActionInterface>> actions,
+        std::vector<std::shared_ptr<Condition>> conditions,
+        std::vector<event::EventType> events)
+        : actions(actions), conditions(conditions), events(events) {}
     virtual ~Command() = default;
-    virtual void doit(std::ostream* o = nullptr) {
+
+    virtual void setHS(hart::HartState* hs) override {
         for(auto a : actions) {
-            a->action(o);
+            a->setHS(hs);
+        }
+        for(auto c : conditions) {
+            c->setHS(hs);
         }
     }
-    auto getEventType() { return et; }
+
+    virtual bool shouldDoit() {
+        // check if we should run the actions
+        // if no conditions, shouldDoit is still true
+        bool shouldDoit = true;
+        for(auto c : conditions) {
+            shouldDoit = shouldDoit && c->check();
+        }
+        return shouldDoit;
+    }
+    virtual void doit(std::ostream* o = nullptr) {
+        if(shouldDoit()) {
+            for(auto a : actions) {
+                a->action(o);
+            }
+        }
+    }
+    auto getEventTypes() { return events; }
 
     virtual void setColor(bool useColor) override {
         ControlBase::setColor(useColor);
         for(auto a : actions)
             a->setColor(useColor);
-    }
-};
-
-class ConditionalCommand : public Command {
-    friend ControlList;
-
-  private:
-    std::vector<std::shared_ptr<condition::ConditionInterface>> conditions;
-
-  public:
-    ConditionalCommand(
-        event::EventType et,
-        std::vector<std::shared_ptr<condition::ConditionInterface>> conditions,
-        std::vector<std::shared_ptr<action::ActionInterface>> actions)
-        : Command(et, actions), conditions(conditions) {}
-    virtual ~ConditionalCommand() = default;
-    virtual void doit(std::ostream* o = nullptr) override {
-        bool shouldDoit = true;
-        for(auto c : conditions) {
-            shouldDoit = shouldDoit && c->check();
-        }
-        if(shouldDoit) Command::doit(o);
     }
 };
 
@@ -452,7 +243,7 @@ class Watch : public ControlBase {
     virtual ~Watch() = default;
 
     void setLog(std::ostream* o) { this->out = o; }
-    virtual void setHS(hart::HartState* hs) {
+    virtual void setHS(hart::HartState* hs) override {
         this->hs = hs;
         this->updateActions();
     }
@@ -520,70 +311,33 @@ class WatchRegister : public Watch {
 
 class WatchMemoryAddress : public Watch {
   public:
-    types::Address addr;
+    std::shared_ptr<Expr> address;
 
-    WatchMemoryAddress(types::Address addr)
-        : WatchMemoryAddress(nullptr, {}, addr) {}
+    WatchMemoryAddress(std::shared_ptr<Expr> address)
+        : WatchMemoryAddress(nullptr, {}, address) {}
     WatchMemoryAddress(
         hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        types::Address addr)
-        : Watch(hs, actions), addr(addr) {}
+        std::shared_ptr<Expr> address)
+        : Watch(hs, actions), address(address) {}
     virtual ~WatchMemoryAddress() = default;
 
     virtual std::string name() override {
         std::stringstream ss;
-        ss << "MEM[" << common::Format::doubleword << this->addr << "]";
+
+        ss << "MEM[";
+        if(hs && address) ss << common::Format::doubleword << address->eval(hs);
+        else ss << "<unknown>]";
         return ss.str();
     }
     virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
-        if(hs) {
-            auto converted_addr = hs->mem().raw(addr);
+        if(hs && address) {
+            auto eval_addr = address->eval(hs);
+            auto converted_addr = hs->mem().raw(eval_addr);
             if(converted_addr) return *(types::Address*)(converted_addr);
         }
         return std::nullopt;
     }
-};
-
-struct ControlList {
-    std::vector<std::shared_ptr<Command>> commands;
-    std::vector<std::shared_ptr<Watch>> watches;
-    ControlList(std::vector<std::shared_ptr<ControlBase>> controls) {
-        for(auto control : controls) {
-            if(auto cmd = std::dynamic_pointer_cast<Command>(control)) {
-                commands.push_back(cmd);
-            } else if(auto watch = std::dynamic_pointer_cast<Watch>(control)) {
-                watches.push_back(watch);
-            }
-        }
-    }
-
-    std::vector<std::shared_ptr<action::ActionInterface>> allActions() {
-        std::vector<std::shared_ptr<action::ActionInterface>> actions;
-        for(auto c : commands) {
-            actions.insert(actions.end(), c->actions.begin(), c->actions.end());
-        }
-
-        return actions;
-    }
-    std::vector<std::shared_ptr<condition::ConditionInterface>>
-    allConditions() {
-        std::vector<std::shared_ptr<condition::ConditionInterface>> conditions;
-        for(auto c : commands) {
-            if(std::shared_ptr<ConditionalCommand> ci =
-                   std::dynamic_pointer_cast<ConditionalCommand>(c)) {
-                conditions.insert(
-                    conditions.end(),
-                    ci->conditions.begin(),
-                    ci->conditions.end());
-            }
-        }
-
-        return conditions;
-    }
-    ControlList() = default;
-    ControlList(const ControlList& other) = default;
-    ControlList& operator=(const ControlList& other) = default;
 };
 
 } // namespace command
