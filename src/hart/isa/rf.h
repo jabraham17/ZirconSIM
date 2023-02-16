@@ -4,6 +4,9 @@
 #include "register.h"
 
 #include "event/event.h"
+#include "hart/types.h"
+
+#include <optional>
 
 namespace isa {
 namespace rf {
@@ -16,15 +19,27 @@ enum class RegisterClassType {
 bool isRegisterClassType(std::string s);
 RegisterClassType getRegisterClassType(std::string s);
 std::string getRegisterClassString(RegisterClassType rcf);
+std::optional<std::pair<RegisterClassType, types::RegisterIndex>>
+parseRegister(std::string s);
+
+namespace internal {
+#define REGISTER_CLASS(classname, reg_prefix, ...)                             \
+    const std::string registerPrefixFor##classname = #reg_prefix;
+#include "defs/registers.inc"
+#define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
+    inline constexpr size_t registerSizeFor##classname = reg_size;
+#include "defs/registers.inc"
+} // namespace internal
 
 class RegisterFile {
   public:
 #define REG_CASE(...) MAKE_REGISTER(__VA_ARGS__),
 #define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
-    RegisterClass<number_regs, reg_size> classname = {                         \
-        #classname,                                                            \
-        #reg_prefix,                                                           \
-        {REGISTER_CLASS_##classname(REG_CASE)}};                               \
+    RegisterClass<number_regs, internal::registerSizeFor##classname>           \
+        classname = {                                                          \
+            #classname,                                                        \
+            #reg_prefix,                                                       \
+            {REGISTER_CLASS_##classname(REG_CASE)}};                           \
     template <typename T> void add##classname##ReadListener(T&& arg) {         \
         classname.addReadListener(std::forward<T>(arg));                       \
     }                                                                          \
@@ -32,6 +47,7 @@ class RegisterFile {
         classname.addWriteListener(std::forward<T>(arg));                      \
     }
 #include "defs/registers.inc"
+#undef REG_CASE
 
     template <typename T> void addReadListener(T&& arg) {
 #define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
