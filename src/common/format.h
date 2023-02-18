@@ -1,7 +1,6 @@
 #ifndef ZIRCON_COMMON_FORMAT_H_
 #define ZIRCON_COMMON_FORMAT_H_
 
-#include <iomanip>
 #include <ostream>
 
 namespace common {

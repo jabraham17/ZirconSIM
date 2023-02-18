@@ -87,7 +87,7 @@ struct Expr {
 
     types::SignedInteger eval(hart::HartState* hs = nullptr);
 
-    private:
+  private:
     std::string getOperatorString();
 };
 } // namespace command

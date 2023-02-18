@@ -1,11 +1,13 @@
 #include "lexer.h"
 
+#include "common/utils.h"
 #include "event/event.h"
 #include "hart/isa/rf.h"
 
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+
 namespace ishell {
 namespace parser {
 
@@ -117,17 +119,10 @@ bool Lexer::isBinaryStart() {
     return c1 == '0' && c2 == 'b';
 }
 
-static std::string toupper(std::string str) {
-    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {
-        return std::toupper(c);
-    });
-    return str;
-}
-
 Token Lexer::getKeyword() {
     Token t;
     auto word = getWord();
-    t.lexeme = toupper(word);
+    t.lexeme = common::utils::toupper(word);
     if(t.lexeme == "STOP") t.token_type = TokenType::STOP;
     else if(t.lexeme == "PAUSE") t.token_type = TokenType::PAUSE;
     else if(t.lexeme == "RESUME") t.token_type = TokenType::RESUME;
@@ -148,7 +143,7 @@ Token Lexer::getPrefixedPrimary() {
     if(peekChar() == '$') {
         getChar();
         auto word = getWord();
-        t.lexeme = toupper(word);
+        t.lexeme = common::utils::toupper(word);
         if(t.lexeme == "PC") t.token_type = TokenType::PC;
         else if(t.lexeme == "M") t.token_type = TokenType::MEM;
         else t.token_type = TokenType::REGISTER;

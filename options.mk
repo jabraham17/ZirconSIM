@@ -18,7 +18,7 @@ OBJ_PATH=$(OBJ_DIRECTORY)$(REL_PATH)
 OS=$(shell uname)
 ifeq ($(OS),Linux)
 CC=/usr/bin/clang
-CXX:=$(CC)++
+CXX:=/usr/bin/clang++
 LD:=$(CXX)
 YACC=/usr/bin/bison
 LEX=/usr/bin/flex

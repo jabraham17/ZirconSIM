@@ -1,5 +1,7 @@
 #include "format.h"
 
+#include <iomanip>
+
 namespace common {
 
 namespace IOManip {
