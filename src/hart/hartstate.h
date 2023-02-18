@@ -136,6 +136,7 @@ class HartState {
             case ExecutionState::STOPPED:
                 return new_es == ExecutionState::RUNNING;
         }
+        return false;
     }
 };
 
