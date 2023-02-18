@@ -14,7 +14,7 @@ LIB_DIRECTORY=$(BUILD_DIRECTORY)lib/
 OS=$(shell uname)
 ifeq ($(OS),Linux)
 CC=/usr/bin/clang
-CXX:=$(CC)
+CXX:=/usr/bin/clang++
 LD:=$(CXX)
 YACC=/usr/bin/bison
 LEX=/usr/bin/flex
