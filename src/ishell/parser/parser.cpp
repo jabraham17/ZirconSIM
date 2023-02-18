@@ -1,7 +1,7 @@
 #include "parser.h"
 
-#include "event/event.h"
 #include "common/debug.h"
+#include "event/event.h"
 
 #include <utility>
 
@@ -20,13 +20,14 @@ Token Parser::expect(TokenType tt) {
         "'");
 }
 Parser::Control_ptr Parser::parse() {
-    common::debug::log(common::debug::DebugType::PARSER, __PRETTY_FUNCTION__, "\n");
+    common::debug::log(common::debug::DebugType::PARSER, "parse()\n");
     auto c = parse_control();
     expect(TokenType::END_OF_FILE);
     return c;
 }
 
 Parser::Control_ptr Parser::parse_control() {
+    common::debug::log(common::debug::DebugType::PARSER, "parse_control()\n");
     if(lexer.peek().token_type == TokenType::WATCH) {
         return parse_watch_command();
     } else {
@@ -34,6 +35,9 @@ Parser::Control_ptr Parser::parse_control() {
     }
 }
 Parser::Watch_ptr Parser::parse_watch_command() {
+    common::debug::log(
+        common::debug::DebugType::PARSER,
+        "parse_watch_command()\n");
     expect(TokenType::WATCH);
     Watch_ptr watch;
     if(lexer.peek().token_type == TokenType::REGISTER) {
@@ -53,6 +57,9 @@ Parser::Watch_ptr Parser::parse_watch_command() {
     return watch;
 }
 Parser::Command_ptr Parser::parse_action_command() {
+    common::debug::log(
+        common::debug::DebugType::PARSER,
+        "parse_action_command()\n");
     auto actions = parse_action_list();
     auto condition = parse_if_statement();
     auto event_list = parse_on_statement();
@@ -69,6 +76,9 @@ Parser::Command_ptr Parser::parse_action_command() {
         event_list);
 }
 Parser::Condition_ptr Parser::parse_if_statement() {
+    common::debug::log(
+        common::debug::DebugType::PARSER,
+        "parse_if_statement()\n");
     if(lexer.peek().token_type == TokenType::IF) {
         expect(TokenType::IF);
         auto cond_expr = parse_expr();
@@ -77,6 +87,9 @@ Parser::Condition_ptr Parser::parse_if_statement() {
     return nullptr;
 }
 std::vector<event::EventType> Parser::parse_on_statement() {
+    common::debug::log(
+        common::debug::DebugType::PARSER,
+        "parse_on_statement()\n");
     if(lexer.peek().token_type == TokenType::ON) {
         expect(TokenType::ON);
         return parse_event_list();
@@ -84,7 +97,9 @@ std::vector<event::EventType> Parser::parse_on_statement() {
     return {};
 }
 std::vector<Parser::Action_ptr> Parser::parse_action_list() {
-    // std::cerr << "parse action\n";
+    common::debug::log(
+        common::debug::DebugType::PARSER,
+        "parse_action_list()\n");
     auto action = parse_action();
     if(lexer.peek().token_type == TokenType::COMMA) {
         expect(TokenType::COMMA);
@@ -94,6 +109,9 @@ std::vector<Parser::Action_ptr> Parser::parse_action_list() {
     } else return {action};
 }
 std::vector<event::EventType> Parser::parse_event_list() {
+    common::debug::log(
+        common::debug::DebugType::PARSER,
+        "parse_event_list()\n");
     auto event = parse_event();
     if(lexer.peek().token_type == TokenType::COMMA) {
         expect(TokenType::COMMA);
@@ -103,6 +121,7 @@ std::vector<event::EventType> Parser::parse_event_list() {
     } else return {event};
 }
 event::EventType Parser::parse_event() {
+    common::debug::log(common::debug::DebugType::PARSER, "parse_event()\n");
     auto sub_lexeme = expect(TokenType::SUBSYSTEM).lexeme;
     expect(TokenType::COLON);
     auto ev_lexeme = expect(TokenType::EVENT).lexeme;
@@ -112,7 +131,7 @@ event::EventType Parser::parse_event() {
     return sub_ev;
 }
 Parser::Action_ptr Parser::parse_action() {
-    // std::cerr << lexer.peek().getString() << "\n";
+    common::debug::log(common::debug::DebugType::PARSER, "parse_action()\n");
     if(lexer.peek().token_type == TokenType::STOP) {
         expect(TokenType::STOP);
         return std::make_shared<command::action::Stop>();
@@ -134,6 +153,7 @@ Parser::Action_ptr Parser::parse_action() {
 }
 
 Parser::Expr_ptr Parser::parse_expr() {
+    common::debug::log(common::debug::DebugType::PARSER, "parse_expr()\n");
     std::vector<Token> input;
     while(ExprParser::isExprToken(lexer.peek())) {
         input.push_back(lexer.getToken());

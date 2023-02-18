@@ -150,15 +150,16 @@ MainArguments::MainArguments()
         .implicit_value(true)
         .help("try to resolve ELF symbols");
 
-    #if defined(DEBUG) && DEBUG==1
+#if defined(DEBUG) && DEBUG == 1
     // if the debug arg is unknown, this WILL fail silently
     // this is currently the desired behavior
-    program_args.add_argument("--debug").append().action(
-        [](const std::string& value) {
+    program_args.add_argument("--debug")
+        .append()
+        .action([](const std::string& value) {
             return common::debug::DebugType(value);
         })
         .help("enable debug printing for the selected module(s)");
-    #endif
+#endif
 }
 
 void MainArguments::parse(int argc, const char** argv, const char** envp) {
@@ -181,14 +182,14 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
             program_args.help().str());
     }
 
-    #if defined(DEBUG) && DEBUG==1
+#if defined(DEBUG) && DEBUG == 1
     // first thing is to set the debug mode
     common::debug::setDebugState(common::debug::DebugType::NONE);
     for(auto dt :
         program_args.get<std::vector<common::debug::DebugType>>("--debug")) {
         common::debug::updateDebugState(dt);
     }
-    #endif
+#endif
 
     std::string filename = program_args.get<std::string>("file");
     // the filename is the first argv
@@ -220,8 +221,8 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     for(auto s : control_args) {
         auto parser = ishell::parser::Parser(s);
         try {
-        auto control = parser.parse();
-        parsed_controls.push_back(control);
+            auto control = parser.parse();
+            parsed_controls.push_back(control);
         } catch(const ishell::parser::ParseException& e) {
             throw ArgumentException("Failed to parse command '" + s + "'");
         }
