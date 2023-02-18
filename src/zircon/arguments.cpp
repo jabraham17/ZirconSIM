@@ -204,7 +204,7 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
         try {
         auto control = parser.parse();
         parsed_controls.push_back(control);
-        } catch(ishell::parser::ParseException e) {
+        } catch(const ishell::parser::ParseException& e) {
             throw ArgumentException("Failed to parse command '" + s + "'");
         }
     }
