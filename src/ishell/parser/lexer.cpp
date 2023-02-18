@@ -1,13 +1,12 @@
 #include "lexer.h"
 
+#include "common/utils.h"
 #include "event/event.h"
 #include "hart/isa/rf.h"
-#include "common/utils.h"
 
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-
 
 namespace ishell {
 namespace parser {
@@ -119,8 +118,6 @@ bool Lexer::isBinaryStart() {
     ungetChar(c1);
     return c1 == '0' && c2 == 'b';
 }
-
-
 
 Token Lexer::getKeyword() {
     Token t;
