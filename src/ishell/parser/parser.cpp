@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include "event/event.h"
+#include "common/debug.h"
 
 #include <utility>
 
@@ -19,6 +20,7 @@ Token Parser::expect(TokenType tt) {
         "'");
 }
 Parser::Control_ptr Parser::parse() {
+    common::debug::log(common::debug::DebugType::PARSER, __PRETTY_FUNCTION__, "\n");
     auto c = parse_control();
     expect(TokenType::END_OF_FILE);
     return c;
