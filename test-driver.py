@@ -21,12 +21,11 @@ TEST_ENV = {
 
 
 
-def execute(args: List[str], stdin: str = None) -> Tuple[int, str, str]:
-    cp = sp.run(args, capture_output=True, input=stdin, text=True, errors="ignore")
+def execute(args: List[str], stdin: str = None) -> Tuple[int, str]:
+    cp = sp.run(args, stdout=sp.PIPE, stderr=sp.STDOUT, input=stdin, text=True, errors="ignore")
     return (
         cp.returncode,
-        cp.stdout,
-        cp.stderr,
+        cp.stdout
     )
 
 
@@ -39,14 +38,14 @@ def build_asm(inpath: str, outpath: str, tools: Dict = {}) -> bool:
     fd, tmp_file = tempfile.mkstemp()
     os.close(fd)
     cmd = [assembler_path] + assembler_args + [inpath, "-o", tmp_file]
-    ret, _, _ = execute(cmd)
+    ret, _ = execute(cmd)
     if ret != 0:
         return False
 
     linker_path = tools["linker"]["path"]
     linker_args = tools["linker"].get("args", [])
     cmd = [linker_path] + linker_args + [tmp_file, "-o", outpath]
-    ret, _, _ = execute(cmd)
+    ret, _ = execute(cmd)
     os.remove(tmp_file)
 
     return ret == 0
@@ -62,7 +61,7 @@ def build_c(
 
     cmd = [compiler_path] + compiler_args + [inpath, "-o", outpath]
 
-    ret, _, _ = execute(cmd)
+    ret, _ = execute(cmd)
     return ret == 0
 
 
@@ -174,15 +173,18 @@ class Test:
     def prerun(self):
         pass
 
-    def run(self, simulator: str) -> str:
+    def run(self, simulator: str) -> Tuple[int, str]:
         if self.args_file:
             simulator_args = open(self.args_file, "r").read()
             simulator_args = shlex.split(simulator_args)
+            simulator_args = [a.strip() for a in simulator_args]
         else:
             simulator_args = []
         cmd = [simulator, self.executable_file] + simulator_args
-        ret, stdout, stderr = execute(cmd)
-        return stdout
+        # print(cmd)
+        ret, output = execute(cmd)
+        # print(output)
+        return ret, output
 
     def check_output(self, output: str) -> bool:
         if self.stdout_file:
@@ -193,8 +195,8 @@ class Test:
             return True
     
     def run_and_check(self, simulator: str) -> bool:
-        output = self.run(simulator)
-        return self.check_output(output)
+        ret, output = self.run(simulator)
+        return ret == 0 and self.check_output(output)
 
     def clean(self):
         pass
