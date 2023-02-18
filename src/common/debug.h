@@ -8,8 +8,7 @@
     F(NONE, 0x0)                                                               \
     F(GENERAL, 0x1)                                                            \
     F(PARSER, 0x2)                                                             \
-    F(ELF, 0x4)                                                                \
-    F(SYSCALL, 0x8)
+    F(SYSCALL, 0x4)
 
 namespace common {
 namespace debug {
