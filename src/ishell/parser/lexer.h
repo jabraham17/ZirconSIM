@@ -71,6 +71,7 @@ struct TokenType {
 
     TokenType(ValueType v = ERROR) : value_(v) {}
     operator ValueType() { return value_; }
+    operator ValueType() const { return value_; }
     explicit operator std::string() const {
 #define LEXER_CASE(tt)                                                         \
     if(this->value_ == tt) return #tt;
@@ -84,6 +85,12 @@ struct TokenType {
     TokenType operator=(ValueType v) {
         this->value_ = v;
         return *this;
+    }
+    bool operator==(const TokenType& other) const {
+        return this->value_ == other.value_;
+    }
+    bool operator==(const ValueType& other) const {
+        return this->value_ == other;
     }
 };
 

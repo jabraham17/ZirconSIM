@@ -41,7 +41,7 @@ class MainArguments {
     std::ostream* mem_log;
     std::ostream* reg_log;
 
-    command::ControlList parsed_commands;
+    std::vector<std::shared_ptr<command::ControlBase>> parsed_controls;
 
   public:
     static MainArguments getMainArguments();

@@ -33,33 +33,24 @@ static std::string colorReset(bool useColor) {
 }
 
 namespace action {
+void Stop::action([[maybe_unused]] std::ostream* o) {
+    if(hs) hs->stop();
+}
+void Pause::action([[maybe_unused]] std::ostream* o) {
+    if(hs) hs->pause();
+}
+void Resume::action([[maybe_unused]] std::ostream* o) {
+    if(hs) hs->resume();
+}
 // TODO: ADD COLOR
-void DumpRegisterClass::action(std::ostream* o) {
-    if(o && hs) {
-        if(this->regtype == isa::rf::RegisterClassType::GPR) {
-            *o << std::string(indent, ' ');
-            this->hs->rf().GPR.dump(*o);
-            *o << std::endl;
-        }
-    }
-}
-// TODO: add color
-void DumpRegister::action(std::ostream* o) {
-    if(o && hs) {
-        if(this->regtype == isa::rf::RegisterClassType::GPR) {
-            *o << std::string(indent, ' ');
-            this->hs->rf().GPR.rawreg(idx).dump(*o);
-            *o << std::endl;
-        }
-    }
-}
-
-void DumpPC::action(std::ostream* o) {
-    if(o && hs) {
-        types::Address pc = hs->pc + offset * 4;
+void Disasm::action(std::ostream* o) {
+    if(o && hs && expr) {
+        auto pc = expr->eval(hs);
         uint32_t inst = 0;
-        uint32_t* inst_ptr = reinterpret_cast<uint32_t*>(hs->mem().raw(pc));
-        if(inst_ptr) inst = *inst_ptr;
+        if(pc) {
+            uint32_t* inst_ptr = reinterpret_cast<uint32_t*>(hs->mem().raw(pc));
+            if(inst_ptr) inst = *inst_ptr;
+        }
         *o << std::string(indent, ' ');
         *o << "PC[" << colorAddr(useColor) << common::Format::doubleword << pc
            << colorReset(useColor) << "] = " << colorHex(useColor)
@@ -67,34 +58,13 @@ void DumpPC::action(std::ostream* o) {
            << isa::inst::disassemble(inst, pc, useColor) << std::endl;
     }
 }
-void DumpMemoryAddress::action(std::ostream* o) {
-    if(o && hs) {
+void Dump::action(std::ostream* o) {
+    if(o && hs && expr) {
+        auto val = expr->eval(hs);
         *o << std::string(indent, ' ');
-        *o << "MEM[" << colorAddr(useColor) << common::Format::doubleword
-           << addr << colorReset(useColor) << "] = ";
-        auto converted_addr = hs->mem().raw(addr);
-        if(converted_addr) {
-            auto value = *(types::Address*)(converted_addr);
-            *o << colorNew(useColor) << common::Format::doubleword << value
-               << colorReset(useColor);
-            if(isa::inst::decodeInstruction(*(uint32_t*)(converted_addr)) !=
-               isa::inst::Opcode::UNKNOWN) {
-                *o << " disassembles to "
-                   << isa::inst::disassemble(
-                          *(uint32_t*)(converted_addr),
-                          0,
-                          useColor);
-            }
-        } else *o << "nil";
+        *o << val;
+        *o << std::endl;
     }
-
-    *o << std::endl;
-}
-void Stop::action([[maybe_unused]] std::ostream* o) {
-    if(hs) hs->stop();
-}
-void Pause::action([[maybe_unused]] std::ostream* o) {
-    if(hs) hs->pause();
 }
 void ActionGroup::action([[maybe_unused]] std::ostream* o) {
     if(hs && !actions.empty()) {

@@ -1,33 +1,37 @@
 #ifndef R_TYPE
-#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)
+    #define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)
 #endif
 
 #ifndef I_TYPE
-#define I_TYPE(prefix, name, opcode, funct3, execution, precedence)
+    #define I_TYPE(prefix, name, opcode, funct3, execution, precedence)
 #endif
 
 #ifndef S_TYPE
-#define S_TYPE(prefix, name, opcode, funct3, execution, precedence)
+    #define S_TYPE(prefix, name, opcode, funct3, execution, precedence)
 #endif
 
 #ifndef B_TYPE
-#define B_TYPE(prefix, name, opcode, funct3, execution, precedence)
+    #define B_TYPE(prefix, name, opcode, funct3, execution, precedence)
 #endif
 
 #ifndef U_TYPE
-#define U_TYPE(prefix, name, opcode, execution, precedence)
+    #define U_TYPE(prefix, name, opcode, execution, precedence)
 #endif
 
 #ifndef J_TYPE
-#define J_TYPE(prefix, name, opcode, execution, precedence)
+    #define J_TYPE(prefix, name, opcode, execution, precedence)
 #endif
 
 #ifndef CUSTOM
-#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)
+    #define CUSTOM(                                                            \
+        prefix,                                                                \
+        name,                                                                  \
+        opcode,                                                                \
+        matcher,                                                               \
+        printer,                                                               \
+        execution,                                                             \
+        precedence)
 #endif
-
-#ifndef ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_
-#define ZIRCON_CPU_ISA_COMMON_BEGIN_HELPER_
 
 #define OPCODE (instruction::getOpcode(bits))
 #define FUNCT7 (instruction::getFunct7(bits))
@@ -73,4 +77,3 @@
     } while(0)
 
 #define COMMA ,
-#endif

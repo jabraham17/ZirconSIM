@@ -1,5 +1,3 @@
-#include "isa-begin.inc"
-
 R_TYPE(rv32m,
        mul,
        0b0110011,

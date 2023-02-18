@@ -1,5 +1,3 @@
-#include "isa-begin.inc"
-
 I_TYPE(rv64i,
        lwu,
        0b0000011,

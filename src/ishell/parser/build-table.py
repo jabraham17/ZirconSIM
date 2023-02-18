@@ -45,7 +45,7 @@ def elm_to_str(elm):
 
 print("namespace precedence_table {")
 
-print(f"std::array<Precedence, {n_elms}> table = {{")
+print(f"std::array<std::array<Precedence, {n_elms}>, {n_elms}> table = {{ std::array<Precedence, {n_elms}>")
 header = ",".join([pad_str(h) for h in token_names])
 print(f"  /*  {pad_str('Top Of Input ->')}  {header}*/")
 for ridx, row in table.iterrows():
@@ -66,5 +66,6 @@ print("}")
 
 print("Precedence getAction(TokenType top_of_stack, TokenType top_of_input) {")
 print("return table[getIndex(top_of_stack)][getIndex(top_of_input)];")
+print("}")
 
 print("}")

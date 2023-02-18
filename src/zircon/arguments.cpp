@@ -2,9 +2,9 @@
 
 #include "color/color.h"
 #include "common/format.h"
-#include "controller/parser/parser.h"
 #include "event/event.h"
 #include "hart/isa/inst.h"
+#include "ishell/parser/parser.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -131,7 +131,6 @@ MainArguments::MainArguments()
         .help("dump runtime statistics");
 
     program_args.add_argument("-control")
-        .nargs(argparse::nargs_pattern::at_least_one)
         .append()
         .metavar("CONTROL")
         .help("a control sequence to apply\n\t\t\t  "
@@ -199,14 +198,14 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
 
     // check for controller args
     auto control_args = program_args.get<std::vector<std::string>>("-control");
-    if(!control_args.empty()) {
-        auto parser = controller::parser::Parser(control_args);
+    // each string is its own control
+    for(auto s : control_args) {
+        auto parser = ishell::parser::Parser(s);
         try {
-            parsed_commands = parser.parse();
-        } catch(const controller::parser::ParseException& err) {
-            throw ArgumentException(
-                "Invalid arguments for '-control': " + std::string(err.what()) +
-                "\n" + program_args.help().str());
+        auto control = parser.parse();
+        parsed_controls.push_back(control);
+        } catch(ishell::parser::ParseException e) {
+            throw ArgumentException("Failed to parse command '" + s + "'");
         }
     }
 
@@ -384,60 +383,67 @@ void MainArguments::addCallbacks(hart::Hart& hart, elf::File& elf) {
 }
 void MainArguments::addControllerCallbacks(hart::Hart& hart) {
     bool useColor = program_args.get<bool>("--color");
-    for(auto a : parsed_commands.allActions()) {
+    for(auto a : parsed_controls) {
         a->setHS(&hart.hs());
-    }
-    for(auto c : parsed_commands.allConditions()) {
-        c->setHS(&hart.hs());
-    }
-    for(auto w : parsed_commands.watches) {
-        w->setHS(&hart.hs());
-        w->setLog(&std::cout);
-    }
-    for(auto c : parsed_commands.commands) {
-        c->setColor(useColor);
-        switch(c->getEventType()) {
-            case event::EventType::HART_AFTER_EXECUTE:
-                hart.addAfterExecuteListener(
-                    [c](hart::HartState&) { c->doit(&std::cout); });
-                break;
-            case event::EventType::HART_BEFORE_EXECUTE:
-                hart.addBeforeExecuteListener(
-                    [c](hart::HartState&) { c->doit(&std::cout); });
-                break;
-            case event::EventType::MEM_READ:
-                hart.hs().mem().addReadListener(
-                    [c](uint64_t, uint64_t, size_t) { c->doit(&std::cout); });
-                break;
-            case event::EventType::MEM_WRITE:
-                hart.hs().mem().addWriteListener(
-                    [c](uint64_t, uint64_t, uint64_t, size_t) {
-                        c->doit(&std::cout);
-                    });
-                break;
-            case event::EventType::MEM_ALLOCATION:
-                hart.hs().mem().addAllocationListener(
-                    [c](uint64_t, uint64_t) { c->doit(&std::cout); });
-                break;
-            case event::EventType::REG_READ:
-                hart.hs().rf().addReadListener(
-                    [c](std::string, uint64_t, uint64_t) {
-                        c->doit(&std::cout);
-                    });
-                break;
-            case event::EventType::REG_WRITE:
-                hart.hs().rf().addWriteListener(
-                    [c](std::string, uint64_t, uint64_t, uint64_t) {
-                        c->doit(&std::cout);
-                    });
-                break;
-            default: std::cerr << "No Event Handler Defined\n";
+        a->setColor(useColor);
+        if(auto watch = std::dynamic_pointer_cast<command::Watch>(a)) {
+            hart.addBeforeExecuteListener(
+                [watch](hart::HartState&) { watch->update(); });
+            hart.addAfterExecuteListener(
+                [watch](hart::HartState&) { watch->update(); });
+            watch->setLog(&std::cout);
+        } else if(
+            auto command = std::dynamic_pointer_cast<command::Command>(a)) {
+            for(auto event_type : command->getEventTypes()) {
+                switch(event_type) {
+                    case event::EventType::HART_AFTER_EXECUTE:
+                        hart.addAfterExecuteListener(
+                            [command](hart::HartState&) {
+                                command->doit(&std::cout);
+                            });
+                        break;
+                    case event::EventType::HART_BEFORE_EXECUTE:
+                        hart.addBeforeExecuteListener(
+                            [command](hart::HartState&) {
+                                command->doit(&std::cout);
+                            });
+                        break;
+                    case event::EventType::MEM_READ:
+                        hart.hs().mem().addReadListener(
+                            [command](uint64_t, uint64_t, size_t) {
+                                command->doit(&std::cout);
+                            });
+                        break;
+                    case event::EventType::MEM_WRITE:
+                        hart.hs().mem().addWriteListener(
+                            [command](uint64_t, uint64_t, uint64_t, size_t) {
+                                command->doit(&std::cout);
+                            });
+                        break;
+                    case event::EventType::MEM_ALLOCATION:
+                        hart.hs().mem().addAllocationListener(
+                            [command](uint64_t, uint64_t) {
+                                command->doit(&std::cout);
+                            });
+                        break;
+                    case event::EventType::REG_READ:
+                        hart.hs().rf().addReadListener(
+                            [command](std::string, uint64_t, uint64_t) {
+                                command->doit(&std::cout);
+                            });
+                        break;
+                    case event::EventType::REG_WRITE:
+                        hart.hs().rf().addWriteListener(
+                            [command](
+                                std::string,
+                                uint64_t,
+                                uint64_t,
+                                uint64_t) { command->doit(&std::cout); });
+                        break;
+                    default: std::cerr << "No Event Handler Defined\n";
+                }
+            }
         }
-    }
-    for(auto w : parsed_commands.watches) {
-        w->setColor(useColor);
-        hart.addBeforeExecuteListener([w](hart::HartState&) { w->update(); });
-        hart.addAfterExecuteListener([w](hart::HartState&) { w->update(); });
     }
 }
 std::vector<std::string> MainArguments::getArgV() { return simulated_argv; }

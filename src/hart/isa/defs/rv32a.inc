@@ -1,5 +1,3 @@
-#include "isa-begin.inc"
-
 CUSTOM(rv32i,
        lr_w,
        0b0101111,
