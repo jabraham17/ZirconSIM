@@ -39,7 +39,7 @@ class Parser {
     /*
     control         -> action_command | watch_command
     watch_command   -> WATCH REGISTER action_list
-    watch_command   -> WATCH MEM LBRACK expr RBRACK action_list
+    watch_command   -> WATCH expr action_list
     action_command  -> action_list if_statement on_staptement
     if_statement    -> IF expr | EPSILON
     on_statement    -> ON event_list | EPSILON

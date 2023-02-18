@@ -197,6 +197,22 @@ ExprParser::reduceRule(const std::vector<StackElm>& rhs) {
     }
 }
 
+std::string getStringStackElm(ExprParser::StackElm e) {
+if(std::holds_alternative<Token>(e)) {
+            return std::get<Token>(e).getString() ;
+        } else {
+            return
+                std::get<std::shared_ptr<command::Expr>>(e)->getString();
+        }
+}
+
+void print_stack(std::vector<ExprParser::StackElm> s) {
+    for(auto e : s) {
+            std::cerr << getStringStackElm(e) << ", ";
+    }
+    std::cerr << "\n";
+}
+
 std::shared_ptr<command::Expr> ExprParser::parse() {
     std::vector<StackElm> stack;
     while(true) {
@@ -211,6 +227,8 @@ std::shared_ptr<command::Expr> ExprParser::parse() {
         if(action == Precedence::YIELD || action == Precedence::SAME) { // shift
             toi = getInputToken();
             stack.push_back(toi);
+            // std::cerr << "AFTER SHIFT ";
+            // print_stack(stack);
         } else if(action == Precedence::TAKE) {
             std::vector<StackElm> rhs;
             Token last_popped_term;
@@ -231,6 +249,7 @@ std::shared_ptr<command::Expr> ExprParser::parse() {
                    precedence_table::getAction(
                        peekStack(stack).token_type,
                        last_popped_term.token_type) == Precedence::YIELD) {
+                        // std::cerr << "TOS: " << peekStack(stack).getString() << " LAST POPPED: " << last_popped_term.getString() << "\n";
                     break;
                 }
             }
@@ -239,14 +258,18 @@ std::shared_ptr<command::Expr> ExprParser::parse() {
                 auto reduced = reduceRule(rhs);
                 stack.push_back(std::move(reduced));
             } else {
+                // print_stack(rhs);
                 throw ParseException("No Valid Rule to Reduce");
             }
+            // std::cerr << "AFTER TAKE ";
+            // print_stack(stack);
         } else {
             throw ParseException("Invalid Table Action");
         }
     }
     if(stack.size() == 1 && isExpression(stack[0])) {
         auto& e = getExpression(stack[0]);
+        // std::cerr << "DONE: " << e->getString() << "\n";
         return std::make_shared<command::Expr>(std::move(*e));
     } else {
         throw ParseException("Not a Single Expression Left");

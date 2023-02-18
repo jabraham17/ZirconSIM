@@ -5,6 +5,7 @@
 #include "hart/types.h"
 
 #include <memory>
+#include <string>
 
 namespace hart {
 class HartState;
@@ -82,7 +83,12 @@ struct Expr {
     bool isPC() { return type == ExprType::PC; }
     bool isMemory() { return type == ExprType::MEMORY; }
 
+    std::string getString();
+
     types::SignedInteger eval(hart::HartState* hs = nullptr);
+
+    private:
+    std::string getOperatorString();
 };
 } // namespace command
 

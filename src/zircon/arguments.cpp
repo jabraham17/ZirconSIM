@@ -201,8 +201,12 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     // each string is its own control
     for(auto s : control_args) {
         auto parser = ishell::parser::Parser(s);
+        try {
         auto control = parser.parse();
         parsed_controls.push_back(control);
+        } catch(ishell::parser::ParseException e) {
+            throw ArgumentException("Failed to parse command '" + s + "'");
+        }
     }
 
     input = (new std::ifstream(filename, std::ios::binary));

@@ -41,10 +41,7 @@ Parser::Watch_ptr Parser::parse_watch_command() {
             watch = std::make_shared<command::WatchRegister>(regtype, idx);
         } else throw new ParseException("Invalid Register: " + reg_tok.lexeme);
     } else {
-        expect(TokenType::MEM);
-        expect(TokenType::LBRACK);
         auto expr = parse_expr();
-        expect(TokenType::RBRACK);
         watch = std::make_shared<command::WatchMemoryAddress>(expr);
     }
     auto actions = parse_action_list();
@@ -85,6 +82,7 @@ std::vector<event::EventType> Parser::parse_on_statement() {
     return {};
 }
 std::vector<Parser::Action_ptr> Parser::parse_action_list() {
+    // std::cerr << "parse action\n";
     auto action = parse_action();
     if(lexer.peek().token_type == TokenType::COMMA) {
         expect(TokenType::COMMA);
@@ -112,6 +110,7 @@ event::EventType Parser::parse_event() {
     return sub_ev;
 }
 Parser::Action_ptr Parser::parse_action() {
+    // std::cerr << lexer.peek().getString() << "\n";
     if(lexer.peek().token_type == TokenType::STOP) {
         expect(TokenType::STOP);
         return std::make_shared<command::action::Stop>();
@@ -129,7 +128,7 @@ Parser::Action_ptr Parser::parse_action() {
         expect(TokenType::DUMP);
         auto expr = parse_expr();
         return std::make_shared<command::action::Dump>(expr);
-    } else throw ParseException("Unknown action");
+    } else throw ParseException("Unknown action: " + lexer.peek().getString());
 }
 
 Parser::Expr_ptr Parser::parse_expr() {
