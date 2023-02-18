@@ -124,9 +124,47 @@ template <typename... Args> void log(Args... args) {
     details::LogHelper::log(DebugType::GENERAL, std::cout, args...);
 }
 
+class CancelableOStream {
+  private:
+    bool isEnabled;
+    std::ostream& os;
+
+  public:
+    CancelableOStream(bool isEnabled, std::ostream& os)
+        : isEnabled(isEnabled), os(os) {}
+    ~CancelableOStream() = default;
+    CancelableOStream(const CancelableOStream& other) = delete;
+    CancelableOStream(CancelableOStream&& other) noexcept = default;
+    CancelableOStream& operator=(const CancelableOStream& other) = delete;
+    CancelableOStream& operator=(CancelableOStream&& other) noexcept = delete;
+
+    template <typename T> CancelableOStream& operator<<(T&& x) {
+        if(isEnabled) os << std::forward<T>(x);
+        return *this;
+    }
+
+    // using TraceManip = Trace& (*)(Trace&);
+    // Trace& operator<<(TraceManip manip) { return manip(*this); }
+
+    // using OStreamType = std::basic_ostream<char, std::char_traits<char>>;
+    // using OStreamManip = OStreamType& (*)(OStreamType&);
+
+    // Trace& operator<<(OStreamManip manip) {
+    //     if(enabled) manip(out);
+    //     return *this;
+    // }
+};
+
+static CancelableOStream rawlog(DebugType dt, std::ostream& os) {
+    bool isEnabled = checkDebugState(dt);
+    return CancelableOStream(isEnabled, os);
+}
+static CancelableOStream rawlog(DebugType dt) { return rawlog(dt, std::cout); }
+static CancelableOStream rawlog(std::ostream& os) {
+    return rawlog(DebugType::GENERAL, os);
+}
+
 } // namespace debug
 } // namespace common
-
-
 
 #endif
