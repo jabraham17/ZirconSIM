@@ -65,7 +65,7 @@ struct TokenType {
     ValueType value_;
 
   public:
-#define TOKEN(t) static const ValueType t = __COUNTER__;
+#define TOKEN(tt) static const ValueType tt = __COUNTER__;
     LEXER_TOKENS(TOKEN)
 #undef TOKEN
 
