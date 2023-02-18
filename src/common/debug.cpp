@@ -23,5 +23,15 @@ bool checkDebugState(DebugType dt) { return dt & CURRENT_DEBUG_STATE; }
 void setDebugState(DebugType dt) { CURRENT_DEBUG_STATE = dt; }
 void updateDebugState(DebugType dt) { CURRENT_DEBUG_STATE |= dt; }
 DebugType getDebugState() { return CURRENT_DEBUG_STATE; }
+
+CancelableOStream rawlog(DebugType dt, std::ostream& os) {
+    bool isEnabled = checkDebugState(dt);
+    return CancelableOStream(isEnabled, os);
+}
+CancelableOStream rawlog(DebugType dt) { return rawlog(dt, std::cout); }
+CancelableOStream rawlog(std::ostream& os) {
+    return rawlog(DebugType::GENERAL, os);
+}
+
 } // namespace debug
 } // namespace common

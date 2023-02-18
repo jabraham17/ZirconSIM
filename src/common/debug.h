@@ -143,26 +143,18 @@ class CancelableOStream {
         return *this;
     }
 
-    // using TraceManip = Trace& (*)(Trace&);
-    // Trace& operator<<(TraceManip manip) { return manip(*this); }
-
-    // using OStreamType = std::basic_ostream<char, std::char_traits<char>>;
-    // using OStreamManip = OStreamType& (*)(OStreamType&);
-
-    // Trace& operator<<(OStreamManip manip) {
-    //     if(enabled) manip(out);
-    //     return *this;
-    // }
+    // special case for ostream inits
+    using OStreamType = std::basic_ostream<char, std::char_traits<char>>;
+    using OStreamManip = OStreamType& (*)(OStreamType&);
+    CancelableOStream& operator<<(OStreamManip manip) {
+        if(isEnabled) manip(os);
+        return *this;
+    }
 };
 
-static CancelableOStream rawlog(DebugType dt, std::ostream& os) {
-    bool isEnabled = checkDebugState(dt);
-    return CancelableOStream(isEnabled, os);
-}
-static CancelableOStream rawlog(DebugType dt) { return rawlog(dt, std::cout); }
-static CancelableOStream rawlog(std::ostream& os) {
-    return rawlog(DebugType::GENERAL, os);
-}
+CancelableOStream rawlog(DebugType dt, std::ostream& os);
+CancelableOStream rawlog(DebugType dt);
+CancelableOStream rawlog(std::ostream& os);
 
 } // namespace debug
 } // namespace common
