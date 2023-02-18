@@ -198,17 +198,16 @@ ExprParser::reduceRule(const std::vector<StackElm>& rhs) {
 }
 
 std::string getStringStackElm(ExprParser::StackElm e) {
-if(std::holds_alternative<Token>(e)) {
-            return std::get<Token>(e).getString() ;
-        } else {
-            return
-                std::get<std::shared_ptr<command::Expr>>(e)->getString();
-        }
+    if(std::holds_alternative<Token>(e)) {
+        return std::get<Token>(e).getString();
+    } else {
+        return std::get<std::shared_ptr<command::Expr>>(e)->getString();
+    }
 }
 
 void print_stack(std::vector<ExprParser::StackElm> s) {
     for(auto e : s) {
-            std::cerr << getStringStackElm(e) << ", ";
+        std::cerr << getStringStackElm(e) << ", ";
     }
     std::cerr << "\n";
 }
@@ -249,7 +248,8 @@ std::shared_ptr<command::Expr> ExprParser::parse() {
                    precedence_table::getAction(
                        peekStack(stack).token_type,
                        last_popped_term.token_type) == Precedence::YIELD) {
-                        // std::cerr << "TOS: " << peekStack(stack).getString() << " LAST POPPED: " << last_popped_term.getString() << "\n";
+                    // std::cerr << "TOS: " << peekStack(stack).getString() << "
+                    // LAST POPPED: " << last_popped_term.getString() << "\n";
                     break;
                 }
             }
