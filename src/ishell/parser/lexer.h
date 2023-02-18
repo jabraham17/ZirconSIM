@@ -86,12 +86,17 @@ struct TokenType {
         this->value_ = v;
         return *this;
     }
-    bool operator==(const TokenType& other) const {
-        return this->value_ == other.value_;
-    }
-    bool operator==(const ValueType& other) const {
-        return this->value_ == other;
-    }
+    // DO NOT PUT IN THESE EQUALITY FUNCTIONS
+    // Having just the first one causes ambiguous compiler errors
+    // Having just the second one or both causes all static const TokenType
+    // to be removed without warning. But only when compiled with -O0. Compiled
+    // with any level of optimization causes this to work properly and as expected
+    // bool operator==(const TokenType& other) const {
+    //     return this->value_ == other.value_;
+    // }
+    // bool operator==(const ValueType& other) const {
+    //     return this->value_ == other;
+    // }
 };
 
 class Token {
