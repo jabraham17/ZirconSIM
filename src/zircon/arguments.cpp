@@ -1,6 +1,7 @@
 #include "arguments.h"
 
 #include "color/color.h"
+#include "common/debug.h"
 #include "common/format.h"
 #include "event/event.h"
 #include "hart/isa/inst.h"
@@ -133,9 +134,7 @@ MainArguments::MainArguments()
     program_args.add_argument("-control")
         .append()
         .metavar("CONTROL")
-        .help("a control sequence to apply\n\t\t\t  "
-              "<subsystem>:<event> <conditions>? <actions>\n\t\t\t  "
-              "WATCH <value> <actions>?\n\t\t\t");
+        .help("a control sequence to apply");
 
     program_args.add_argument("-e", "-env")
         .append()
@@ -150,6 +149,16 @@ MainArguments::MainArguments()
         .default_value(false)
         .implicit_value(true)
         .help("try to resolve ELF symbols");
+
+    #if defined(DEBUG) && DEBUG==1
+    // if the debug arg is unknown, this WILL fail silently
+    // this is currently the desired behavior
+    program_args.add_argument("--debug").append().action(
+        [](const std::string& value) {
+            return common::debug::DebugType(value);
+        })
+        .help("enable debug printing for the selected module(s)");
+    #endif
 }
 
 void MainArguments::parse(int argc, const char** argv, const char** envp) {
@@ -171,6 +180,15 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
             "Bad arguments: " + std::string(err.what()) + "\n" +
             program_args.help().str());
     }
+
+    #if defined(DEBUG) && DEBUG==1
+    // first thing is to set the debug mode
+    common::debug::setDebugState(common::debug::DebugType::NONE);
+    for(auto dt :
+        program_args.get<std::vector<common::debug::DebugType>>("--debug")) {
+        common::debug::updateDebugState(dt);
+    }
+    #endif
 
     std::string filename = program_args.get<std::string>("file");
     // the filename is the first argv
@@ -202,8 +220,8 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     for(auto s : control_args) {
         auto parser = ishell::parser::Parser(s);
         try {
-        auto control = parser.parse();
-        parsed_controls.push_back(control);
+            auto control = parser.parse();
+            parsed_controls.push_back(control);
         } catch(ishell::parser::ParseException e) {
             throw ArgumentException("Failed to parse command '" + s + "'");
         }
