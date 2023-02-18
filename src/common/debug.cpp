@@ -5,6 +5,10 @@
 namespace common {
 namespace debug {
 
+#define TOKEN(d, v) const DebugType DebugType::d = v;
+    DEBUG_CATAGORIES(TOKEN)
+#undef TOKEN
+
 DebugType::DebugType(std::string s) : value_() {
     std::string S = utils::toupper(s);
     if(0) {

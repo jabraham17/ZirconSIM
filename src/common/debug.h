@@ -21,7 +21,9 @@ struct DebugType {
     ValueType value_;
 
   public:
-#define TOKEN(d, v) static const ValueType d = v;
+    // note this is DebugType, not ValueType
+    // it must be DebugType, or the templating for log<>(....) will not work
+#define TOKEN(d, v) static const DebugType d;
     DEBUG_CATAGORIES(TOKEN)
 #undef TOKEN
 
@@ -77,29 +79,54 @@ void setDebugState(DebugType dt);
 void updateDebugState(DebugType dt);
 DebugType getDebugState();
 
-// template <typename... Args> void log(Args... args) {
-//     log<Args...>(DebugType::GENERAL, std::cout, args...);
-// }
-// template <typename... Args> void log(std::ostream& os, Args... args) {
-//     log<Args...>(DebugType::GENERAL, os, args...);
-// }
-// template <typename... Args> void log(DebugType dt, Args... args) {
-//     log<Args...>(dt, std::cout, args...);
-// }
-// template <typename Arg0> void log([[maybe_unused]]DebugType dt,
-// [[maybe_unused]]std::ostream& os, [[maybe_unused]]Arg0 arg0) { 
-    // #if defined(DEBUG) && DEBUG==1
-//     if(checkDebugState(dt)) os << arg0;
-// #endif
-// }
-// template <typename Arg0, typename Arg1, typename... Args>
-// void log(DebugType dt, std::ostream& os, Arg0 arg0, Arg1 arg1, Args... args)
-// {
-//     log<Arg0>(dt, os, arg0);
-//     log<Arg1, Args...>(dt, os, arg1, args...);
-// }
+namespace details {
+class LogHelper {
+  public:
+    template <typename... Args>
+    static void
+    log([[maybe_unused]] DebugType dt,
+        [[maybe_unused]] std::ostream& os,
+        [[maybe_unused]] Args... args) {
+#if defined(DEBUG) && DEBUG == 1
+        if(checkDebugState(dt)) {
+            os << std::string(dt) << ": ";
+            LogHelper::logHelper(dt, os, args...);
+        }
+#endif
+    }
+#if defined(DEBUG) && DEBUG == 1
+  private:
+    template <typename Arg0, typename... Args>
+    static void logHelper(
+        [[maybe_unused]] DebugType dt,
+        std::ostream& os,
+        Arg0 arg0,
+        Args... args) {
+        LogHelper::logHelper(dt, os, arg0);
+        LogHelper::logHelper(dt, os, args...);
+    }
+    template <typename Arg0>
+    static void
+    logHelper([[maybe_unused]] DebugType dt, std::ostream& os, Arg0 arg0) {
+        os << arg0;
+    }
+#endif
+};
+} // namespace details
+
+template <typename... Args> void log(DebugType dt, Args... args) {
+    details::LogHelper::log(dt, std::cout, args...);
+}
+template <typename... Args> void log(std::ostream& os, Args... args) {
+    details::LogHelper::log(DebugType::GENERAL, os, args...);
+}
+template <typename... Args> void log(Args... args) {
+    details::LogHelper::log(DebugType::GENERAL, std::cout, args...);
+}
 
 } // namespace debug
 } // namespace common
+
+
 
 #endif
