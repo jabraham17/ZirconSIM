@@ -218,10 +218,10 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     // check for controller args
     auto control_args = program_args.get<std::vector<std::string>>("-control");
     // each string is its own control
+    auto parser = ishell::parser::Parser();
     for(auto s : control_args) {
-        auto parser = ishell::parser::Parser(s);
         try {
-            auto control = parser.parse();
+            auto control = parser.parse(s);
             parsed_controls.push_back(control);
         } catch(const ishell::parser::ParseException& e) {
             throw ArgumentException("Failed to parse command '" + s + "'");

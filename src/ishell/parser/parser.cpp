@@ -19,11 +19,23 @@ Token Parser::expect(TokenType tt) {
         "Expected '" + std::string(tt) + "' got '" + std::string(t.token_type) +
         "'");
 }
-Parser::Control_ptr Parser::parse() {
+Parser::Control_ptr Parser::parse(std::string input) {
     common::debug::log(common::debug::DebugType::PARSER, "parse()\n");
+    lexer = Lexer(input);
     auto c = parse_control();
     expect(TokenType::END_OF_FILE);
     return c;
+}
+std::vector<Parser::Control_ptr> Parser::parseAll(std::string input) {
+    common::debug::log(common::debug::DebugType::PARSER, "parseAll()\n");
+    lexer = Lexer(input);
+    std::vector<Parser::Control_ptr> c_list;
+    while(lexer.peek().token_type != TokenType::END_OF_FILE) {
+        auto c = parse_control();
+        c_list.push_back(c);
+    }
+    expect(TokenType::END_OF_FILE);
+    return c_list;
 }
 
 Parser::Control_ptr Parser::parse_control() {

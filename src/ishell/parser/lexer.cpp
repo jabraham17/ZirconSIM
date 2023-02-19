@@ -20,7 +20,8 @@ std::string Token::getString() {
     return const_cast<const Token*>(this)->getString();
 }
 
-Lexer::Lexer(std::string input): tokens(), input_buffer(), last_token(TokenType::NONE) {
+Lexer::Lexer(std::string input)
+    : tokens(), input_buffer(), last_token(TokenType::NONE) {
     input_buffer.insert(input_buffer.end(), input.rbegin(), input.rend());
 }
 
@@ -174,10 +175,15 @@ Token Lexer::getSymbol() {
             case '/': t.token_type = TokenType::DIVIDE; break;
             case '+': t.token_type = TokenType::PLUS; break;
             case '-': {
-                t.token_type = TokenType::MINUS; 
+                t.token_type = TokenType::MINUS;
 
-                // if the last token type was an NONE, LPAREN, LBRAC, operator or a keyword return NEGATE
-                if(last_token.token_type == TokenType::NONE || last_token.token_type == TokenType::LPAREN || last_token.token_type == TokenType::LBRACK || last_token.token_type.isOperator() || last_token.token_type.isKeyword()) {
+                // if the last token type was an NONE, LPAREN, LBRAC, operator
+                // or a keyword return NEGATE
+                if(last_token.token_type == TokenType::NONE ||
+                   last_token.token_type == TokenType::LPAREN ||
+                   last_token.token_type == TokenType::LBRACK ||
+                   last_token.token_type.isOperator() ||
+                   last_token.token_type.isKeyword()) {
                     t.token_type = TokenType::NEGATE;
                 }
                 break;
@@ -232,9 +238,7 @@ Token Lexer::getSymbol() {
                 } else t.token_type = TokenType::BW_OR;
                 break;
             }
-            case '~':
-                t.token_type = TokenType::BW_NOT;
-                break;
+            case '~': t.token_type = TokenType::BW_NOT; break;
             default: break;
         }
     }

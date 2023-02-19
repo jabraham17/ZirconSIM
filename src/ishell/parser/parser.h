@@ -31,16 +31,15 @@ class Parser {
 
   public:
     Lexer lexer;
-    std::ostream* log;
-    Parser(std::string input, std::ostream& log = std::cout)
-        : lexer(input), log(&log) {}
-    Control_ptr parse();
+    Parser() = default;
+    Control_ptr parse(std::string input);
+    std::vector<Control_ptr> parseAll(std::string input);
 
     /*
     control         -> action_command | watch_command
     watch_command   -> WATCH REGISTER action_list
     watch_command   -> WATCH expr action_list
-    action_command  -> action_list if_statement on_staptement
+    action_command  -> action_list if_statement on_statement
     if_statement    -> IF expr | EPSILON
     on_statement    -> ON event_list | EPSILON
     action_list     -> action | action COMMA action_list

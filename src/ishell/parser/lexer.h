@@ -64,7 +64,7 @@
     F(NOT)
 
 #define LEXER_TOKENS(F)                                                        \
-    LEXER_TOKENS_MISC(F)                                                        \
+    LEXER_TOKENS_MISC(F)                                                       \
     LEXER_TOKENS_EVENT(F)                                                      \
     LEXER_TOKENS_KEYWORD(F)                                                    \
     LEXER_TOKENS_PRIMARY(F)                                                    \
@@ -149,10 +149,11 @@ class Token {
 
 class Lexer {
   public:
-    Lexer(std::string input);
+    Lexer(std::string input = "");
     Token getToken();
     Token peek(unsigned ahead = 1);
     TokenType ungetToken(Token);
+    void addInput(std::string);
 
   private:
     std::vector<Token> tokens;

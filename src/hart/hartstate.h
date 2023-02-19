@@ -10,7 +10,7 @@
 #include <unordered_map>
 
 namespace command {
-    struct Expr;
+struct Expr;
 }
 
 namespace hart {
