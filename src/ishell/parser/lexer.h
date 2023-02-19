@@ -4,16 +4,20 @@
 #include <string>
 #include <vector>
 
-#define LEXER_TOKENS(F)                                                        \
-    /*MISC*/                                                                   \
+// miscellaneous tokens
+#define LEXER_TOKENS_MISC(F)                                                   \
     F(END_OF_FILE)                                                             \
     F(NONE)                                                                    \
-    F(ERROR)                                                                   \
-    /*Event selection*/                                                        \
+    F(ERROR)
+
+// event tokens
+#define LEXER_TOKENS_EVENT(F)                                                  \
     F(SUBSYSTEM)                                                               \
     F(EVENT)                                                                   \
-    F(COLON)                                                                   \
-    /*keywords*/                                                               \
+    F(COLON)
+
+// keyword tokens
+#define LEXER_TOKENS_KEYWORD(F)                                                \
     F(STOP)                                                                    \
     F(PAUSE)                                                                   \
     F(RESUME)                                                                  \
@@ -21,19 +25,24 @@
     F(DUMP)                                                                    \
     F(DISASM)                                                                  \
     F(IF)                                                                      \
-    F(ON)                                                                      \
-    /*primaries, most are prefixed with $*/                                    \
+    F(ON)
+
+// keyword tokens
+#define LEXER_TOKENS_PRIMARY(F)                                                \
     F(NUM)                                                                     \
     F(PC)                                                                      \
     F(MEM)                                                                     \
-    F(REGISTER)                                                                \
-    F(COMMA)                                                                   \
-    /*grouping*/                                                               \
+    F(REGISTER)
+
+// grouping tokens
+#define LEXER_TOKENS_GROUPING(F)                                               \
     F(LPAREN)                                                                  \
     F(RPAREN)                                                                  \
     F(LBRACK)                                                                  \
-    F(RBRACK)                                                                  \
-    /*expr ops*/                                                               \
+    F(RBRACK)
+
+// operator tokens
+#define LEXER_TOKENS_OPERATOR(F)                                               \
     F(MULTIPLY)                                                                \
     F(DIVIDE)                                                                  \
     F(PLUS)                                                                    \
@@ -53,6 +62,16 @@
     F(NEGATE)                                                                  \
     F(BW_NOT)                                                                  \
     F(NOT)
+
+#define LEXER_TOKENS(F)                                                        \
+    LEXER_TOKENS_MISC(F)                                                        \
+    LEXER_TOKENS_EVENT(F)                                                      \
+    LEXER_TOKENS_KEYWORD(F)                                                    \
+    LEXER_TOKENS_PRIMARY(F)                                                    \
+    LEXER_TOKENS_GROUPING(F)                                                   \
+    LEXER_TOKENS_OPERATOR(F)                                                   \
+    /*others*/                                                                 \
+    F(COMMA)
 
 namespace ishell {
 
@@ -97,6 +116,22 @@ struct TokenType {
     // bool operator==(const ValueType& other) const {
     //     return this->value_ == other;
     // }
+
+    bool isKeyword() {
+#define LEXER_CASE(tt) this->value_ == tt ||
+        return LEXER_TOKENS_KEYWORD(LEXER_CASE) false;
+#undef LEXER_CASE
+    }
+    bool isOperator() {
+#define LEXER_CASE(tt) this->value_ == tt ||
+        return LEXER_TOKENS_OPERATOR(LEXER_CASE) false;
+#undef LEXER_CASE
+    }
+    bool isPrimary() {
+#define LEXER_CASE(tt) this->value_ == tt ||
+        return LEXER_TOKENS_PRIMARY(LEXER_CASE) false;
+#undef LEXER_CASE
+    }
 };
 
 class Token {
@@ -122,6 +157,7 @@ class Lexer {
   private:
     std::vector<Token> tokens;
     std::vector<char> input_buffer;
+    Token last_token;
 
     // returns NUM
     Token getNUM();

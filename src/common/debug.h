@@ -6,9 +6,10 @@
 
 #define DEBUG_CATAGORIES(F)                                                    \
     F(NONE, 0x0)                                                               \
-    F(GENERAL, 0x1)                                                            \
+    F(LOG, 0x1)                                                                \
     F(PARSER, 0x2)                                                             \
-    F(SYSCALL, 0x4)
+    F(SYSCALL, 0x4)                                                            \
+    F(EXPR, 0x8)
 
 namespace common {
 namespace debug {
@@ -39,6 +40,27 @@ struct DebugType {
     }
     explicit operator std::string() {
         return std::string(*const_cast<const DebugType*>(this));
+    }
+    std::string logPrefix() {
+        // if it matches exactly NONE, return nothing
+        // if it matches exactly ALL, return "ALL"
+        // if not, extract out each piece and return them
+        if(this->value_ == NONE) return "";
+        std::string prefix;
+        std::string sep;
+        bool matches_all = true;
+#define DEBUG_CASE(d, v)                                                       \
+    if(this->value_ & d) {                                                     \
+        prefix = prefix + sep + #d;                                            \
+        sep = "|";                                                             \
+    } else {                                                                   \
+        matches_all = false;                                                   \
+    }
+        DEBUG_CATAGORIES(DEBUG_CASE)
+#undef DEBUG_CASE
+
+        if(matches_all) return "<ALL>: ";
+        else return prefix + ": ";
     }
     DebugType operator=(ValueType v) {
         this->value_ = v;
@@ -88,7 +110,7 @@ class LogHelper {
         [[maybe_unused]] Args... args) {
 #if defined(DEBUG) && DEBUG == 1
         if(checkDebugState(dt)) {
-            os << std::string(dt) << ": ";
+            os << dt.logPrefix();
             LogHelper::logHelper(dt, os, args...);
         }
 #endif
@@ -117,10 +139,19 @@ template <typename... Args> void log(DebugType dt, Args... args) {
     details::LogHelper::log(dt, std::cout, args...);
 }
 template <typename... Args> void log(std::ostream& os, Args... args) {
-    details::LogHelper::log(DebugType::GENERAL, os, args...);
+    details::LogHelper::log(DebugType::LOG, os, args...);
 }
 template <typename... Args> void log(Args... args) {
-    details::LogHelper::log(DebugType::GENERAL, std::cout, args...);
+    details::LogHelper::log(DebugType::LOG, std::cout, args...);
+}
+template <typename... Args> void logln(DebugType dt, Args... args) {
+    details::LogHelper::log(dt, std::cout, args..., "\n");
+}
+template <typename... Args> void logln(std::ostream& os, Args... args) {
+    details::LogHelper::log(DebugType::LOG, os, args..., "\n");
+}
+template <typename... Args> void logln(Args... args) {
+    details::LogHelper::log(DebugType::LOG, std::cout, args..., "\n");
 }
 
 class CancelableOStream {
@@ -154,6 +185,7 @@ class CancelableOStream {
 CancelableOStream rawlog(DebugType dt, std::ostream& os);
 CancelableOStream rawlog(DebugType dt);
 CancelableOStream rawlog(std::ostream& os);
+CancelableOStream rawlog();
 
 } // namespace debug
 } // namespace common

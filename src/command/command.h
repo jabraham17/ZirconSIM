@@ -184,8 +184,7 @@ class Command : public ControlBase {
     Command(
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
         std::vector<std::shared_ptr<Condition>> conditions,
-        std::vector<event::EventType> events)
-        : actions(actions), conditions(conditions), events(events) {}
+        std::vector<event::EventType> events);
     virtual ~Command() = default;
 
     virtual void setHS(hart::HartState* hs) override {

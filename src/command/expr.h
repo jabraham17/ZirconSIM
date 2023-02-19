@@ -42,7 +42,7 @@ struct Expr {
     ExprOperatorType op_type;
     std::shared_ptr<Expr> left_expr;
     std::shared_ptr<Expr> right_expr;
-    std::string name;
+    std::string name_;
     types::UnsignedInteger number;
 
   public:
@@ -51,23 +51,23 @@ struct Expr {
         ExprOperatorType op_type,
         std::shared_ptr<Expr> e2)
         : type(ExprType::BINARY), op_type(op_type), left_expr(std::move(e1)),
-          right_expr(std::move(e2)), name(), number() {}
+          right_expr(std::move(e2)), name_(), number() {}
     Expr(ExprOperatorType op_type, std::shared_ptr<Expr> e1)
         : type(ExprType::UNARY), op_type(op_type), left_expr(std::move(e1)),
-          right_expr(nullptr), name(), number() {}
+          right_expr(nullptr), name_(), number() {}
     Expr(types::UnsignedInteger number)
         : type(ExprType::NUMBER), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), name(), number(number) {}
+          left_expr(nullptr), right_expr(nullptr), name_(), number(number) {}
     Expr(std::string reg_name)
         : type(ExprType::REGISTER), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), name(reg_name), number() {}
+          left_expr(nullptr), right_expr(nullptr), name_(reg_name), number() {}
     Expr()
         : type(ExprType::PC), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), name(), number() {}
+          left_expr(nullptr), right_expr(nullptr), name_(), number() {}
     Expr(std::shared_ptr<Expr> address)
         : type(ExprType::MEMORY), op_type(ExprOperatorType::NONE),
-          left_expr(std::move(address)), right_expr(nullptr), name(), number() {
-    }
+          left_expr(std::move(address)), right_expr(nullptr), name_(),
+          number() {}
 
     Expr(const Expr&) = delete;            // copy construct
     Expr(Expr&&) = default;                // move construct
@@ -84,6 +84,7 @@ struct Expr {
     bool isMemory() { return type == ExprType::MEMORY; }
 
     std::string getString();
+    std::string name();
 
     types::SignedInteger eval(hart::HartState* hs = nullptr);
 

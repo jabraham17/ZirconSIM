@@ -1,10 +1,29 @@
 #include "command.h"
 
 #include "color/color.h"
+#include "common/debug.h"
 #include "common/format.h"
 #include "hart/isa/inst.h"
 
 namespace command {
+
+Command::Command(
+    std::vector<std::shared_ptr<action::ActionInterface>> actions,
+    std::vector<std::shared_ptr<Condition>> conditions,
+    std::vector<event::EventType> events)
+    : actions(actions), conditions(conditions), events(events) {
+    // if not defined on any events, should be defined on the default event
+    if(this->events.empty()) {
+        this->events = event::getDefaultEventTypes();
+    }
+    // // if not defined on any events, should be defined on all events
+    // if(this->events.empty()) {
+    //     auto event_types = event::getAllEventTypes();
+    //     this->events = std::vector<event::EventType>(
+    //         std::begin(event_types),
+    //         std::end(event_types));
+    // }
+}
 
 static std::string colorAddr(bool useColor) {
     return useColor
@@ -42,7 +61,6 @@ void Pause::action([[maybe_unused]] std::ostream* o) {
 void Resume::action([[maybe_unused]] std::ostream* o) {
     if(hs) hs->resume();
 }
-// TODO: ADD COLOR
 void Disasm::action(std::ostream* o) {
     if(o && hs && expr) {
         auto pc = expr->eval(hs);
@@ -62,6 +80,7 @@ void Dump::action(std::ostream* o) {
     if(o && hs && expr) {
         auto val = expr->eval(hs);
         *o << std::string(indent, ' ');
+        *o << common::Format::dec;
         *o << val;
         *o << std::endl;
     }

@@ -2,6 +2,7 @@
 #define ZIRCON_EVENT_EVENT_H_
 
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -70,8 +71,26 @@ enum class EventType : uint64_t {
 #include "events.inc"
     NONE,
 };
+std::string getEventName(EventType et);
 bool isEventType(std::string s);
 EventType getEventType(std::string s);
+
+std::vector<EventType> getDefaultEventTypes();
+
+#define EVENT_NAME(sub, e) +1
+constexpr size_t getNumberEventTypes() {
+    return 0
+#include "events.inc"
+        ;
+}
+constexpr auto getAllEventTypes() {
+#define EVENT_NAME(sub, e) EventType::sub##_##e,
+    std::array<EventType, getNumberEventTypes()> events = {
+#include "events.inc"
+    };
+    return events;
+}
+
 // class EventType {
 //     using ValueType = int;
 //     ValueType value_;
