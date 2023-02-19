@@ -61,7 +61,6 @@ void Pause::action([[maybe_unused]] std::ostream* o) {
 void Resume::action([[maybe_unused]] std::ostream* o) {
     if(hs) hs->resume();
 }
-// TODO: ADD COLOR
 void Disasm::action(std::ostream* o) {
     if(o && hs && expr) {
         auto pc = expr->eval(hs);
@@ -81,6 +80,7 @@ void Dump::action(std::ostream* o) {
     if(o && hs && expr) {
         auto val = expr->eval(hs);
         *o << std::string(indent, ' ');
+        *o << common::Format::dec;
         *o << val;
         *o << std::endl;
     }

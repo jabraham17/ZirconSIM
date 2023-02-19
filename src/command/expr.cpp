@@ -51,27 +51,56 @@ apply_operator(ExprOperatorType op_type, types::SignedInteger v) {
 }
 
 types::SignedInteger Expr::eval(hart::HartState* hs) {
-    if(hs == nullptr) return 0;
-    switch(type) {
-        case ExprType::BINARY: {
-            auto lhs = left_expr->eval(hs);
-            auto rhs = right_expr->eval(hs);
-            return apply_operator(lhs, op_type, rhs);
+    types::SignedInteger value = 0;
+    if(hs == nullptr) {
+        value = 0;
+    } else {
+        switch(type) {
+            case ExprType::BINARY: {
+                auto lhs = left_expr->eval(hs);
+                auto rhs = right_expr->eval(hs);
+                value = apply_operator(lhs, op_type, rhs);
+                break;
+            }
+            case ExprType::UNARY: {
+                auto v = left_expr->eval(hs);
+                value = apply_operator(op_type, v);
+                break;
+            }
+            case ExprType::NUMBER: value = number; break;
+            case ExprType::REGISTER: value = 0; break; // TODO: implement me
+            case ExprType::PC: value = hs->pc; break;
+            case ExprType::MEMORY: {
+                auto addr = left_expr->eval(hs);
+                if(addr) {
+                    auto converted_addr = hs->mem().raw(addr);
+                    if(converted_addr) {
+                        value = *(uint64_t*)(converted_addr);
+                        break;
+                    }
+                }
+                common::debug::logln(
+                    common::debug::DebugType::EXPR,
+                    "Unable to read memory due to invalid address");
+                value = 0;
+                break;
+            }
+            default: {
+                common::debug::logln(
+                    common::debug::DebugType::EXPR,
+                    "Attempted use of unsupported expression");
+                break;
+            }
         }
-        case ExprType::UNARY: {
-            auto v = left_expr->eval(hs);
-            return apply_operator(op_type, v);
-        }
-        case ExprType::NUMBER:
-            return number;
-            // case ExprType::REGISTER:  return 0;
-            case ExprType::PC: return hs->pc;
-            // case ExprType::MEMORY: return 0;
     }
     common::debug::logln(
         common::debug::DebugType::EXPR,
-        "Attempted use of unsupported expression");
-    return 0;
+        "eval(",
+        this->getString(),
+        ") = ",
+        common::Format::dec,
+        value);
+    return value;
 }
 
 std::string Expr::getString() {

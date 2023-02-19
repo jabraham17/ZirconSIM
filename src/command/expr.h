@@ -66,8 +66,8 @@ struct Expr {
           left_expr(nullptr), right_expr(nullptr), name_(), number() {}
     Expr(std::shared_ptr<Expr> address)
         : type(ExprType::MEMORY), op_type(ExprOperatorType::NONE),
-          left_expr(std::move(address)), right_expr(nullptr), name_(), number() {
-    }
+          left_expr(std::move(address)), right_expr(nullptr), name_(),
+          number() {}
 
     Expr(const Expr&) = delete;            // copy construct
     Expr(Expr&&) = default;                // move construct

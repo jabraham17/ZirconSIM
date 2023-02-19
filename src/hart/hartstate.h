@@ -9,6 +9,10 @@
 #include <mutex>
 #include <unordered_map>
 
+namespace command {
+    struct Expr;
+}
+
 namespace hart {
 
 enum class ExecutionState {
@@ -19,8 +23,10 @@ enum class ExecutionState {
 };
 
 class Hart;
+
 class HartState {
     friend Hart;
+    friend command::Expr;
 
   private:
     std::unique_ptr<isa::rf::RegisterFile> rf_;
