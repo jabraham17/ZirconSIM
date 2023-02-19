@@ -26,6 +26,17 @@ EventSubsystemType getEventSubsystemType(std::string s) {
     return EventSubsystemType::NONE;
 }
 
+std::string getEventName(EventType et) {
+#define EVENT_NAME(sub, e)                                                     \
+    if(et == EventType::sub##_##e) return #sub "_" #e;
+#include "events.inc"
+    return "";
+}
+std::vector<EventType> getDefaultEventTypes() {
+    return {EventType::HART_BEFORE_EXECUTE};
+}
+
+
 bool isEventType(std::string s) {
 #define EVENT_NAME(sub, e)                                                     \
     if(s == #sub "_" #e || s == #e) return true;
@@ -38,4 +49,5 @@ EventType getEventType(std::string s) {
 #include "events.inc"
     return EventType::NONE;
 }
+
 } // namespace event
