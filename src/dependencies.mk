@@ -1,11 +1,12 @@
 
 hart= 
-elf= mem
+elf= 
 mem= 
 event= 
-ishell= command event hart
-command= event hart mem hart
+ishell= 
+command= 
 common= 
+trace=
 zircon= command ishell hart elf mem trace event color common
 zircon-wasm= command ishell hart elf mem trace event color common
 
