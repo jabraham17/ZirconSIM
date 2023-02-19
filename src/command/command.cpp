@@ -12,10 +12,10 @@ Command::Command(
     std::vector<std::shared_ptr<Condition>> conditions,
     std::vector<event::EventType> events)
     : actions(actions), conditions(conditions), events(events) {
-        // if not defined on any events, should be defined on the default event
-        if(this->events.empty()) {
-            this->events = event::getDefaultEventTypes();
-        }
+    // if not defined on any events, should be defined on the default event
+    if(this->events.empty()) {
+        this->events = event::getDefaultEventTypes();
+    }
     // // if not defined on any events, should be defined on all events
     // if(this->events.empty()) {
     //     auto event_types = event::getAllEventTypes();
@@ -23,7 +23,6 @@ Command::Command(
     //         std::begin(event_types),
     //         std::end(event_types));
     // }
-
 }
 
 static std::string colorAddr(bool useColor) {
