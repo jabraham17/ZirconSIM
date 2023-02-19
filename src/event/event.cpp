@@ -36,7 +36,6 @@ std::vector<EventType> getDefaultEventTypes() {
     return {EventType::HART_BEFORE_EXECUTE};
 }
 
-
 bool isEventType(std::string s) {
 #define EVENT_NAME(sub, e)                                                     \
     if(s == #sub "_" #e || s == #e) return true;

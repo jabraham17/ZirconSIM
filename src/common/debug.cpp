@@ -40,7 +40,7 @@ CancelableOStream rawlog(DebugType dt) { return rawlog(dt, std::cout); }
 CancelableOStream rawlog(std::ostream& os) {
     return rawlog(DebugType::LOG, os);
 }
-CancelableOStream rawlog() {return rawlog(std::cout);}
+CancelableOStream rawlog() { return rawlog(std::cout); }
 
 } // namespace debug
 } // namespace common
