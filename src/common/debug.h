@@ -6,7 +6,7 @@
 
 #define DEBUG_CATAGORIES(F)                                                    \
     F(NONE, 0x0)                                                               \
-    F(LOG, 0x1)                                                            \
+    F(LOG, 0x1)                                                                \
     F(PARSER, 0x2)                                                             \
     F(SYSCALL, 0x4)
 
