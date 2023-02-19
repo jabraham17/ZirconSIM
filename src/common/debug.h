@@ -143,6 +143,15 @@ template <typename... Args> void log(std::ostream& os, Args... args) {
 template <typename... Args> void log(Args... args) {
     details::LogHelper::log(DebugType::LOG, std::cout, args...);
 }
+template <typename... Args> void logln(DebugType dt, Args... args) {
+    details::LogHelper::log(dt, std::cout, args..., "\n");
+}
+template <typename... Args> void logln(std::ostream& os, Args... args) {
+    details::LogHelper::log(DebugType::LOG, os, args..., "\n");
+}
+template <typename... Args> void logln(Args... args) {
+    details::LogHelper::log(DebugType::LOG, std::cout, args..., "\n");
+}
 
 class CancelableOStream {
   private:
@@ -175,6 +184,7 @@ class CancelableOStream {
 CancelableOStream rawlog(DebugType dt, std::ostream& os);
 CancelableOStream rawlog(DebugType dt);
 CancelableOStream rawlog(std::ostream& os);
+CancelableOStream rawlog();
 
 } // namespace debug
 } // namespace common
