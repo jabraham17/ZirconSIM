@@ -20,25 +20,29 @@ std::string Token::getString() {
     return const_cast<const Token*>(this)->getString();
 }
 
-Lexer::Lexer(std::string input) {
+Lexer::Lexer(std::string input): tokens(), input_buffer(), last_token(TokenType::NONE) {
     input_buffer.insert(input_buffer.end(), input.rbegin(), input.rend());
 }
 
 Token Lexer::getToken() {
+    Token tok;
     // if we have tokens, get them,
     if(!tokens.empty()) {
-        auto t = tokens.back();
+        tok = tokens.back();
         tokens.pop_back();
-        return t;
+    } else {
+        skipWhitespace();
+        if(endOfInput()) tok = Token(TokenType::END_OF_FILE);
+        else {
+
+            if(isSymbol()) tok = getSymbol();
+            else if(isNUM()) tok = getNUM();
+            else if(isPrefixedPrimaryStart()) tok = getPrefixedPrimary();
+            else tok = getKeyword();
+        }
     }
-    skipWhitespace();
-
-    if(endOfInput()) return Token(TokenType::END_OF_FILE);
-
-    if(isSymbol()) return getSymbol();
-    else if(isNUM()) return getNUM();
-    else if(isPrefixedPrimaryStart()) return getPrefixedPrimary();
-    else return getKeyword();
+    last_token = tok;
+    return tok;
 }
 
 Token Lexer::peek(unsigned ahead) {
@@ -59,6 +63,7 @@ Token Lexer::peek(unsigned ahead) {
 
 TokenType Lexer::ungetToken(Token t) {
     tokens.push_back(t);
+    last_token = t;
     return t.token_type;
 }
 
@@ -168,7 +173,15 @@ Token Lexer::getSymbol() {
             case '*': t.token_type = TokenType::MULTIPLY; break;
             case '/': t.token_type = TokenType::DIVIDE; break;
             case '+': t.token_type = TokenType::PLUS; break;
-            case '-': t.token_type = TokenType::MINUS; break;
+            case '-': {
+                t.token_type = TokenType::MINUS; 
+
+                // if the last token type was an NONE, LPAREN, LBRAC, operator or a keyword return NEGATE
+                if(last_token.token_type == TokenType::NONE || last_token.token_type == TokenType::LPAREN || last_token.token_type == TokenType::LBRACK || last_token.token_type.isOperator() || last_token.token_type.isKeyword()) {
+                    t.token_type = TokenType::NEGATE;
+                }
+                break;
+            }
             case '<': {
                 if(peekChar() == '=') {
                     getChar();
@@ -222,8 +235,6 @@ Token Lexer::getSymbol() {
             case '~':
                 t.token_type = TokenType::BW_NOT;
                 break;
-                // TODO: NEGATE, which is a prefixed MINUS, is not implemented
-
             default: break;
         }
     }
