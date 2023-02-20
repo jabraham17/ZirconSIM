@@ -68,7 +68,11 @@ types::SignedInteger Expr::eval(hart::HartState* hs) {
                 break;
             }
             case ExprType::NUMBER: value = number; break;
-            case ExprType::REGISTER: value = 0; break; // TODO: implement me
+            case ExprType::REGISTER: {
+                auto reg = hs->rf().getRegisterClassForType(register_.first);
+                value = reg.rawreg(register_.second).get();
+                 break;
+            }
             case ExprType::PC: value = hs->pc; break;
             case ExprType::MEMORY: {
                 auto addr = left_expr->eval(hs);

@@ -152,7 +152,11 @@ Token Lexer::getPrefixedPrimary() {
         t.lexeme = common::utils::toupper(word);
         if(t.lexeme == "PC") t.token_type = TokenType::PC;
         else if(t.lexeme == "M") t.token_type = TokenType::MEM;
-        else t.token_type = TokenType::REGISTER;
+        else {
+            t.token_type = TokenType::REGISTER;
+            // maintain the orginal case of the register
+            t.lexeme = word;
+        }
     }
     return t;
 }

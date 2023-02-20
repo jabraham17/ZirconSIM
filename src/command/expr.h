@@ -2,6 +2,7 @@
 #ifndef ZIRCON_COMMAND_EXPR_H_
 #define ZIRCON_COMMAND_EXPR_H_
 
+#include "hart/isa/rf.h"
 #include "hart/types.h"
 
 #include <memory>
@@ -39,11 +40,19 @@ enum class ExprOperatorType {
 struct Expr {
   private:
     ExprType type;
+
+    // used for binary and unary
     ExprOperatorType op_type;
     std::shared_ptr<Expr> left_expr;
     std::shared_ptr<Expr> right_expr;
-    std::string name_;
+
+    // used for mem and num
     types::UnsignedInteger number;
+
+    // registers use the original name in the name_ field used to
+    // refer to it, since registers can have multiple names
+    std::string name_;
+    isa::rf::RegisterSymbol register_;
 
   public:
     Expr(
@@ -51,23 +60,26 @@ struct Expr {
         ExprOperatorType op_type,
         std::shared_ptr<Expr> e2)
         : type(ExprType::BINARY), op_type(op_type), left_expr(std::move(e1)),
-          right_expr(std::move(e2)), name_(), number() {}
+          right_expr(std::move(e2)), number(), name_(), register_() {}
     Expr(ExprOperatorType op_type, std::shared_ptr<Expr> e1)
         : type(ExprType::UNARY), op_type(op_type), left_expr(std::move(e1)),
-          right_expr(nullptr), name_(), number() {}
+          right_expr(nullptr), number(), name_(), register_() {}
     Expr(types::UnsignedInteger number)
         : type(ExprType::NUMBER), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), name_(), number(number) {}
-    Expr(std::string reg_name)
+          left_expr(nullptr), right_expr(nullptr), number(number), name_(),
+          register_() {}
+    Expr(std::string name_, isa::rf::RegisterSymbol register_)
         : type(ExprType::REGISTER), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), name_(reg_name), number() {}
+          left_expr(nullptr), right_expr(nullptr), number(), name_(name_),
+          register_(register_) {}
     Expr()
         : type(ExprType::PC), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), name_(), number() {}
+          left_expr(nullptr), right_expr(nullptr), number(), name_(),
+          register_() {}
     Expr(std::shared_ptr<Expr> address)
         : type(ExprType::MEMORY), op_type(ExprOperatorType::NONE),
-          left_expr(std::move(address)), right_expr(nullptr), name_(),
-          number() {}
+          left_expr(std::move(address)), right_expr(nullptr), number(), name_(),
+          register_() {}
 
     Expr(const Expr&) = delete;            // copy construct
     Expr(Expr&&) = default;                // move construct

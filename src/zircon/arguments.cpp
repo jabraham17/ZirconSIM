@@ -229,7 +229,7 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
             auto control = parser.parse(s);
             parsed_controls.push_back(control);
         } catch(const ishell::parser::ParseException& e) {
-            throw ArgumentException("Failed to parse command '" + s + "'");
+            throw ArgumentException("Failed to parse command '" + s + "': " + e.what());
         }
     }
 
