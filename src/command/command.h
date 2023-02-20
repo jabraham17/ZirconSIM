@@ -293,7 +293,7 @@ class WatchRegister : public Watch {
     virtual ~WatchRegister() = default;
 
     virtual std::string name() override {
-        // probably want to provide a way to pass in the actual register name used by the programmer, so we get better output
+        // TODO: probably want to provide a way to pass in the actual register name used by the programmer, so we get better output
         return isa::rf::getRegisterClassString(this->reg.first) + "[" +
                std::to_string(this->reg.second) + "]";
     }
