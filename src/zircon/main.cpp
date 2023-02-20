@@ -4,8 +4,8 @@
 
 #include "elf/elf.h"
 #include "hart/hart.h"
-#include "trace/stats.h"
 #include "ishell/parser/parser.h"
+#include "trace/stats.h"
 
 int main(int argc, const char** argv, const char** envp) {
 
@@ -42,16 +42,17 @@ int main(int argc, const char** argv, const char** envp) {
                 std::getline(std::cin, input);
 
                 try {
-                auto control = parser.parse(input);
-                control->setHS(&hart.hs());
-                if(auto command = std::dynamic_pointer_cast<command::Command>(control)) {
-                    command->doit(&std::cout);
-                }
-                else {
-                    std::cerr << "Only COMMANDs are supported at this time\n";
-                }
-                }
-                catch(const ishell::parser::ParseException& pe) {
+                    auto control = parser.parse(input);
+                    control->setHS(&hart.hs());
+                    if(auto command =
+                           std::dynamic_pointer_cast<command::Command>(
+                               control)) {
+                        command->doit(&std::cout);
+                    } else {
+                        std::cerr
+                            << "Only COMMANDs are supported at this time\n";
+                    }
+                } catch(const ishell::parser::ParseException& pe) {
                     std::cerr << "Invalid command\n";
                 }
 

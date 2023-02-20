@@ -21,9 +21,8 @@ std::string getRegisterClassString(RegisterClassType rcf) {
     return "NONE";
 }
 
-std::optional<RegisterSymbol>
-parseRegister(std::string s) {
-#define REG_CASE(classname, index, nice_name, ...) \
+std::optional<RegisterSymbol> parseRegister(std::string s) {
+#define REG_CASE(classname, index, nice_name, ...)                             \
     if(s == #nice_name ||                                                      \
        s == internal::registerPrefixFor##classname + std::to_string(index))    \
         return std::make_pair(getRegisterClassType(#classname), index);

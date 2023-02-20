@@ -12,7 +12,8 @@ namespace isa {
 namespace rf {
 
 struct IllegalRegisterClassException : public std::runtime_error {
-    IllegalRegisterClassException() : std::runtime_error("Illegal Register Class") {}
+    IllegalRegisterClassException()
+        : std::runtime_error("Illegal Register Class") {}
     IllegalRegisterClassException(std::string s)
         : std::runtime_error("Illegal Register Class " + s) {}
 };
@@ -33,8 +34,7 @@ using RegisterSymbol = std::pair<RegisterClassType, types::RegisterIndex>;
 bool isRegisterClassType(std::string s);
 RegisterClassType getRegisterClassType(std::string s);
 std::string getRegisterClassString(RegisterClassType rcf);
-std::optional<RegisterSymbol>
-parseRegister(std::string s);
+std::optional<RegisterSymbol> parseRegister(std::string s);
 
 namespace internal {
 #define REGISTER_CLASS(classname, reg_prefix, ...)                             \
@@ -73,11 +73,12 @@ class RegisterFile {
     add##classname##WriteListener(std::forward<T>(arg));
 #include "defs/registers.inc"
     }
-    
+
     auto getRegisterClassForType(RegisterClassType rct) {
         auto rct_str = getRegisterClassString(rct);
-        #define REGISTER_CLASS(classname, ...) if(rct_str == #classname) return classname;
-        #include "defs/registers.inc"
+#define REGISTER_CLASS(classname, ...)                                         \
+    if(rct_str == #classname) return classname;
+#include "defs/registers.inc"
         throw IllegalRegisterClassException(rct_str);
     }
 };

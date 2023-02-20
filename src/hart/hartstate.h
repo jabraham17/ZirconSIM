@@ -1,6 +1,7 @@
 #ifndef ZIRCON_HART_HARTSTATE_H_
 #define ZIRCON_HART_HARTSTATE_H_
 
+#include "common/debug.h"
 #include "isa/rf.h"
 #include "mem/memory-image.h"
 
@@ -8,7 +9,6 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
-#include "common/debug.h"
 
 namespace command {
 struct Expr;
@@ -116,7 +116,7 @@ class HartState {
             std::unique_lock lk(lock_es);
             execution_state = es;
         }
-        
+
         signal_es.notify_all();
     }
     template <typename Callable, typename... Args>
