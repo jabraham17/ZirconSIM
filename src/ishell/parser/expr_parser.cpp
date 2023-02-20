@@ -153,8 +153,12 @@ ExprParser::reducePrimaryRule(const std::vector<StackElm>& rhs) {
     assert(isPrimaryRule(rhs));
     if(rhs.size() == 1) {
         if(isTokenOfType(rhs[0], TokenType::REGISTER)) {
-            return std::make_shared<command::Expr>(
-                std::get<Token>(rhs[0]).lexeme);
+
+            auto reg_name = std::get<Token>(rhs[0]).lexeme;
+            if(auto reg = isa::rf::parseRegister(reg_name)) {
+                return std::make_shared<command::Expr>(reg_name, *reg);
+            } else throw new ParseException("Invalid Register: " + reg_name);
+            else throw ParseException("Invalid Register");
         } else if(isTokenOfType(rhs[0], TokenType::NUM)) {
             return std::make_shared<command::Expr>(
                 types::strToUnsignedInteger(std::get<Token>(rhs[0]).lexeme));

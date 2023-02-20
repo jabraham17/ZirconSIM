@@ -16,13 +16,6 @@ Command::Command(
     if(this->events.empty()) {
         this->events = event::getDefaultEventTypes();
     }
-    // // if not defined on any events, should be defined on all events
-    // if(this->events.empty()) {
-    //     auto event_types = event::getAllEventTypes();
-    //     this->events = std::vector<event::EventType>(
-    //         std::begin(event_types),
-    //         std::end(event_types));
-    // }
 }
 
 static std::string colorAddr(bool useColor) {

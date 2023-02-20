@@ -11,15 +11,29 @@
 namespace isa {
 namespace rf {
 
+struct IllegalRegisterClassException : public std::runtime_error {
+    IllegalRegisterClassException() : std::runtime_error("Illegal Register Class") {}
+    IllegalRegisterClassException(std::string s)
+        : std::runtime_error("Illegal Register Class " + s) {}
+};
+struct IllegalRegisterException : public std::runtime_error {
+    IllegalRegisterException() : std::runtime_error("Illegal Register") {}
+    IllegalRegisterException(std::string s)
+        : std::runtime_error("Illegal Register " + s) {}
+};
+
 enum class RegisterClassType {
 #define REGISTER_CLASS(r, ...) r,
 #include "defs/registers.inc"
     NONE,
 };
+// a type to refer to a register
+using RegisterSymbol = std::pair<RegisterClassType, types::RegisterIndex>;
+
 bool isRegisterClassType(std::string s);
 RegisterClassType getRegisterClassType(std::string s);
 std::string getRegisterClassString(RegisterClassType rcf);
-std::optional<std::pair<RegisterClassType, types::RegisterIndex>>
+std::optional<RegisterSymbol>
 parseRegister(std::string s);
 
 namespace internal {
@@ -58,6 +72,13 @@ class RegisterFile {
 #define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
     add##classname##WriteListener(std::forward<T>(arg));
 #include "defs/registers.inc"
+    }
+    
+    auto getRegisterClassForType(RegisterClassType rct) {
+        auto rct_str = getRegisterClassString(rct);
+        #define REGISTER_CLASS(classname, ...) if(rct_str == #classname) return classname;
+        #include "defs/registers.inc"
+        throw IllegalRegisterClassException(rct_str);
     }
 };
 }; // namespace rf
