@@ -294,13 +294,13 @@ class WatchRegister : public Watch {
     virtual std::string name() override {
         // TODO: probably want to provide a way to pass in the actual register
         // name used by the programmer, so we get better output
-        return isa::rf::getRegisterClassString(this->reg.first) + "[" +
-               std::to_string(this->reg.second) + "]";
+        return isa::rf::getRegisterClassString(this->reg.rct) + "[" +
+               std::to_string(this->reg.idx) + "]";
     }
     virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
         if(hs) {
-            auto r = hs->rf().getRegisterClassForType(reg.first);
-            auto value = r.rawreg(reg.second).get();
+            auto r = hs->rf().getRegisterClassForType(reg.rct);
+            auto value = r.rawreg(reg.idx).get();
             return value;
         }
         return std::nullopt;
