@@ -20,12 +20,11 @@ bool ExprParser::isTerminal(const StackElm& se) {
     return std::holds_alternative<Token>(se);
 }
 bool ExprParser::isExpression(const StackElm& se) {
-    return std::holds_alternative<std::shared_ptr<command::Expr>>(se);
+    return std::holds_alternative<command::Expr::PtrTy>(se);
 }
-const std::shared_ptr<command::Expr>&
-ExprParser::getExpression(const StackElm& se) {
+const command::Expr::PtrTy& ExprParser::getExpression(const StackElm& se) {
     assert(isExpression(se));
-    return std::get<std::shared_ptr<command::Expr>>(se);
+    return std::get<command::Expr::PtrTy>(se);
 }
 bool ExprParser::isTokenOfType(const StackElm& se, TokenType tt) {
     return isTerminal(se) && std::get<Token>(se).token_type == tt;
@@ -78,7 +77,7 @@ bool ExprParser::isBinaryRule(const std::vector<StackElm>& rhs) {
     }
     return false;
 }
-std::shared_ptr<command::Expr>
+command::Expr::PtrTy
 ExprParser::reduceBinaryRule(const std::vector<StackElm>& rhs) {
     assert(isBinaryRule(rhs));
     auto op = command::ExprOperatorType::NONE;
@@ -106,10 +105,7 @@ ExprParser::reduceBinaryRule(const std::vector<StackElm>& rhs) {
     assert(op != command::ExprOperatorType::NONE);
     auto& left = getExpression(rhs[2]);
     auto& right = getExpression(rhs[0]);
-    return std::make_shared<command::Expr>(
-        std::move(left),
-        op,
-        std::move(right));
+    return command::Expr::makeBinaryExpression(left, op, right);
 }
 
 bool ExprParser::isUnaryRule(const std::vector<StackElm>& rhs) {
@@ -123,7 +119,7 @@ bool ExprParser::isUnaryRule(const std::vector<StackElm>& rhs) {
     }
     return false;
 }
-std::shared_ptr<command::Expr>
+command::Expr::PtrTy
 ExprParser::reduceUnaryRule(const std::vector<StackElm>& rhs) {
     assert(isUnaryRule(rhs));
     auto op = command::ExprOperatorType::NONE;
@@ -135,7 +131,7 @@ ExprParser::reduceUnaryRule(const std::vector<StackElm>& rhs) {
     }
     assert(op != command::ExprOperatorType::NONE);
     auto& e = getExpression(rhs[0]);
-    return std::make_shared<command::Expr>(op, std::move(e));
+    return command::Expr::makeUnaryExpression(op, e);
 }
 bool ExprParser::isPrimaryRule(const std::vector<StackElm>& rhs) {
     if(rhs.size() == 1) {
@@ -148,7 +144,7 @@ bool ExprParser::isPrimaryRule(const std::vector<StackElm>& rhs) {
                isExpression(rhs[1]) && isTokenOfType(rhs[0], TokenType::RBRACK);
     } else return false;
 }
-std::shared_ptr<command::Expr>
+command::Expr::PtrTy
 ExprParser::reducePrimaryRule(const std::vector<StackElm>& rhs) {
     assert(isPrimaryRule(rhs));
     if(rhs.size() == 1) {
@@ -156,31 +152,31 @@ ExprParser::reducePrimaryRule(const std::vector<StackElm>& rhs) {
 
             auto reg_name = std::get<Token>(rhs[0]).lexeme;
             if(auto reg = isa::rf::parseRegister(reg_name)) {
-                return std::make_shared<command::Expr>(reg_name, *reg);
+                return command::Expr::makeRegisterExpression(reg_name, *reg);
             } else {
                 throw new ParseException("Invalid Register: " + reg_name);
             }
         } else if(isTokenOfType(rhs[0], TokenType::NUM)) {
-            return std::make_shared<command::Expr>(
+            return command::Expr::makeNumberExpression(
                 types::strToUnsignedInteger(std::get<Token>(rhs[0]).lexeme));
         } else {
-            return std::make_shared<command::Expr>(); // PC
+            return command::Expr::makePCExpression(); // PC
         }
     } else {
         // memory
         auto& e = getExpression(rhs[1]);
-        return std::make_shared<command::Expr>(std::move(e));
+        return command::Expr::makeMemoryExpression(e);
     }
 }
 bool ExprParser::isParenRule(const std::vector<StackElm>& rhs) {
     return rhs.size() == 3 && isTokenOfType(rhs[2], TokenType::LPAREN) &&
            isExpression(rhs[1]) && isTokenOfType(rhs[0], TokenType::RPAREN);
 }
-std::shared_ptr<command::Expr>
+command::Expr::PtrTy
 ExprParser::reduceParenRule(const std::vector<StackElm>& rhs) {
     assert(isParenRule(rhs));
     auto& e = getExpression(rhs[1]);
-    return std::make_shared<command::Expr>(std::move(*e));
+    return command::Expr::makeParenExpression(e);
 }
 
 bool ExprParser::isValidRule(const std::vector<StackElm>& rhs) {
@@ -188,8 +184,7 @@ bool ExprParser::isValidRule(const std::vector<StackElm>& rhs) {
            isParenRule(rhs);
 }
 
-std::shared_ptr<command::Expr>
-ExprParser::reduceRule(const std::vector<StackElm>& rhs) {
+command::Expr::PtrTy ExprParser::reduceRule(const std::vector<StackElm>& rhs) {
     assert(isValidRule(rhs));
     if(isBinaryRule(rhs)) {
         return reduceBinaryRule(rhs);
@@ -208,7 +203,7 @@ std::string getStringStackElm(ExprParser::StackElm e) {
     if(std::holds_alternative<Token>(e)) {
         return std::get<Token>(e).getString();
     } else {
-        return std::get<std::shared_ptr<command::Expr>>(e)->getString();
+        return std::get<command::Expr::PtrTy>(e)->getString();
     }
 }
 
@@ -221,7 +216,7 @@ void debugPrintStack(std::vector<ExprParser::StackElm> s) {
     }
 }
 
-std::shared_ptr<command::Expr> ExprParser::parse() {
+command::Expr::PtrTy ExprParser::parse() {
     std::vector<StackElm> stack;
     while(true) {
         auto toi = peekInput();
@@ -305,7 +300,7 @@ std::shared_ptr<command::Expr> ExprParser::parse() {
             e->getString(),
             "\n");
 
-        return std::make_shared<command::Expr>(std::move(*e));
+        return e;
     } else {
         throw ParseException("Not a Single Expression Left");
     }

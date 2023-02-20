@@ -71,11 +71,11 @@ class ActionInterface {
 #define MAKE_ACTION_1_ARGS(ClassName, ActionTypeName)                          \
     class ClassName : public ActionInterface {                                 \
       private:                                                                 \
-        std::shared_ptr<Expr> expr;                                            \
+        command::Expr::PtrTy expr;                                             \
                                                                                \
       public:                                                                  \
-        ClassName(std::shared_ptr<Expr> expr) : ClassName(nullptr, expr) {}    \
-        ClassName(hart::HartState* hs, std::shared_ptr<Expr> expr)             \
+        ClassName(command::Expr::PtrTy expr) : ClassName(nullptr, expr) {}     \
+        ClassName(hart::HartState* hs, command::Expr::PtrTy expr)              \
             : ActionInterface(ActionType::ActionTypeName, hs), expr(expr) {}   \
         virtual ~ClassName() = default;                                        \
         void action(std::ostream* o = nullptr) override;                       \
@@ -146,13 +146,12 @@ class Condition {
     hart::HartState* hs;
 
   private:
-    std::shared_ptr<Expr> condition;
+    command::Expr::PtrTy condition;
 
   public:
-    Condition(hart::HartState* hs, std::shared_ptr<Expr> condition)
+    Condition(hart::HartState* hs, command::Expr::PtrTy condition)
         : hs(hs), condition(condition) {}
-    Condition(std::shared_ptr<Expr> condition)
-        : Condition(nullptr, condition) {}
+    Condition(command::Expr::PtrTy condition) : Condition(nullptr, condition) {}
     Condition() : Condition(nullptr, nullptr) {}
     virtual ~Condition() = default;
 
@@ -310,14 +309,14 @@ class WatchRegister : public Watch {
 
 class WatchMemoryAddress : public Watch {
   public:
-    std::shared_ptr<Expr> address;
+    command::Expr::PtrTy address;
 
-    WatchMemoryAddress(std::shared_ptr<Expr> address)
+    WatchMemoryAddress(command::Expr::PtrTy address)
         : WatchMemoryAddress(nullptr, {}, address) {}
     WatchMemoryAddress(
         hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        std::shared_ptr<Expr> address)
+        command::Expr::PtrTy address)
         : Watch(hs, actions), address(address) {}
     virtual ~WatchMemoryAddress() = default;
 

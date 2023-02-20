@@ -73,6 +73,7 @@ void Dump::action(std::ostream* o) {
     if(o && hs && expr) {
         auto val = expr->eval(hs);
         *o << std::string(indent, ' ');
+        *o << expr->name() << " = ";
         *o << common::Format::dec;
         *o << val;
         *o << std::endl;

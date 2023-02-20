@@ -13,7 +13,7 @@ class HartState;
 }
 
 namespace command {
-enum class ExprType { BINARY, UNARY, NUMBER, REGISTER, PC, MEMORY };
+enum class ExprType { BINARY, UNARY, PAREN, NUMBER, REGISTER, PC, MEMORY };
 enum class ExprOperatorType {
     NONE,
     MULTIPLY,
@@ -38,13 +38,16 @@ enum class ExprOperatorType {
 };
 
 struct Expr {
+  public:
+    using PtrTy = std::shared_ptr<Expr>;
+
   private:
     ExprType type;
 
-    // used for binary and unary
+    // used for binary, unary, and paren
     ExprOperatorType op_type;
-    std::shared_ptr<Expr> left_expr;
-    std::shared_ptr<Expr> right_expr;
+    PtrTy left_expr;
+    PtrTy right_expr;
 
     // used for mem and num
     types::UnsignedInteger number;
@@ -54,33 +57,109 @@ struct Expr {
     std::string name_;
     isa::rf::RegisterSymbol register_;
 
+  private:
+    // should be a private constructor, only allow creation through static make
+    // methods since make_shared requires a public constructor, we have to use
+    // this hacky PrivateTag to protect the public constructor another solution
+    // was std::shared(new Expr), but make_shared provides some performance
+    // benefits due to memory locality
+    struct PrivateTag {};
+
   public:
     Expr(
-        std::shared_ptr<Expr> e1,
+        const PrivateTag&,
+        ExprType type,
         ExprOperatorType op_type,
-        std::shared_ptr<Expr> e2)
-        : type(ExprType::BINARY), op_type(op_type), left_expr(std::move(e1)),
-          right_expr(std::move(e2)), number(), name_(), register_() {}
-    Expr(ExprOperatorType op_type, std::shared_ptr<Expr> e1)
-        : type(ExprType::UNARY), op_type(op_type), left_expr(std::move(e1)),
-          right_expr(nullptr), number(), name_(), register_() {}
-    Expr(types::UnsignedInteger number)
-        : type(ExprType::NUMBER), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), number(number), name_(),
-          register_() {}
-    Expr(std::string name_, isa::rf::RegisterSymbol register_)
-        : type(ExprType::REGISTER), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), number(), name_(name_),
+        PtrTy left_expr,
+        PtrTy right_expr,
+        types::UnsignedInteger number,
+        std::string name_,
+        isa::rf::RegisterSymbol register_)
+        : type(type), op_type(op_type), left_expr(left_expr),
+          right_expr(right_expr), number(number), name_(name_),
           register_(register_) {}
-    Expr()
-        : type(ExprType::PC), op_type(ExprOperatorType::NONE),
-          left_expr(nullptr), right_expr(nullptr), number(), name_(),
-          register_() {}
-    Expr(std::shared_ptr<Expr> address)
-        : type(ExprType::MEMORY), op_type(ExprOperatorType::NONE),
-          left_expr(std::move(address)), right_expr(nullptr), number(), name_(),
-          register_() {}
 
+    static PtrTy
+    makeBinaryExpression(PtrTy e1, ExprOperatorType op_type, PtrTy e2) {
+        return std::make_shared<Expr>(
+            PrivateTag{},
+            ExprType::BINARY,
+            op_type,
+            e1,
+            e2,
+            types::UnsignedInteger{},
+            std::string(),
+            isa::rf::RegisterSymbol{});
+    }
+    static PtrTy makeUnaryExpression(ExprOperatorType op_type, PtrTy e) {
+        return std::make_shared<Expr>(
+            PrivateTag{},
+            ExprType::UNARY,
+            op_type,
+            e,
+            nullptr,
+            types::UnsignedInteger{},
+            std::string(),
+            isa::rf::RegisterSymbol{});
+    }
+    static PtrTy makeParenExpression(PtrTy e) {
+        return std::make_shared<Expr>(
+            PrivateTag{},
+            ExprType::PAREN,
+            ExprOperatorType::NONE,
+            e,
+            nullptr,
+            types::UnsignedInteger{},
+            std::string(),
+            isa::rf::RegisterSymbol{});
+    }
+    static PtrTy makeNumberExpression(types::UnsignedInteger number) {
+        return std::make_shared<Expr>(
+            PrivateTag{},
+            ExprType::NUMBER,
+            ExprOperatorType::NONE,
+            nullptr,
+            nullptr,
+            number,
+            std::string(),
+            isa::rf::RegisterSymbol{});
+    }
+    static PtrTy makeRegisterExpression(
+        std::string name_,
+        isa::rf::RegisterSymbol register_) {
+        return std::make_shared<Expr>(
+            PrivateTag{},
+            ExprType::REGISTER,
+            ExprOperatorType::NONE,
+            nullptr,
+            nullptr,
+            types::UnsignedInteger{},
+            name_,
+            register_);
+    }
+    static PtrTy makePCExpression() {
+        return std::make_shared<Expr>(
+            PrivateTag{},
+            ExprType::PC,
+            ExprOperatorType::NONE,
+            nullptr,
+            nullptr,
+            types::UnsignedInteger{},
+            std::string(),
+            isa::rf::RegisterSymbol{});
+    }
+
+    static PtrTy makeMemoryExpression(PtrTy e) {
+        return std::make_shared<Expr>(
+            PrivateTag{},
+            ExprType::MEMORY,
+            ExprOperatorType::NONE,
+            e,
+            nullptr,
+            types::UnsignedInteger{},
+            std::string(),
+            isa::rf::RegisterSymbol{});
+    }
     Expr(const Expr&) = delete;            // copy construct
     Expr(Expr&&) = default;                // move construct
     Expr& operator=(const Expr&) = delete; // copy assignment
@@ -90,6 +169,7 @@ struct Expr {
     ExprType getType() { return type; }
     bool isBinary() { return type == ExprType::BINARY; }
     bool isUnary() { return type == ExprType::UNARY; }
+    bool isParen() { return type == ExprType::PAREN; }
     bool isNumber() { return type == ExprType::NUMBER; }
     bool isRegister() { return type == ExprType::REGISTER; }
     bool isPC() { return type == ExprType::PC; }

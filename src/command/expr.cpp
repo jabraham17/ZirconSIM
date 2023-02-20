@@ -67,6 +67,10 @@ types::SignedInteger Expr::eval(hart::HartState* hs) {
                 value = apply_operator(op_type, v);
                 break;
             }
+            case ExprType::PAREN: {
+                value = left_expr->eval(hs);
+                break;
+            }
             case ExprType::NUMBER: value = number; break;
             case ExprType::REGISTER: {
                 auto reg = hs->rf().getRegisterClassForType(register_.first);
@@ -117,6 +121,7 @@ std::string Expr::getString() {
         case ExprType::UNARY:
             ss << this->getOperatorString() << left_expr->getString();
             break;
+        case ExprType::PAREN: ss << "(" << left_expr->getString() << ")"; break;
         case ExprType::NUMBER: ss << std::to_string(number); break;
         case ExprType::REGISTER: ss << "$" << name_; break;
         case ExprType::PC: ss << "$pc"; break;
