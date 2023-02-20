@@ -55,8 +55,7 @@ Parser::Watch_ptr Parser::parse_watch_command() {
     if(lexer.peek().token_type == TokenType::REGISTER) {
         auto reg_tok = expect(TokenType::REGISTER);
         if(auto reg = isa::rf::parseRegister(reg_tok.lexeme)) {
-            auto [regtype, idx] = *reg;
-            watch = std::make_shared<command::WatchRegister>(regtype, idx);
+            watch = std::make_shared<command::WatchRegister>(*reg);
         } else throw new ParseException("Invalid Register: " + reg_tok.lexeme);
     } else {
         auto expr = parse_expr();

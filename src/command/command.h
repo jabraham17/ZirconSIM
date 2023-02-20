@@ -281,28 +281,27 @@ class Watch : public ControlBase {
 
 class WatchRegister : public Watch {
   public:
-    isa::rf::RegisterClassType regtype;
-    types::RegisterIndex idx;
+  isa::rf::RegisterSymbol reg;
 
-    WatchRegister(isa::rf::RegisterClassType regtype, types::RegisterIndex idx)
-        : WatchRegister(nullptr, {}, regtype, idx) {}
+    WatchRegister(isa::rf::RegisterSymbol reg)
+        : WatchRegister(nullptr, {}, reg) {}
     WatchRegister(
         hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        isa::rf::RegisterClassType regtype,
-        types::RegisterIndex idx)
-        : Watch(hs, actions), regtype(regtype), idx(idx) {}
+        isa::rf::RegisterSymbol reg)
+        : Watch(hs, actions), reg(reg) {}
     virtual ~WatchRegister() = default;
 
     virtual std::string name() override {
-        return isa::rf::getRegisterClassString(this->regtype) + "[" +
-               std::to_string(this->idx) + "]";
+        // probably want to provide a way to pass in the actual register name used by the programmer, so we get better output
+        return isa::rf::getRegisterClassString(this->reg.first) + "[" +
+               std::to_string(this->reg.second) + "]";
     }
     virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
         if(hs) {
-            if(this->regtype == isa::rf::RegisterClassType::GPR) {
-                return this->hs->rf().GPR.rawreg(idx).get();
-            }
+            auto r = hs->rf().getRegisterClassForType(reg.first);
+            auto value = r.rawreg(reg.second).get();
+            return value;
         }
         return std::nullopt;
     }
