@@ -25,7 +25,8 @@ check_format() {
     diff <($CF --Werror --style=file:$STYLE $file) $file >/dev/null 2>&1
 }
 
-git diff --cached --name-only \
+# exclude delete files
+git diff --cached --name-only --diff-filter=d \
 -- "src/*.c" "src/*.cpp" "src/*.cc" "src/*.h" "src/*.hpp" "src/*.inc" | \
     while read file
     do
