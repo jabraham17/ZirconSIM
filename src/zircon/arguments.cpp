@@ -135,10 +135,10 @@ MainArguments::MainArguments()
         .append()
         .metavar("CONTROL")
         .help("a control sequence to apply");
-    
+
     program_args.add_argument("--start-paused")
-    .default_value(false)
-    .implicit_value(true)
+        .default_value(false)
+        .implicit_value(true)
         .help("start with the hart in a paused state");
 
     program_args.add_argument("-e", "-env")
@@ -229,7 +229,8 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
             auto control = parser.parse(s);
             parsed_controls.push_back(control);
         } catch(const ishell::parser::ParseException& e) {
-            throw ArgumentException("Failed to parse command '" + s + "': " + e.what());
+            throw ArgumentException(
+                "Failed to parse command '" + s + "': " + e.what());
         }
     }
 
@@ -267,7 +268,6 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
             "Failed to open '" +
             *program_args.present<std::string>("--reg-log") + "'");
     }
-
 }
 
 std::ifstream MainArguments::getInputFile() {
