@@ -1,0 +1,7 @@
+-control 'dump $pc,dump $x9,dump $x10 if $pc<=0x16e7c && $pc>=0x16e10 on hart:after_execute' \
+-control 'dump $pc,dump $x9,dump $x10 if $pc>=0x1d400 && $pc<=0x1d454 on hart:after_execute' \
+-control 'dump $pc,dump $x9,dump $x10 if $pc>=0x1fe8c && $pc<=0x1feec on hart:after_execute' \
+-control 'watch 0x7fffffff0000fb88 dump $m[0x7fffffff0000fb88]'  \
+-control 'watch $x9 dump $x9' \
+
+# test/envp-elf-debug.out

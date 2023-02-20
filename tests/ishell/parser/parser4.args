@@ -1,0 +1,3 @@
+-control 'watch 0x7fffffff0000fb88 dump $m[0x7fffffff0000fb88]' -control 'watch $x9 dump $x9' -control 'dump $pc,dump $m[0x7fffffff0000fb88] if $pc == 0x1fec0' --color
+
+# test/envp-elf-debug.out
