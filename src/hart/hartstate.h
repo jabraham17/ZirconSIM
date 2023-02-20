@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include "common/debug.h"
 
 namespace command {
 struct Expr;
@@ -107,12 +108,15 @@ class HartState {
     bool isPaused() { return execution_state == ExecutionState::PAUSED; }
 
     void setExecutionState(ExecutionState es) {
-        if(!isValidExecutionStateTransition(es))
+        if(!isValidExecutionStateTransition(es)) {
             es = ExecutionState::INVALID_STATE;
+            common::debug::logln("Hart is now in an invalid execution state");
+        }
         {
             std::unique_lock lk(lock_es);
             execution_state = es;
         }
+        
         signal_es.notify_all();
     }
     template <typename Callable, typename... Args>
