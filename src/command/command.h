@@ -175,7 +175,8 @@ class Command : public ControlBase {
     }
 
     virtual bool shouldDoit() {
-        return hs && condition && bool(condition->eval(hs));
+        if(hs && condition) return bool(condition->eval(hs));
+        return true; // always do it if condition doesn't exist
     }
     virtual void doit(std::ostream* o = nullptr) {
         if(shouldDoit()) {

@@ -1,5 +1,7 @@
 #include "syscall.h"
 
+#include "common/debug.h"
+
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
@@ -29,7 +31,12 @@ T convertToRealAddress(hart::HartState& hs, types::Address addr) {
 int64_t
 getMappedSyscallNumber([[maybe_unused]] int64_t riscv64_syscall_number) {
 #define MAP_SYSCALL(name, x86_64, riscv64, ...)                                \
-    if(riscv64_syscall_number == riscv64) return x86_64;
+    if(riscv64_syscall_number == riscv64) {                                    \
+        common::debug::logln(                                                  \
+            common::debug::DebugType::SYSCALL,                                 \
+            "Emulating " #name " " #riscv64 " as " #x86_64);                   \
+        return x86_64;                                                         \
+    }
 #include "syscall.inc"
     return -1;
 }
@@ -39,9 +46,35 @@ bool emulateSyscall(
     [[maybe_unused]] hart::HartState& hs) {
 #define EMULATE_SYSCALL(name, riscv64, execution, ...)                         \
     if(sys == riscv64) {                                                       \
+        common::debug::logln(                                                  \
+            common::debug::DebugType::SYSCALL,                                 \
+            "Emulating " #name "[" #riscv64 "]",                               \
+            " arg0=",                                                          \
+            common::Format::doubleword,                                        \
+            hs().rf().GPR.rawreg(10).get(),                                    \
+            " arg1=",                                                          \
+            common::Format::doubleword,                                        \
+            hs().rf().GPR.rawreg(11).get(),                                    \
+            " arg2=",                                                          \
+            common::Format::doubleword,                                        \
+            hs().rf().GPR.rawreg(12).get(),                                    \
+            " arg3=",                                                          \
+            common::Format::doubleword,                                        \
+            hs().rf().GPR.rawreg(13).get(),                                    \
+            " arg4=",                                                          \
+            common::Format::doubleword,                                        \
+            hs().rf().GPR.rawreg(14).get(),                                    \
+            " arg5=",                                                          \
+            common::Format::doubleword,                                        \
+            hs().rf().GPR.rawreg(15).get());                                   \
         do {                                                                   \
             execution;                                                         \
         } while(0);                                                            \
+        common::debug::logln(                                                  \
+            common::debug::DebugType::SYSCALL,                                 \
+            "Syscall " #name " returned with ",                                \
+            common::Format::doubleword,                                        \
+            hs().rf().GPR.rawreg(10).get());                                   \
         return true;                                                           \
     }
 #include "syscall.inc"
