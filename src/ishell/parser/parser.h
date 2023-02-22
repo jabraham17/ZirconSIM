@@ -59,7 +59,7 @@ class Parser {
     std::vector<event::EventType> parse_event_list();
     event::EventType parse_event();
     Action_ptr parse_action();
-    command::Expr::PtrTy parse_expr();
+    command::ExprPtr parse_expr();
 
     // helpers
 

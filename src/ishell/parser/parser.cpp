@@ -163,7 +163,7 @@ Parser::Action_ptr Parser::parse_action() {
     } else throw ParseException("Unknown action: " + lexer.peek().getString());
 }
 
-command::Expr::PtrTy Parser::parse_expr() {
+command::ExprPtr Parser::parse_expr() {
     common::debug::log(common::debug::DebugType::PARSER, "parse_expr()\n");
     std::vector<Token> input;
     while(ExprParser::isExprToken(lexer.peek())) {

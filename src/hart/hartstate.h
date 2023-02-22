@@ -11,7 +11,7 @@
 #include <unordered_map>
 
 namespace command {
-struct Expr;
+class Expr;
 }
 
 namespace hart {

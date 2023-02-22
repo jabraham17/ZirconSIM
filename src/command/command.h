@@ -71,11 +71,11 @@ class ActionInterface {
 #define MAKE_ACTION_1_ARGS(ClassName, ActionTypeName)                          \
     class ClassName : public ActionInterface {                                 \
       private:                                                                 \
-        command::Expr::PtrTy expr;                                             \
+        command::ExprPtr expr;                                                 \
                                                                                \
       public:                                                                  \
-        ClassName(command::Expr::PtrTy expr) : ClassName(nullptr, expr) {}     \
-        ClassName(hart::HartState* hs, command::Expr::PtrTy expr)              \
+        ClassName(command::ExprPtr expr) : ClassName(nullptr, expr) {}         \
+        ClassName(hart::HartState* hs, command::ExprPtr expr)                  \
             : ActionInterface(ActionType::ActionTypeName, hs), expr(expr) {}   \
         virtual ~ClassName() = default;                                        \
         void action(std::ostream* o = nullptr) override;                       \
@@ -146,18 +146,16 @@ class Condition {
     hart::HartState* hs;
 
   private:
-    command::Expr::PtrTy condition;
+    command::ExprPtr condition;
 
   public:
-    Condition(hart::HartState* hs, command::Expr::PtrTy condition)
+    Condition(hart::HartState* hs, command::ExprPtr condition)
         : hs(hs), condition(condition) {}
-    Condition(command::Expr::PtrTy condition) : Condition(nullptr, condition) {}
+    Condition(command::ExprPtr condition) : Condition(nullptr, condition) {}
     Condition() : Condition(nullptr, nullptr) {}
     virtual ~Condition() = default;
 
-    virtual bool check() {
-        return hs && condition && bool(condition->eval(hs));
-    }
+    virtual bool check();
     virtual void setHS(hart::HartState* hs) { this->hs = hs; }
 };
 
@@ -309,33 +307,19 @@ class WatchRegister : public Watch {
 
 class WatchMemoryAddress : public Watch {
   public:
-    command::Expr::PtrTy address;
+    command::ExprPtr address;
 
-    WatchMemoryAddress(command::Expr::PtrTy address)
+    WatchMemoryAddress(command::ExprPtr address)
         : WatchMemoryAddress(nullptr, {}, address) {}
     WatchMemoryAddress(
         hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        command::Expr::PtrTy address)
+        command::ExprPtr address)
         : Watch(hs, actions), address(address) {}
     virtual ~WatchMemoryAddress() = default;
 
-    virtual std::string name() override {
-        std::stringstream ss;
-
-        ss << "MEM[";
-        if(hs && address) ss << common::Format::doubleword << address->eval(hs);
-        else ss << "<unknown>]";
-        return ss.str();
-    }
-    virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
-        if(hs && address) {
-            auto eval_addr = address->eval(hs);
-            auto converted_addr = hs->mem().raw(eval_addr);
-            if(converted_addr) return *(types::Address*)(converted_addr);
-        }
-        return std::nullopt;
-    }
+    virtual std::string name() override;
+    virtual std::optional<types::UnsignedInteger> readCurrentValue() override;
 };
 
 } // namespace command

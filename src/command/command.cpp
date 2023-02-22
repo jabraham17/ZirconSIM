@@ -73,7 +73,7 @@ void Dump::action(std::ostream* o) {
     if(o && hs && expr) {
         auto val = expr->eval(hs);
         *o << std::string(indent, ' ');
-        *o << expr->name() << " = ";
+        *o << expr->getString() << " = ";
         *o << common::Format::dec;
         *o << val;
         *o << std::endl;
@@ -89,6 +89,8 @@ void ActionGroup::action([[maybe_unused]] std::ostream* o) {
     }
 }
 } // namespace action
+
+bool Condition::check() { return hs && condition && bool(condition->eval(hs)); }
 
 void Watch::update() {
     std::optional<types::UnsignedInteger> current = readCurrentValue();
@@ -126,6 +128,23 @@ void Watch::update() {
             a->action(out);
         }
     }
+}
+
+std::string WatchMemoryAddress::name() {
+    std::stringstream ss;
+
+    ss << "MEM[";
+    if(hs && address) ss << common::Format::doubleword << address->eval(hs);
+    else ss << "<unknown>]";
+    return ss.str();
+}
+std::optional<types::UnsignedInteger> WatchMemoryAddress::readCurrentValue() {
+    if(hs && address) {
+        auto eval_addr = address->eval(hs);
+        auto converted_addr = hs->mem().raw(eval_addr);
+        if(converted_addr) return *(types::Address*)(converted_addr);
+    }
+    return std::nullopt;
 }
 
 } // namespace command
