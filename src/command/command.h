@@ -71,11 +71,11 @@ class ActionInterface {
 #define MAKE_ACTION_1_ARGS(ClassName, ActionTypeName)                          \
     class ClassName : public ActionInterface {                                 \
       private:                                                                 \
-        std::shared_ptr<Expr> expr;                                            \
+        command::ExprPtr expr;                                                 \
                                                                                \
       public:                                                                  \
-        ClassName(std::shared_ptr<Expr> expr) : ClassName(nullptr, expr) {}    \
-        ClassName(hart::HartState* hs, std::shared_ptr<Expr> expr)             \
+        ClassName(command::ExprPtr expr) : ClassName(nullptr, expr) {}         \
+        ClassName(hart::HartState* hs, command::ExprPtr expr)                  \
             : ActionInterface(ActionType::ActionTypeName, hs), expr(expr) {}   \
         virtual ~ClassName() = default;                                        \
         void action(std::ostream* o = nullptr) override;                       \
@@ -146,19 +146,16 @@ class Condition {
     hart::HartState* hs;
 
   private:
-    std::shared_ptr<Expr> condition;
+    command::ExprPtr condition;
 
   public:
-    Condition(hart::HartState* hs, std::shared_ptr<Expr> condition)
+    Condition(hart::HartState* hs, command::ExprPtr condition)
         : hs(hs), condition(condition) {}
-    Condition(std::shared_ptr<Expr> condition)
-        : Condition(nullptr, condition) {}
+    Condition(command::ExprPtr condition) : Condition(nullptr, condition) {}
     Condition() : Condition(nullptr, nullptr) {}
     virtual ~Condition() = default;
 
-    virtual bool check() {
-        return hs && condition && bool(condition->eval(hs));
-    }
+    virtual bool check();
     virtual void setHS(hart::HartState* hs) { this->hs = hs; }
 };
 
@@ -295,13 +292,13 @@ class WatchRegister : public Watch {
     virtual std::string name() override {
         // TODO: probably want to provide a way to pass in the actual register
         // name used by the programmer, so we get better output
-        return isa::rf::getRegisterClassString(this->reg.first) + "[" +
-               std::to_string(this->reg.second) + "]";
+        return isa::rf::getRegisterClassString(this->reg.rct) + "[" +
+               std::to_string(this->reg.idx) + "]";
     }
     virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
         if(hs) {
-            auto r = hs->rf().getRegisterClassForType(reg.first);
-            auto value = r.rawreg(reg.second).get();
+            auto r = hs->rf().getRegisterClassForType(reg.rct);
+            auto value = r.rawreg(reg.idx).get();
             return value;
         }
         return std::nullopt;
@@ -310,33 +307,19 @@ class WatchRegister : public Watch {
 
 class WatchMemoryAddress : public Watch {
   public:
-    std::shared_ptr<Expr> address;
+    command::ExprPtr address;
 
-    WatchMemoryAddress(std::shared_ptr<Expr> address)
+    WatchMemoryAddress(command::ExprPtr address)
         : WatchMemoryAddress(nullptr, {}, address) {}
     WatchMemoryAddress(
         hart::HartState* hs,
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        std::shared_ptr<Expr> address)
+        command::ExprPtr address)
         : Watch(hs, actions), address(address) {}
     virtual ~WatchMemoryAddress() = default;
 
-    virtual std::string name() override {
-        std::stringstream ss;
-
-        ss << "MEM[";
-        if(hs && address) ss << common::Format::doubleword << address->eval(hs);
-        else ss << "<unknown>]";
-        return ss.str();
-    }
-    virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
-        if(hs && address) {
-            auto eval_addr = address->eval(hs);
-            auto converted_addr = hs->mem().raw(eval_addr);
-            if(converted_addr) return *(types::Address*)(converted_addr);
-        }
-        return std::nullopt;
-    }
+    virtual std::string name() override;
+    virtual std::optional<types::UnsignedInteger> readCurrentValue() override;
 };
 
 } // namespace command

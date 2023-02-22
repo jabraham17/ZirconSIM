@@ -28,8 +28,19 @@ enum class RegisterClassType {
 #include "defs/registers.inc"
     NONE,
 };
-// a type to refer to a register
-using RegisterSymbol = std::pair<RegisterClassType, types::RegisterIndex>;
+
+struct RegisterSymbol {
+    RegisterClassType rct;
+    types::RegisterIndex idx;
+    RegisterSymbol() : rct(RegisterClassType::NONE), idx() {}
+    RegisterSymbol(RegisterClassType rct, types::RegisterIndex idx)
+        : rct(rct), idx(idx) {}
+    RegisterSymbol(const RegisterSymbol&) = default;
+    RegisterSymbol(RegisterSymbol&&) = default;
+    RegisterSymbol& operator=(const RegisterSymbol&) = default;
+    RegisterSymbol& operator=(RegisterSymbol&&) = default;
+    ~RegisterSymbol() = default;
+};
 
 bool isRegisterClassType(std::string s);
 RegisterClassType getRegisterClassType(std::string s);

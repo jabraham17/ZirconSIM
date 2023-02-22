@@ -32,7 +32,7 @@ The current implementation is powerful but can act in surprising ways, use with 
   - pause execution of the simulator and enter the interactive shell
 - `resume`
   - resume execution of the simulator from the paused state
-  - likely only useful from the interactive shell, but available everywhere 
+  - likely only useful from the interactive shell, but available everywhere
 - `disasm <expr>`
   - evaluates the expression and attempts to disassemble it as a RISC-V instruction
 - `dump <expr>`

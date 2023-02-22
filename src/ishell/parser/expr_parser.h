@@ -41,16 +41,16 @@ namespace parser {
 
 class ExprParser {
   public:
-    using StackElm = std::variant<Token, std::shared_ptr<command::Expr>>;
+    using StackElm = std::variant<Token, command::ExprPtr>;
     ExprParser(std::vector<Token> input) : input(input) {}
-    std::shared_ptr<command::Expr> parse();
+    command::ExprPtr parse();
 
     static bool isExprToken(const Token&);
 
   private:
     bool isTerminal(const StackElm&);
     bool isExpression(const StackElm&);
-    const std::shared_ptr<command::Expr>& getExpression(const StackElm& se);
+    const command::ExprPtr& getExpression(const StackElm& se);
     bool isTokenOfType(const StackElm&, TokenType);
     // sees through non terminal
     Token peekStack(const std::vector<StackElm>& stack);
@@ -59,20 +59,16 @@ class ExprParser {
     Token getInputToken();
 
     bool isBinaryRule(const std::vector<StackElm>& rhs);
-    std::shared_ptr<command::Expr>
-    reduceBinaryRule(const std::vector<StackElm>& rhs);
+    command::ExprPtr reduceBinaryRule(const std::vector<StackElm>& rhs);
     bool isUnaryRule(const std::vector<StackElm>& rhs);
-    std::shared_ptr<command::Expr>
-    reduceUnaryRule(const std::vector<StackElm>& rhs);
+    command::ExprPtr reduceUnaryRule(const std::vector<StackElm>& rhs);
     bool isPrimaryRule(const std::vector<StackElm>& rhs);
-    std::shared_ptr<command::Expr>
-    reducePrimaryRule(const std::vector<StackElm>& rhs);
+    command::ExprPtr reducePrimaryRule(const std::vector<StackElm>& rhs);
     bool isParenRule(const std::vector<StackElm>& rhs);
-    std::shared_ptr<command::Expr>
-    reduceParenRule(const std::vector<StackElm>& rhs);
+    command::ExprPtr reduceParenRule(const std::vector<StackElm>& rhs);
 
     bool isValidRule(const std::vector<StackElm>& rhs);
-    std::shared_ptr<command::Expr> reduceRule(const std::vector<StackElm>& rhs);
+    command::ExprPtr reduceRule(const std::vector<StackElm>& rhs);
 
   private:
     std::vector<Token> input;

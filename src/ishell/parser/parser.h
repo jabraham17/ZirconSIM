@@ -26,7 +26,6 @@ class Parser {
     using Watch_ptr = std::shared_ptr<command::Watch>;
     using Command_ptr = std::shared_ptr<command::Command>;
     using Condition_ptr = std::shared_ptr<command::Condition>;
-    using Expr_ptr = std::shared_ptr<command::Expr>;
     using Action_ptr = std::shared_ptr<command::action::ActionInterface>;
 
   public:
@@ -60,7 +59,7 @@ class Parser {
     std::vector<event::EventType> parse_event_list();
     event::EventType parse_event();
     Action_ptr parse_action();
-    Expr_ptr parse_expr();
+    command::ExprPtr parse_expr();
 
     // helpers
 

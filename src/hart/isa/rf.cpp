@@ -25,7 +25,7 @@ std::optional<RegisterSymbol> parseRegister(std::string s) {
 #define REG_CASE(classname, index, nice_name, ...)                             \
     if(s == #nice_name ||                                                      \
        s == internal::registerPrefixFor##classname + std::to_string(index))    \
-        return std::make_pair(getRegisterClassType(#classname), index);
+        return RegisterSymbol(getRegisterClassType(#classname), index);
 #define REGISTER_CLASS(classname, ...) REGISTER_CLASS_##classname(REG_CASE)
 #include "defs/registers.inc"
 #undef REG_CASE2

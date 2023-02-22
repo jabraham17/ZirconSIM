@@ -235,7 +235,7 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     }
 
     input = (new std::ifstream(filename, std::ios::binary));
-    if(!input) {
+    if(!input || (input && !input->is_open())) {
         throw ArgumentException("Failed to open '" + filename + "'");
     }
 
