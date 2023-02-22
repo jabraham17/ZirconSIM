@@ -141,24 +141,6 @@ class ActionGroup : public ActionInterface {
 };
 } // namespace action
 
-class Condition {
-  protected:
-    hart::HartState* hs;
-
-  private:
-    command::ExprPtr condition;
-
-  public:
-    Condition(hart::HartState* hs, command::ExprPtr condition)
-        : hs(hs), condition(condition) {}
-    Condition(command::ExprPtr condition) : Condition(nullptr, condition) {}
-    Condition() : Condition(nullptr, nullptr) {}
-    virtual ~Condition() = default;
-
-    virtual bool check();
-    virtual void setHS(hart::HartState* hs) { this->hs = hs; }
-};
-
 // empty class for inheritance
 class ControlBase {
   protected:
@@ -174,33 +156,26 @@ class Command : public ControlBase {
 
   private:
     std::vector<std::shared_ptr<action::ActionInterface>> actions;
-    std::vector<std::shared_ptr<Condition>> conditions;
+    command::ExprPtr condition;
     std::vector<event::EventType> events;
+    hart::HartState* hs;
 
   public:
     Command(
         std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        std::vector<std::shared_ptr<Condition>> conditions,
+        command::ExprPtr condition,
         std::vector<event::EventType> events);
     virtual ~Command() = default;
 
     virtual void setHS(hart::HartState* hs) override {
+        this->hs = hs;
         for(auto a : actions) {
-            a->setHS(hs);
-        }
-        for(auto c : conditions) {
-            c->setHS(hs);
+            a->setHS(this->hs);
         }
     }
 
     virtual bool shouldDoit() {
-        // check if we should run the actions
-        // if no conditions, shouldDoit is still true
-        bool shouldDoit = true;
-        for(auto c : conditions) {
-            shouldDoit = shouldDoit && c->check();
-        }
-        return shouldDoit;
+        return hs && condition && bool(condition->eval(hs));
     }
     virtual void doit(std::ostream* o = nullptr) {
         if(shouldDoit()) {

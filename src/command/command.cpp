@@ -9,9 +9,9 @@ namespace command {
 
 Command::Command(
     std::vector<std::shared_ptr<action::ActionInterface>> actions,
-    std::vector<std::shared_ptr<Condition>> conditions,
+    command::ExprPtr condition,
     std::vector<event::EventType> events)
-    : actions(actions), conditions(conditions), events(events) {
+    : actions(actions), condition(condition), events(events), hs(nullptr) {
     // if not defined on any events, should be defined on the default event
     if(this->events.empty()) {
         this->events = event::getDefaultEventTypes();
@@ -89,8 +89,6 @@ void ActionGroup::action([[maybe_unused]] std::ostream* o) {
     }
 }
 } // namespace action
-
-bool Condition::check() { return hs && condition && bool(condition->eval(hs)); }
 
 void Watch::update() {
     std::optional<types::UnsignedInteger> current = readCurrentValue();

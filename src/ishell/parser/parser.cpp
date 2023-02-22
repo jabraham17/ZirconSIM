@@ -76,24 +76,17 @@ Parser::Command_ptr Parser::parse_action_command() {
     auto event_list = parse_on_statement();
 
     actions = make_action_group(actions);
-    // if no condition (ie a nullptr), make condition_list empty
-    auto condition_list =
-        condition ? (std::initializer_list<Condition_ptr>){condition}
-                  : (std::initializer_list<Condition_ptr>());
 
-    return std::make_shared<command::Command>(
-        actions,
-        condition_list,
-        event_list);
+    return std::make_shared<command::Command>(actions, condition, event_list);
 }
-Parser::Condition_ptr Parser::parse_if_statement() {
+command::ExprPtr Parser::parse_if_statement() {
     common::debug::log(
         common::debug::DebugType::PARSER,
         "parse_if_statement()\n");
     if(lexer.peek().token_type == TokenType::IF) {
         expect(TokenType::IF);
         auto cond_expr = parse_expr();
-        return std::make_shared<command::Condition>(cond_expr);
+        return cond_expr;
     }
     return nullptr;
 }
