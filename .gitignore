@@ -10,3 +10,5 @@ toolchains/
 test/build/
 benchmark/build/
 benchmark/results/
+._*
+__pycache__
