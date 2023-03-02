@@ -27,7 +27,11 @@ CF=clang-format
 CF=$ZIRCON_HOME/../llvm/llvm-project/build/bin/clang-format
 
 FILES=("*.c" "*.cpp" "*.cc" "*.h" "*.hpp" "*.inc")
-
 for s in "${FILES[@]}"; do
     (set -x && find $ZIRCON_HOME/src -ipath $s -type f -exec $CF --Werror --style=file:$ZIRCON_HOME/.clang-format -i {} +)
+done
+
+DIRS=("src" "test" "tests" "scripts")
+for d in "${DIRS[@]}"; do
+    (set -x && find $ZIRCON_HOME/$d -ipath '*.py' -type f -exec python3 -m black --quiet {} +)
 done
