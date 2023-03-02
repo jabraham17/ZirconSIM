@@ -71,12 +71,14 @@ $(call map,generate_verbose_call,CC CXX LD YACC LEX AR RANLIB)
 COMPILE_FLAGS=
 LINK_FLAGS=
 COMPILE_FLAGS+= -Wno-comment
+
 ifeq ($(DEBUG),1)
 COMPILE_FLAGS+= -DDEBUG=1 -g -O0 
 LINK_FLAGS+= -g
 else
 COMPILE_FLAGS+= -O3
 endif
+
 ifeq ($(WASM),1)
 COMPILE_FLAGS+= -DWASM=1 -fwasm-exceptions
 else
@@ -84,6 +86,9 @@ COMPILE_FLAGS+= -masm=intel
 endif
 override COMPILE_FLAGS+= -Wall -Wextra
 
+ifdef LINKER
+LINK_FLAGS+= -fuse-ld=$(LINKER)
+endif
 
 override CFLAGS+= $(COMPILE_FLAGS) -std=c11 -D_XOPEN_SOURCE=700
 override CXXFLAGS+= $(COMPILE_FLAGS) -std=c++17
