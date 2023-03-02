@@ -1,4 +1,5 @@
 import sys
+
 try:
     import pandas as pd
 except ModuleNotFoundError:
@@ -13,12 +14,16 @@ except ImportError:
     exit(1)
 
 # find first row with 'TABLE'
-x = df.loc[df.iloc[:, 0] == "TABLE"] 
+x = df.loc[df.iloc[:, 0] == "TABLE"]
 top_of_input_row = int(x.index.values[0]) + 1
 top_of_stack_col = 1
-n_elms = len(df.iloc[top_of_input_row+1:, top_of_stack_col])
-token_names = list(df.iloc[top_of_input_row+1:,top_of_stack_col])
-table = pd.DataFrame(df.iloc[top_of_input_row+1:, top_of_stack_col+1: top_of_stack_col+1+n_elms]).reset_index(drop=True)
+n_elms = len(df.iloc[top_of_input_row + 1 :, top_of_stack_col])
+token_names = list(df.iloc[top_of_input_row + 1 :, top_of_stack_col])
+table = pd.DataFrame(
+    df.iloc[
+        top_of_input_row + 1 :, top_of_stack_col + 1 : top_of_stack_col + 1 + n_elms
+    ]
+).reset_index(drop=True)
 table.columns = token_names
 # token_names = list(token_names)
 
@@ -28,8 +33,12 @@ table.columns = token_names
 precedences = ["TAKE", "YIELD", "SAME", "ERR", "ACC"]
 largest_width = max([len(h) for h in token_names] + [len(p) for p in precedences])
 cell_width = largest_width + len("Precedence::")
+
+
 def pad_str(s):
     return f"{s:{cell_width}}"
+
+
 def elm_to_str(elm):
     p = "ERR"
     if elm == ">":
@@ -45,7 +54,9 @@ def elm_to_str(elm):
 
 print("namespace precedence_table {")
 
-print(f"std::array<std::array<Precedence, {n_elms}>, {n_elms}> table = {{ std::array<Precedence, {n_elms}>")
+print(
+    f"std::array<std::array<Precedence, {n_elms}>, {n_elms}> table = {{ std::array<Precedence, {n_elms}>"
+)
 header = ",".join([pad_str(h) for h in token_names])
 print(f"  /*  {pad_str('Top Of Input ->')}  {header}*/")
 for ridx, row in table.iterrows():

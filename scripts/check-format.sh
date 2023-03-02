@@ -31,8 +31,19 @@ check_format() {
     file=$1
     diff <($CF --Werror --style=file:$STYLE $file) $file >/dev/null 2>&1
 }
+check_format_python() {
+    file=$1
+    python3 -m black --quiet --check $file >/dev/null 2>&1
+}
 export -f check_format
+export -f check_format_python
+
 FILES=("*.c" "*.cpp" "*.cc" "*.h" "*.hpp" "*.inc")
 for s in "${FILES[@]}"; do
     (find $ZIRCON_HOME/src -ipath $s -type f -exec bash -c 'check_format "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$ZIRCON_HOME/;;g") needs to be formatted' {} \; )
+done
+
+DIRS=("src" "test" "tests" "scripts")
+for d in "${DIRS[@]}"; do
+    (find $ZIRCON_HOME/$d -ipath '*.py' -type f -exec bash -c 'check_format_python "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$ZIRCON_HOME/;;g") needs to be formatted' {} \; )
 done
