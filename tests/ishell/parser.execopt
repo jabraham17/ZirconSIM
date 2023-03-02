@@ -1,0 +1,12 @@
+-control 'dump $pc on hart:before_execute' -control 'disasm $pc on hart:before_execute' -control 'dump 8+(-7) if 1'
+-control 'dump -7 != -7' -control 'stop' # bad1
+-control 'dump -7 == -7' -control 'stop' # bad2
+
+-control 'dump $pc,dump $x9,dump $x10 if $pc<=0x16e7c && $pc>=0x16e10 on hart:after_execute' -control 'dump $pc,dump $x9,dump $x10 if $pc>=0x1d400 && $pc<=0x1d454 on hart:after_execute' -control 'dump $pc,dump $x9,dump $x10 if $pc>=0x1fe8c && $pc<=0x1feec on hart:after_execute' -control 'watch 0x7fffffff0000fb88 dump $m[0x7fffffff0000fb88]' -control 'watch $x9 dump $x9'
+
+-control 'watch 0x7fffffff0000fb88 dump $m[0x7fffffff0000fb88]' -control 'watch $x9 dump $x9' -control 'dump $pc,dump $m[0x7fffffff0000fb88] if $pc == 0x1fec0' --color
+
+
+ -control 'dump $pc,$gpr if $pc<=0x105b8 && $pc>=0x104ec on hart:before_execute,hart:after_execute' -e VAR=VALUE -- he hh
+
+-control 'stop' -control 'pause' -control 'resume' -control 'disasm 8+9' -control 'dump ($pc + 7) - $x1 + $m[99]' -control 'watch $m[0x787] pause' -control 'stop,pause if $a0 == 0 && $a1 == 7 on hart:before_execute'
