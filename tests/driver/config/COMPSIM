@@ -1,0 +1,15 @@
+# commented lines are ignored
+default= LINKER=lld
+debug= DEBUG=1 LINKER=lld
+
+
+# clang_with_ld= -B CC=clang CXX=clang++ CLINKER=ld
+# clang_with_gold= -B CC=clang CXX=clang++ LINKER=gold 
+clang_with_lld= CC=clang CXX=clang++ LINKER=lld
+clang_with_mold= CC=clang CXX=clang++ LINKER=mold
+
+
+# gcc_with_ld= -B CC=gcc CXX=g++ CLINKER=ld
+# gcc_with_gold= -B CC=gcc CXX=g++ LINKER=gold 
+gcc_with_lld= CC=gcc CXX=g++ LINKER=lld
+gcc_with_mold= CC=gcc CXX=g++ LINKER=mold

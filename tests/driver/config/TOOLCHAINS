@@ -1,0 +1,11 @@
+# commented lines are ignored
+# lines here have access to ENV vars like ZIRCON_HOME
+# uses makefile like syntax for ease of script parsing
+# TODO: this file needs serious improvement, assumes toolchains are already built
+# each variable should point at the root dir
+# a bin directory holds compilation tools
+# a lib holds libraries
+# an include holds headers
+rv64ima_elf_gcc=$(ZIRCON_HOME)/toolchains/rv64ima
+rv64ima_gnu_gcc=$(ZIRCON_HOME)/toolchains/rv64ima-linux
+rv64ima_musl_gcc=$(ZIRCON_HOME)/toolchains/rv64ima-musl
