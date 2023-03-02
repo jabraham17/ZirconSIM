@@ -1,5 +1,0 @@
-
- -control 'dump $pc,$gpr if $pc<=0x105b8 && $pc>=0x104ec on hart:before_execute,hart:after_execute' \
- -e VAR=VALUE -- he hh
-
-#test/envp-musl-debug.out

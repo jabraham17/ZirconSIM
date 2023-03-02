@@ -1,1 +1,0 @@
--control 'dump $pc on hart:before_execute' -control 'disasm $pc on hart:before_execute' -control 'dump 8+(-7) if 1'
