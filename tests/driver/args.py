@@ -45,9 +45,9 @@ def arguments(args: List[str], env: Dict[str, str]) -> ap.Namespace:
         action=ap.BooleanOptionalAction,
         help="print a final summary report",
     )
-    # TODO: unpicked name for this yet
+
     a.add_argument(
-        "--unknown-name",
+        "--full-report",
         default=False,
         action=ap.BooleanOptionalAction,
         help="print test results as they finish",
