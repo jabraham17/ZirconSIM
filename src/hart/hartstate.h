@@ -31,28 +31,70 @@ class HartState {
 
   private:
     std::unique_ptr<isa::rf::RegisterFile> rf_;
-    std::shared_ptr<mem::MemoryImage> memimg_;
 
-    std::unordered_map<std::string, types::Address> memory_locations_;
+    struct MemoryPair {
+        std::shared_ptr<mem::MemoryImage> mem;
+        std::unordered_map<std::string, types::Address> locations;
+        MemoryPair(
+            std::shared_ptr<mem::MemoryImage> mem,
+            std::unordered_map<std::string, types::Address> locations = {})
+            : mem(mem), locations(locations) {}
+    };
+
+    // address space 0 points to local_mem;
+    std::unordered_map<types::Address, MemoryPair> memories_;
 
     std::mutex lock_es;
     std::condition_variable signal_es;
     ExecutionState execution_state;
 
   public:
-    isa::rf::RegisterFile& rf() { return *rf_; }
-    mem::MemoryImage& mem() { return *memimg_; }
-    const isa::rf::RegisterFile& rf() const { return *rf_; }
-    const mem::MemoryImage& mem() const { return *memimg_; }
-
-    types::Address getMemLocation(const std::string& name) {
-        if(auto it = memory_locations_.find(name);
-           it != memory_locations_.end())
-            return it->second;
-        else return 0;
+    isa::rf::RegisterFile& rf() const { return *rf_; }
+    mem::MemoryImage& mem(types::Address addressSpace = 0) const {
+        // TODO: need to handle case where address space not in memories
+        if(auto mem_it = memories_.find(addressSpace);
+           mem_it != memories_.end()) {
+            return *(mem_it->second.mem);
+        } else {
+            std::cerr << "UNKNOWN ADDRESS SPACE: PANIC!!!\n";
+            exit(1);
+        }
     }
-    void setMemLocation(const std::string& name, types::UnsignedInteger val) {
-        memory_locations_.insert_or_assign(name, val);
+    isa::rf::RegisterFile& rf() {
+        return const_cast<const HartState*>(this)->rf();
+    }
+    mem::MemoryImage& mem(types::Address addressSpace = 0) {
+        return const_cast<const HartState*>(this)->mem(addressSpace);
+    }
+
+    types::Address
+    getMemLocation(const std::string& name, types::Address addressSpace = 0) {
+        if(auto mem_it = memories_.find(addressSpace);
+           mem_it != memories_.end()) {
+
+            auto locations = mem_it->second.locations;
+            if(auto it = locations.find(name); it != locations.end())
+                return it->second;
+            else return 0;
+        } else return 0;
+    }
+    void setMemLocation(
+        const std::string& name,
+        types::UnsignedInteger val,
+        types::Address addressSpace = 0) {
+        if(auto mem_it = memories_.find(addressSpace);
+           mem_it != memories_.end()) {
+            mem_it->second.locations.insert_or_assign(name, val);
+        }
+    }
+
+    types::Address allocateAddressSpace() {
+        static types::Address nextAddressSpace = 1;
+
+        auto addrSpace = nextAddressSpace;
+        nextAddressSpace++;
+        memories_.insert_or_assign(addrSpace, std::make_shared<mem::MemoryImage>());
+        return addrSpace;
     }
 
     struct PCProxy {
