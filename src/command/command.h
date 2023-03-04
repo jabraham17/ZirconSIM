@@ -274,7 +274,7 @@ class WatchRegister : public Watch {
     virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
         if(hs) {
             auto r = hs->rf().getRegisterClassForType(reg.rct);
-            auto value = r.rawreg(reg.idx).get();
+            auto value = r->rawreg(reg.idx).get();
             return value;
         }
         return std::nullopt;
