@@ -8,10 +8,16 @@
 // #endif
 
 #define MAKE_REGISTER(classname, number, nice_name, initial_value, rd_only)    \
-    Register<rf::internal::registerSizeFor##classname>(                        \
+    Register(                                                                  \
+        rf::internal::registerSizeFor##classname,                              \
         initial_value,                                                         \
         #nice_name,                                                            \
         rd_only)
+
+
+/*out of tree registers take precedence over ones defined here*/
+/*this allows an application to override existing ones*/
+#include "generated-definition/registers.inc"
 
 #define REGISTER_CLASS_GPR(R)                                                  \
     R(GPR, 0, zero, 0, true)                                                   \
