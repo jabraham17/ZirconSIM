@@ -60,11 +60,10 @@ class RegisterFile {
   public:
 #define REG_CASE(...) MAKE_REGISTER(__VA_ARGS__),
 #define REGISTER_CLASS(classname, reg_prefix, number_regs, reg_size)           \
-    RegisterClass<number_regs, internal::registerSizeFor##classname>           \
-        classname = {                                                          \
-            #classname,                                                        \
-            #reg_prefix,                                                       \
-            {REGISTER_CLASS_##classname(REG_CASE)}};                           \
+    RegisterClass classname = {                                                \
+        #classname,                                                            \
+        #reg_prefix,                                                           \
+        number_regs, REGISTER_CLASS_##classname(REG_CASE)};                               \
     template <typename T> void add##classname##ReadListener(T&& arg) {         \
         classname.addReadListener(std::forward<T>(arg));                       \
     }                                                                          \
@@ -85,10 +84,10 @@ class RegisterFile {
 #include "defs/registers.inc"
     }
 
-    auto getRegisterClassForType(RegisterClassType rct) {
+    RegisterClass* getRegisterClassForType(RegisterClassType rct) {
         auto rct_str = getRegisterClassString(rct);
 #define REGISTER_CLASS(classname, ...)                                         \
-    if(rct_str == #classname) return classname;
+    if(rct_str == #classname) return &classname;
 #include "defs/registers.inc"
         throw IllegalRegisterClassException(rct_str);
     }

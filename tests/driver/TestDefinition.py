@@ -201,7 +201,7 @@ def _build_one_zircon(build_dir: str, name: str, cmd: str):
     if cmd is None:
         print("Unknown configuration for '" + name + "'")
         return False
-    cmd = "make " + cmd + f" BUILD='{os.path.join(build_dir, name)}'"
+    cmd = "nice make " + cmd + f" BUILD='{os.path.join(build_dir, name)}' -j{mp.cpu_count()}"
     cmd = shlex.split(cmd)
     print(cmd)
     ret = sp.call(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
@@ -443,6 +443,7 @@ class TestConfiguration:
         # need all possible combinations of the three configs
         # however not all combinations, if more than one file specifies an sub_name
         # then that possible combination of configurations is invalid
+        idx = 1
         for configs in itertools.product(
             comp_configs, exec_configs, sim_configs, toolchain_configs
         ):
@@ -450,12 +451,17 @@ class TestConfiguration:
             # if there is exactly 1, use it
             n_subtest_names = sum(1 for c in configs if c.subtest_name)
             sub_name = None
+            exp_sub_name = None
             if n_subtest_names > 1:
                 continue
             elif n_subtest_names == 1:
                 sub_name = next(c.subtest_name for c in configs if c.subtest_name)
+                exp_sub_name = sub_name
+            else:
+                sub_name = str(idx)
+                idx+=1
 
-            exp_file = exp_files["DEFAULT"] if not sub_name else exp_files[sub_name]
+            exp_file = exp_files["DEFAULT"] if not exp_sub_name else exp_files[exp_sub_name]
 
             (comp_config, exec_config, sim_config, toolchain_config) = configs
 
@@ -501,7 +507,7 @@ class TestInstance:
         """if build success, returns (success, object)
         object on success is (build_output, executable)
         object on failure is (build_output, reason)"""
-        test_name = self.config.test_name
+        test_name = self.config.name()
         compile_options = self.config.compile_options.options
         source_file = self.config.source_file
         executable_file = TestFile(
@@ -523,14 +529,15 @@ class TestInstance:
             )
 
         # find first compiler like tool in toolchain
-        # TODO: for now use g++ for everything
-        tool = glob.glob(os.path.join(toolchain_path, "bin", "*-g++"))[0]
+        # TODO: for now use gcc for everything
+        tool = glob.glob(os.path.join(toolchain_path, "bin", "*-gcc"))[0]
 
         cmd = (
             [tool]
             + shlex.split(compile_options)
             + [source_file.getPath(), "-o", executable_file.getPath()]
         )
+        print(cmd)
         ret = TestInstance._execute(cmd, build_output)
 
         if ret == 0:
@@ -544,7 +551,7 @@ class TestInstance:
         """runs executable and returns on success (True, output_file)
         on an error returns (False, msg)
         Note this function does NOT check return code of the testcase"""
-        test_name = self.config.test_name
+        test_name = self.config.name()
         exec_options = self.config.exec_options.options
         exec_output = TestFile(
             test_name + ".output",
@@ -560,9 +567,8 @@ class TestInstance:
 
         sim = os.path.join(simulator_path, "bin", "zircon")
 
-        print(exec_options)
         cmd = [sim] + [executable.getPath()] + shlex.split(exec_options)
-
+        print(cmd)
         # intentionally not checking return code, this has no bearing on test case result
         TestInstance._execute(cmd, exec_output)
 

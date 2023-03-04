@@ -1,14 +1,16 @@
 
+# hart must be build first so that dependencies for out of tree *.inc is satisfied
 hart= 
-elf= 
-mem= 
-event= 
-ishell= 
-command= 
-common= 
-trace=
-zircon= command ishell hart elf mem trace event color common
-zircon-wasm= command ishell hart elf mem trace event color common
+elf= hart
+mem= hart
+event= hart
+ishell= hart
+command= hart
+common= hart
+trace= hart
+color= hart
+zircon= hart command ishell elf mem trace event color common
+zircon-wasm= hart command ishell elf mem trace event color common
 
 define make_depen
 $(eval $1: $($1))

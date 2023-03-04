@@ -104,7 +104,7 @@ std::string RegisterExpr::getString() const { return "$" + name; }
 types::SignedInteger RegisterExpr::evalImpl(hart::HartState* hs) const {
     return hs->rf()
         .getRegisterClassForType(regSym.rct)
-        .rawreg(regSym.idx)
+        ->rawreg(regSym.idx)
         .get();
 }
 
