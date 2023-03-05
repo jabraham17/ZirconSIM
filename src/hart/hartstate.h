@@ -93,7 +93,9 @@ class HartState {
 
         auto addrSpace = nextAddressSpace;
         nextAddressSpace++;
-        memories_.insert_or_assign(addrSpace, std::make_shared<mem::MemoryImage>());
+        memories_.insert_or_assign(
+            addrSpace,
+            std::make_shared<mem::MemoryImage>());
         return addrSpace;
     }
 

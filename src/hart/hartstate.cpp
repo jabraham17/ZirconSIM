@@ -10,8 +10,8 @@ types::InstructionWord HartState::getInstWord() const {
 HartState::HartState(std::shared_ptr<mem::MemoryImage> m)
     : rf_(std::make_unique<isa::rf::RegisterFile>()), memories_(),
       execution_state(ExecutionState::STOPPED) {
-        // insert memory image for address space 0
-        this->memories_.insert_or_assign(0, m);
-      }
+    // insert memory image for address space 0
+    this->memories_.insert_or_assign(0, m);
+}
 
 } // namespace hart
