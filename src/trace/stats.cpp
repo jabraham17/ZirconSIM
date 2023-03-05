@@ -1,5 +1,6 @@
 #include "stats.h"
 
+#include "hart/isa/inst-execute.h"
 #include "hart/isa/inst.h"
 
 #include <functional>

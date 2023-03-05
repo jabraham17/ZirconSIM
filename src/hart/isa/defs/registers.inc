@@ -14,7 +14,6 @@
         #nice_name,                                                            \
         rd_only)
 
-
 /*out of tree registers take precedence over ones defined here*/
 /*this allows an application to override existing ones*/
 #include "generated-definition/registers.inc"

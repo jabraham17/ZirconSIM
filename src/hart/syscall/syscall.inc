@@ -23,7 +23,6 @@
 /*this allows an application to override existing ones*/
 #include "generated-definition/syscalls.inc"
 
-
 // MAP_SYSCALL(read, 0, 63, fd, buf, count)
 // MAP_SYSCALL(write, 1, 64, fd, buf, count)
 // MAP_SYSCALL(close, 3, 57, fd)

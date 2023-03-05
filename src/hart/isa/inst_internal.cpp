@@ -1,6 +1,7 @@
 #include "inst.h"
 
 #include "color/color.h"
+#include "common/utils.h"
 #include "hart/syscall/syscall.h"
 
 #include <sstream>
@@ -125,12 +126,107 @@ std::string OPCODE_NICE_NAME_TABLE[] = {
 #define CUSTOM(prefix, name, ...) #name,
 #include "defs/instructions.inc"
 };
+std::string OPCODE_PREFIX_TABLE[] = {
+    "UNKNOWN",
+#define R_TYPE(prefix, ...) #prefix,
+#define I_TYPE(prefix, ...) #prefix,
+#define S_TYPE(prefix, ...) #prefix,
+#define B_TYPE(prefix, ...) #prefix,
+#define U_TYPE(prefix, ...) #prefix,
+#define J_TYPE(prefix, ...) #prefix,
+#define CUSTOM(prefix, ...) #prefix,
+#include "defs/instructions.inc"
+};
 
 const std::string& getOpcodeNameFromTable(Opcode op) {
     return OPCODE_NAME_TABLE[op];
 }
 const std::string& getOpcodeNiceNameFromTable(Opcode op) {
     return OPCODE_NICE_NAME_TABLE[op];
+}
+const std::string& getPrefixFromTable(Opcode op) {
+    return OPCODE_PREFIX_TABLE[op];
+}
+
+const Opcode getOpcodeFromTable(std::string argPrefix, std::string argName) {
+#define CHECK_NAME_PREC(prefix, name)                                          \
+    if(common::utils::tolower(#prefix) == common::utils::tolower(argPrefix) && \
+       common::utils::tolower(#name) == common::utils::tolower(argName)) {     \
+        return Opcode::prefix##_##name;                                        \
+    }
+#define R_TYPE(prefix, name, ...) CHECK_NAME_PREC(prefix, name)
+#define I_TYPE(prefix, name, ...) CHECK_NAME_PREC(prefix, name)
+#define S_TYPE(prefix, name, ...) CHECK_NAME_PREC(prefix, name)
+#define B_TYPE(prefix, name, ...) CHECK_NAME_PREC(prefix, name)
+#define U_TYPE(prefix, name, ...) CHECK_NAME_PREC(prefix, name)
+#define J_TYPE(prefix, name, ...) CHECK_NAME_PREC(prefix, name)
+#define CUSTOM(prefix, name, ...) CHECK_NAME_PREC(prefix, name)
+#include "defs/instructions.inc"
+#undef CHECK_NAME_PREC
+    return Opcode::UNKNOWN;
+}
+
+uint64_t getOpcodeFieldFromTable(Opcode op) {
+#define GET_OPCODE_FIELD(prefix, name, opcode)                                 \
+    if(Opcode::prefix##_##name == op) {                                        \
+        return opcode;                                                         \
+    }
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
+    GET_OPCODE_FIELD(prefix, name, opcode)
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    GET_OPCODE_FIELD(prefix, name, opcode)
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    GET_OPCODE_FIELD(prefix, name, opcode)
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    GET_OPCODE_FIELD(prefix, name, opcode)
+#define U_TYPE(prefix, name, opcode, execution, precedence)                    \
+    GET_OPCODE_FIELD(prefix, name, opcode)
+#define J_TYPE(prefix, name, opcode, execution, precedence)                    \
+    GET_OPCODE_FIELD(prefix, name, opcode)
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
+    GET_OPCODE_FIELD(prefix, name, opcode)
+#include "defs/instructions.inc"
+#undef GET_OPCODE_FIELD
+    return 0;
+}
+uint64_t getFunct7FieldFromTable(Opcode op) {
+#define GET_FUNCT7_FIELD(prefix, name, funct7)                                 \
+    if(Opcode::prefix##_##name == op) {                                        \
+        return funct7;                                                         \
+    }
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
+    GET_FUNCT7_FIELD(prefix, name, funct7)
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence) return 0;
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence) return 0;
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence) return 0;
+#define U_TYPE(prefix, name, opcode, execution, precedence) return 0;
+#define J_TYPE(prefix, name, opcode, execution, precedence) return 0;
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
+    return 0;
+#include "defs/instructions.inc"
+#undef GET_FUNCT7_FIELD
+    return 0;
+}
+uint64_t getFunct3FieldFromTable(Opcode op) {
+#define GET_FUNCT3_FIELD(prefix, name, funct3)                                 \
+    if(Opcode::prefix##_##name == op) {                                        \
+        return funct3;                                                         \
+    }
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
+    GET_FUNCT3_FIELD(prefix, name, funct3)
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    GET_FUNCT3_FIELD(prefix, name, funct3)
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    GET_FUNCT3_FIELD(prefix, name, funct3)
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    GET_FUNCT3_FIELD(prefix, name, funct3)
+#define U_TYPE(prefix, name, opcode, execution, precedence) return 0;
+#define J_TYPE(prefix, name, opcode, execution, precedence) return 0;
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
+    return 0;
+#include "defs/instructions.inc"
+#undef GET_FUNCT3_FIELD
+    return 0;
 }
 
 uint64_t OPCODE_PRECEDENCE[] = {
@@ -206,6 +302,35 @@ Opcode decodeInstruction(uint32_t bits) {
     if(prefix##_##name##_matcher_func(bits)) matched = Opcode::prefix##_##name;
 #include "defs/instructions.inc"
 
+    return matched;
+}
+
+// use precedence, rather than prefix, to distinguish
+// this is SLOW
+const Opcode getOpcodeFromTable(std::string arg) {
+    Opcode matched = Opcode::UNKNOWN;
+#define CHECK_NAME_PREC(prefix, name, precedence)                              \
+    if(common::utils::tolower(#name) == common::utils::tolower(arg) &&         \
+       (matched == Opcode::UNKNOWN ||                                          \
+        precedence < getOpcodePrecedence(matched))) {                          \
+        matched = Opcode::prefix##_##name;                                     \
+    }
+#define R_TYPE(prefix, name, opcode, funct7, funct3, execution, precedence)    \
+    CHECK_NAME_PREC(prefix, name, precedence)
+#define I_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    CHECK_NAME_PREC(prefix, name, precedence)
+#define S_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    CHECK_NAME_PREC(prefix, name, precedence)
+#define B_TYPE(prefix, name, opcode, funct3, execution, precedence)            \
+    CHECK_NAME_PREC(prefix, name, precedence)
+#define U_TYPE(prefix, name, opcode, execution, precedence)                    \
+    CHECK_NAME_PREC(prefix, name, precedence)
+#define J_TYPE(prefix, name, opcode, execution, precedence)                    \
+    CHECK_NAME_PREC(prefix, name, precedence)
+#define CUSTOM(prefix, name, opcode, matcher, printer, execution, precedence)  \
+    CHECK_NAME_PREC(prefix, name, precedence)
+#include "defs/instructions.inc"
+#undef CHECK_NAME_PREC
     return matched;
 }
 

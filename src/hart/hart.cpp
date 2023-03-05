@@ -1,6 +1,7 @@
 #include "hart.h"
 
 #include "event/event.h"
+#include "isa/inst-execute.h"
 #include "isa/inst.h"
 #include "isa/instruction_match.h"
 #include "isa/rf.h"

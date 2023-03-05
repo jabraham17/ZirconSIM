@@ -201,7 +201,11 @@ def _build_one_zircon(build_dir: str, name: str, cmd: str):
     if cmd is None:
         print("Unknown configuration for '" + name + "'")
         return False
-    cmd = "nice make " + cmd + f" BUILD='{os.path.join(build_dir, name)}' -j{mp.cpu_count()}"
+    cmd = (
+        "nice make "
+        + cmd
+        + f" BUILD='{os.path.join(build_dir, name)}' -j{mp.cpu_count()}"
+    )
     cmd = shlex.split(cmd)
     print(cmd)
     ret = sp.call(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
@@ -459,9 +463,11 @@ class TestConfiguration:
                 exp_sub_name = sub_name
             else:
                 sub_name = str(idx)
-                idx+=1
+                idx += 1
 
-            exp_file = exp_files["DEFAULT"] if not exp_sub_name else exp_files[exp_sub_name]
+            exp_file = (
+                exp_files["DEFAULT"] if not exp_sub_name else exp_files[exp_sub_name]
+            )
 
             (comp_config, exec_config, sim_config, toolchain_config) = configs
 

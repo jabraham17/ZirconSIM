@@ -4,6 +4,7 @@
 #include "common/debug.h"
 #include "common/format.h"
 #include "event/event.h"
+#include "hart/isa/inst-execute.h"
 #include "hart/isa/inst.h"
 #include "ishell/parser/parser.h"
 
