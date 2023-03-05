@@ -3,6 +3,7 @@
 #include "color/color.h"
 #include "common/debug.h"
 #include "common/format.h"
+#include "hart/isa/inst-execute.h"
 #include "hart/isa/inst.h"
 
 namespace command {

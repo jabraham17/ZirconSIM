@@ -3,6 +3,7 @@
 #include "common/format.h"
 #include "elf/elf.h"
 #include "hart/hart.h"
+#include "hart/isa/inst-execute.h"
 #include "hart/isa/inst.h"
 #include "mem/memory-image.h"
 

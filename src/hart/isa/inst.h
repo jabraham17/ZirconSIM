@@ -1,8 +1,6 @@
 #ifndef ZIRCON_HART_ISA_INST_H_
 #define ZIRCON_HART_ISA_INST_H_
 
-#include "hart/hart.h"
-
 #include <string>
 
 namespace isa {
@@ -34,6 +32,17 @@ struct Opcode {
 
     static const std::string& getName(Opcode op);
     static const std::string& getNiceName(Opcode op);
+
+    static const std::string& getPrefix(Opcode op);
+    static const std::string& getBareName(Opcode op);
+
+    static const Opcode lookupName(std::string prefix, std::string name);
+    static const Opcode lookupName(std::string name);
+
+    static uint64_t getOpcodeField(Opcode op);
+    static uint64_t getFunct7Field(Opcode op);
+    static uint64_t getFunct3Field(Opcode op);
+
     static constexpr size_t size();
 
     bool isRType() const;
@@ -48,9 +57,6 @@ struct Opcode {
 };
 
 Opcode decodeInstruction(uint32_t bits);
-std::string fields(uint32_t bits);
-void executeInstruction(uint32_t bits, hart::HartState& hs);
-std::string disassemble(uint32_t bits, uint32_t pc = 0, bool color = false);
 
 }; // namespace inst
 }; // namespace isa
