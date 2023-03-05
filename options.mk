@@ -25,6 +25,7 @@ YACC=/usr/bin/bison
 LEX=/usr/bin/flex
 AR=/usr/bin/ar
 RANLIB=/usr/bin/ranlib
+PYTHON3=/usr/bin/python3
 else ifeq ($(OS),Darwin)
 CC=/usr/local/opt/llvm/bin/clang
 CXX:=$(CC)
@@ -33,6 +34,7 @@ YACC=/usr/local/opt/bison/bin/bison
 LEX=/usr/local/opt/flex/bin/flex
 AR=/usr/local/opt/llvm/bin/llvm-ar
 RANLIB=/usr/local/opt/llvm/bin/llvm-ranlib
+PYTHON3=/usr/bin/python3
 else
 $(error Unsupported build on $(OS))
 endif
@@ -67,7 +69,7 @@ $(eval $(call _generate_verbose_call,$1))
 endef
 
 map = $(foreach a,$(2),$(call $(1),$(a)))
-$(call map,generate_verbose_call,CC CXX LD YACC LEX AR RANLIB)
+$(call map,generate_verbose_call,CC CXX LD YACC LEX AR RANLIB PYTHON3)
 
 COMPILE_FLAGS=
 LINK_FLAGS=
