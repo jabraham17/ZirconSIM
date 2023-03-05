@@ -72,9 +72,11 @@ $(call map,generate_verbose_call,CC CXX LD YACC LEX AR RANLIB)
 COMPILE_FLAGS=
 LINK_FLAGS=
 COMPILE_FLAGS+= -Wno-comment
+COMPILE_FLAGS+= -flto
+LINK_FLAGS+= -flto
 
 ifeq ($(DEBUG),1)
-COMPILE_FLAGS+= -DDEBUG=1 -g -O0 
+COMPILE_FLAGS+= -DDEBUG=1 -g -O0 -fstandalone-debug
 LINK_FLAGS+= -g
 else
 COMPILE_FLAGS+= -O3
