@@ -63,7 +63,8 @@ class RegisterFile {
     RegisterClass classname = {                                                \
         #classname,                                                            \
         #reg_prefix,                                                           \
-        number_regs, REGISTER_CLASS_##classname(REG_CASE)};                               \
+        number_regs,                                                           \
+        REGISTER_CLASS_##classname(REG_CASE)};                                 \
     template <typename T> void add##classname##ReadListener(T&& arg) {         \
         classname.addReadListener(std::forward<T>(arg));                       \
     }                                                                          \
