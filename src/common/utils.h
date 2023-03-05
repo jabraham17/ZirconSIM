@@ -5,6 +5,7 @@
 namespace common {
 namespace utils {
 extern std::string toupper(std::string str);
-}
+extern std::string tolower(std::string str);
+} // namespace utils
 } // namespace common
 #endif
