@@ -30,6 +30,10 @@ class MainArguments {
     std::vector<std::string> getArgV();
     common::ordered_map<std::string, std::string> getEnvVars();
 
+    // check if we should use color or not
+    bool useColor();
+  
+
   private:
     MainArguments();
     argparse::ArgumentParser program_args;
