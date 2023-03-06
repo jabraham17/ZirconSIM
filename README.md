@@ -1,5 +1,7 @@
 # ZirconSIM
 
+![Zircon Icon](img/icon.svg)
+
 ZirconSIM (also just Zircon) is a RISC-V ISA simulator designed to support rapid software development.
 Zircon can load ELF64 RISC-V executables compiled for a variety of platforms and run them with reasonable efficiency.
 Zircon was created with developers in mind and supports a large number of operations to improve the debugging of RISC-V code.
