@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <sys/stat.h>
 #include <unordered_map>
+#include <unistd.h>
 
 namespace arguments {
 std::ostream* getFileStreamIfTrue(
@@ -87,12 +88,18 @@ auto colorSym(bool useColor) {
 }
 auto colorReset(bool useColor) { return useColor ? color::getReset() : ""; }
 
+bool isTerminalOutput() {
+    return isatty(fileno(stdout));
+}
+
 MainArguments::MainArguments()
     : program_args({}, {}, argparse::default_arguments::help) {
     program_args.add_argument("file").help("elf64 file execute read from");
 
-    program_args.add_argument("-c", "--color")
-        .default_value(false)
+    program_args.add_argument("--color")
+        .implicit_value(true)
+        .help("colorize output");
+    program_args.add_argument("--no-color")
         .implicit_value(true)
         .help("colorize output");
 
@@ -276,7 +283,7 @@ std::ifstream MainArguments::getInputFile() {
 }
 void MainArguments::addCallbacks(hart::Hart& hart, elf::File& elf) {
 
-    bool useColor = program_args.get<bool>("--color");
+    bool useColor = this->useColor();
     auto elf_symbols = elf.getSymbolTable();
 
     if(program_args.get<bool>("--inst")) {
@@ -407,7 +414,7 @@ void MainArguments::addCallbacks(hart::Hart& hart, elf::File& elf) {
     }
 }
 void MainArguments::addControllerCallbacks(hart::Hart& hart) {
-    bool useColor = program_args.get<bool>("--color");
+    bool useColor = this->useColor();
     for(auto a : parsed_controls) {
         a->setHS(&hart.hs());
         a->setColor(useColor);
@@ -475,6 +482,22 @@ std::vector<std::string> MainArguments::getArgV() { return simulated_argv; }
 common::ordered_map<std::string, std::string> MainArguments::getEnvVars() {
     return simulated_env;
 }
+
+// bool MainArguments::useColor() {
+//     return program_args.get<bool>("--color") && !program_args.get<bool>("--no-color");
+// }
+bool MainArguments::useColor() {
+    if(program_args.is_used("--color") && program_args.present<bool>("--color")) {
+        return true;
+    }
+    else if(program_args.is_used("--no-color") && program_args.present<bool>("--no-color")) {
+        return false;
+    }
+    else {
+        return isTerminalOutput();
+    }
+}
+
 
 static std::unique_ptr<MainArguments> main_arg = nullptr;
 MainArguments MainArguments::getMainArguments() {
