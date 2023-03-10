@@ -211,11 +211,12 @@ void Hart::init(
     init_heap();
     init_stack(argv, envp);
 
-    // start execution thread
     execution_thread = std::thread(&Hart::execute, this);
 }
 
 void Hart::execute() {
+    sync_point.wait();
+    common::debug::logln("Starting Hart::execute()");
     while(1) {
         if(hs().isRunning()) {
             try {
@@ -230,12 +231,18 @@ void Hart::execute() {
                 hs().setExecutionState(ExecutionState::INVALID_STATE);
             }
         } else if(hs().isPaused()) {
-            hs().waitForExecutionStateChange();
+            // do nothing
+            std::this_thread::yield();
         } else {
             break;
         }
     }
-    // execution_thread.join();
+    common::debug::logln("Finished with Hart::execute()");
+    if(hs().isInInvalidState()) {
+        std::cerr << "Hart reached an invalid and unrecoverable state"
+                  << std::endl;
+    }
+    sync_point.signal();
 }
 
 } // namespace hart
