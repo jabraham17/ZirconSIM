@@ -109,12 +109,14 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <strings.h> // include 'strcasecmp'
 #include <stdlib.h>
 #include <ctype.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <signal.h>
 #include "linenoise.h"
 
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
@@ -169,6 +171,7 @@ enum KEY_ACTION{
 	CTRL_T = 20,        /* Ctrl-t */
 	CTRL_U = 21,        /* Ctrl+u */
 	CTRL_W = 23,        /* Ctrl+w */
+    CTRL_Z = 26,        /* Ctrl+z  */
 	ESC = 27,           /* Escape */
 	BACKSPACE =  127    /* Backspace */
 };
@@ -853,6 +856,9 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
             return (int)l.len;
         case CTRL_C:     /* ctrl-c */
             errno = EAGAIN;
+            return -1;
+        case CTRL_Z:
+            raise(SIGTSTP);
             return -1;
         case BACKSPACE:   /* backspace */
         case 8:     /* ctrl-h */
