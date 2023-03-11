@@ -32,7 +32,6 @@ class MainArguments {
 
     // check if we should use color or not
     bool useColor();
-  
 
   private:
     MainArguments();

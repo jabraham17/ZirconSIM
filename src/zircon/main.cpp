@@ -5,8 +5,8 @@
 #include "elf/elf.h"
 #include "hart/hart.h"
 #include "ishell/parser/parser.h"
-#include "trace/stats.h"
 #include "ishell/repl.h"
+#include "trace/stats.h"
 
 int main(int argc, const char** argv, const char** envp) {
 
@@ -69,18 +69,16 @@ int main(int argc, const char** argv, const char** envp) {
 
     hart.init(args.getArgV(), args.getEnvVars());
     hart.hs().setPC(start);
-    
+
     ishell::Repl repl(&hart.hs());
 
     if(args.accessRawArguments().get<bool>("--start-paused")) {
         hart.hs().pause();
-    }
-    else {
+    } else {
         hart.hs().start();
     }
     hart.startExecution();
     repl.run();
-
 
     hart.wait_till_done();
     repl.wait_till_done();

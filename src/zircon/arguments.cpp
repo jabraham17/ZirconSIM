@@ -11,8 +11,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <sys/stat.h>
-#include <unordered_map>
 #include <unistd.h>
+#include <unordered_map>
 
 namespace arguments {
 std::ostream* getFileStreamIfTrue(
@@ -89,17 +89,14 @@ auto colorSym(bool useColor) {
 }
 auto colorReset(bool useColor) { return useColor ? color::getReset() : ""; }
 
-bool isTerminalOutput() {
-    return isatty(fileno(stdout));
-}
+bool isTerminalOutput() { return isatty(fileno(stdout)); }
 
 MainArguments::MainArguments()
     : program_args({}, {}, argparse::default_arguments::help) {
     program_args.add_argument("file").help("elf64 file execute read from");
 
-    program_args.add_argument("--color")
-        .implicit_value(true)
-        .help("colorize output");
+    program_args.add_argument("--color").implicit_value(true).help(
+        "colorize output");
     program_args.add_argument("--no-color")
         .implicit_value(true)
         .help("colorize output");
@@ -485,20 +482,21 @@ common::ordered_map<std::string, std::string> MainArguments::getEnvVars() {
 }
 
 // bool MainArguments::useColor() {
-//     return program_args.get<bool>("--color") && !program_args.get<bool>("--no-color");
+//     return program_args.get<bool>("--color") &&
+//     !program_args.get<bool>("--no-color");
 // }
 bool MainArguments::useColor() {
-    if(program_args.is_used("--color") && program_args.present<bool>("--color")) {
+    if(program_args.is_used("--color") &&
+       program_args.present<bool>("--color")) {
         return true;
-    }
-    else if(program_args.is_used("--no-color") && program_args.present<bool>("--no-color")) {
+    } else if(
+        program_args.is_used("--no-color") &&
+        program_args.present<bool>("--no-color")) {
         return false;
-    }
-    else {
+    } else {
         return isTerminalOutput();
     }
 }
-
 
 static std::unique_ptr<MainArguments> main_arg = nullptr;
 MainArguments MainArguments::getMainArguments() {

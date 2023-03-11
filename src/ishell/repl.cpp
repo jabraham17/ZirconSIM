@@ -1,24 +1,24 @@
 #include "repl.h"
 
+#include "getline.h"
+
 #include "command/command.h"
 #include "hart/hartstate.h"
 #include "ishell/parser/parser.h"
 
-#include <unistd.h>
 #include <termios.h>
-#include "getline.h"
+#include <unistd.h>
 
 namespace ishell {
 
-Repl::Repl(hart::HartState* hs) : hs(hs), sync_point(), execution_thread(&Repl::execute, this) {}
+Repl::Repl(hart::HartState* hs)
+    : hs(hs), sync_point(), execution_thread(&Repl::execute, this) {}
 
-void Repl::run() {
-    sync_point.signal();
-}
+void Repl::run() { sync_point.signal(); }
 void Repl::wait_till_done() {
     sync_point.wait();
-        execution_thread.join();
-    }
+    execution_thread.join();
+}
 
 void Repl::execute() {
     sync_point.wait();
@@ -47,20 +47,16 @@ void Repl::execute() {
             } catch(const ishell::parser::ParseException& pe) {
                 std::cerr << "Invalid command\n";
             }
-        }
-        else if(hs->isRunning()) {
+        } else if(hs->isRunning()) {
             // keep running
             std::this_thread::yield();
-        }
-        else {
+        } else {
             break;
         }
     }
     common::debug::logln("Finished with Repl::execute()");
     sync_point.signal();
 }
-
-
 
 } // namespace ishell
 

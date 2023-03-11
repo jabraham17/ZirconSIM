@@ -12,24 +12,21 @@ class syncpoint {
     std::mutex lock_;
     std::condition_variable signal_;
     bool ready_;
-    public:
-    syncpoint(): lock_(), signal_(), ready_(false) {}
+
+  public:
+    syncpoint() : lock_(), signal_(), ready_(false) {}
     void signal() {
         std::unique_lock lk(lock_);
         ready_ = true;
         lk.unlock();
         signal_.notify_all();
-        
     }
     void wait() {
         std::unique_lock lk(lock_);
         // stop waiting when ready
-        signal_.wait(lk, [this] {return this->ready_;});
+        signal_.wait(lk, [this] { return this->ready_; });
         ready_ = true; // reset syncpoint
     }
-
-
-
 };
 
 } // namespace threading

@@ -5,11 +5,11 @@
 #include "isa/rf.h"
 #include "mem/memory-image.h"
 
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
-#include <atomic>
 
 namespace command {
 class Expr;
@@ -141,12 +141,8 @@ class HartState {
     HartState& operator()() { return *this; }
     const HartState& operator()() const { return *this; }
 
-    void setPC(types::Address start_address) {
-        pc = start_address;
-    }
-    void start() {
-        setExecutionState(ExecutionState::RUNNING);
-    }
+    void setPC(types::Address start_address) { pc = start_address; }
+    void start() { setExecutionState(ExecutionState::RUNNING); }
     void start(types::Address start_address) {
         setPC(start_address);
         start();
@@ -158,7 +154,9 @@ class HartState {
     bool isRunning() { return execution_state == ExecutionState::RUNNING; }
     bool isPaused() { return execution_state == ExecutionState::PAUSED; }
     bool isStopped() { return execution_state == ExecutionState::STOPPED; }
-    bool isInInvalidState() { return execution_state == ExecutionState::INVALID_STATE; }
+    bool isInInvalidState() {
+        return execution_state == ExecutionState::INVALID_STATE;
+    }
 
     void setExecutionState(ExecutionState es) {
         if(!isValidExecutionStateTransition(es)) {
@@ -171,7 +169,8 @@ class HartState {
     // void setExecutionState(ExecutionState es) {
     //     if(!isValidExecutionStateTransition(es)) {
     //         es = ExecutionState::INVALID_STATE;
-    //         common::debug::logln("Hart is now in an invalid execution state");
+    //         common::debug::logln("Hart is now in an invalid execution
+    //         state");
     //     }
     //     {
     //         std::unique_lock lk(lock_es);
@@ -205,7 +204,8 @@ class HartState {
                 return new_es == ExecutionState::STOPPED ||
                        new_es == ExecutionState::PAUSED;
             case ExecutionState::STOPPED:
-                return new_es == ExecutionState::RUNNING || new_es == ExecutionState::PAUSED;
+                return new_es == ExecutionState::RUNNING ||
+                       new_es == ExecutionState::PAUSED;
         }
         return false;
     }
