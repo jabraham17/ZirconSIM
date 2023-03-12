@@ -28,7 +28,7 @@ std::optional<RegisterSymbol> parseRegister(std::string s) {
         return RegisterSymbol(getRegisterClassType(#classname), index);
 #define REGISTER_CLASS(classname, ...) REGISTER_CLASS_##classname(REG_CASE)
 #include "defs/registers.inc"
-#undef REG_CASE2
+#undef REG_CASE
 
     // failed to parse a register
     return std::nullopt;

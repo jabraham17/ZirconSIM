@@ -6,6 +6,7 @@
 #include "event/event.h"
 #include "hart/types.h"
 
+#include <array>
 #include <optional>
 
 namespace isa {
@@ -93,6 +94,21 @@ class RegisterFile {
         throw IllegalRegisterClassException(rct_str);
     }
 };
+
+[[maybe_unused]] static auto getAllPossibleRegisterNames() {
+#define REG_CASE(classname, index, nice_name, ...)                             \
+    std::string(#nice_name),                                                   \
+        internal::registerPrefixFor##classname + std::to_string(index),
+
+#define REGISTER_CLASS(classname, ...) REGISTER_CLASS_##classname(REG_CASE)
+
+    std::array a = {
+#include "defs/registers.inc"
+    };
+#undef REG_CASE
+    return a;
+}
+
 }; // namespace rf
 }; // namespace isa
 
