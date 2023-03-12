@@ -154,7 +154,7 @@ Token Lexer::getPrefixedPrimary() {
         else if(t.lexeme == "M") t.token_type = TokenType::MEM;
         else {
             t.token_type = TokenType::REGISTER;
-            // maintain the orginal case of the register
+            // maintain the original case of the register
             t.lexeme = word;
         }
     }

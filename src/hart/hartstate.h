@@ -5,6 +5,7 @@
 #include "isa/rf.h"
 #include "mem/memory-image.h"
 
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -44,9 +45,9 @@ class HartState {
     // address space 0 points to local_mem;
     std::unordered_map<types::Address, MemoryPair> memories_;
 
-    std::mutex lock_es;
-    std::condition_variable signal_es;
-    ExecutionState execution_state;
+    // std::mutex lock_es;
+    // std::condition_variable signal_es;
+    std::atomic<ExecutionState> execution_state;
 
   public:
     isa::rf::RegisterFile& rf() const { return *rf_; }
@@ -140,9 +141,11 @@ class HartState {
     HartState& operator()() { return *this; }
     const HartState& operator()() const { return *this; }
 
+    void setPC(types::Address start_address) { pc = start_address; }
+    void start() { setExecutionState(ExecutionState::RUNNING); }
     void start(types::Address start_address) {
-        pc = start_address;
-        setExecutionState(ExecutionState::RUNNING);
+        setPC(start_address);
+        start();
     }
     void stop() { setExecutionState(ExecutionState::STOPPED); }
     void pause() { setExecutionState(ExecutionState::PAUSED); }
@@ -150,36 +153,49 @@ class HartState {
     ExecutionState getExecutionState() { return execution_state; }
     bool isRunning() { return execution_state == ExecutionState::RUNNING; }
     bool isPaused() { return execution_state == ExecutionState::PAUSED; }
+    bool isStopped() { return execution_state == ExecutionState::STOPPED; }
+    bool isInInvalidState() {
+        return execution_state == ExecutionState::INVALID_STATE;
+    }
 
     void setExecutionState(ExecutionState es) {
         if(!isValidExecutionStateTransition(es)) {
             es = ExecutionState::INVALID_STATE;
             common::debug::logln("Hart is now in an invalid execution state");
         }
-        {
-            std::unique_lock lk(lock_es);
-            execution_state = es;
-        }
+        execution_state = es;
+    }
 
-        signal_es.notify_all();
-    }
-    template <typename Callable, typename... Args>
-    void waitForExecutionStateChange(Callable func, Args... args) {
-        {
-            std::unique_lock lk(lock_es);
-            signal_es.wait(lk);
-            func(args...);
-        }
-    }
-    void waitForExecutionStateChange() {
-        std::unique_lock lk(lock_es);
-        signal_es.wait(lk);
-    }
+    // void setExecutionState(ExecutionState es) {
+    //     if(!isValidExecutionStateTransition(es)) {
+    //         es = ExecutionState::INVALID_STATE;
+    //         common::debug::logln("Hart is now in an invalid execution
+    //         state");
+    //     }
+    //     {
+    //         std::unique_lock lk(lock_es);
+    //         execution_state = es;
+    //     }
+
+    //     signal_es.notify_all();
+    // }
+    // template <typename Callable, typename... Args>
+    // void waitForExecutionStateChange(Callable func, Args... args) {
+    //     {
+    //         std::unique_lock lk(lock_es);
+    //         signal_es.wait(lk);
+    //         func(args...);
+    //     }
+    // }
+    // void waitForExecutionStateChange() {
+    //     std::unique_lock lk(lock_es);
+    //     signal_es.wait(lk);
+    // }
 
   private:
     bool isValidExecutionStateTransition(ExecutionState new_es) {
         if(new_es == ExecutionState::INVALID_STATE) return true;
-        switch(execution_state) {
+        switch(execution_state.load()) {
             case ExecutionState::INVALID_STATE: return false;
             case ExecutionState::PAUSED:
                 return new_es == ExecutionState::RUNNING ||
@@ -188,7 +204,8 @@ class HartState {
                 return new_es == ExecutionState::STOPPED ||
                        new_es == ExecutionState::PAUSED;
             case ExecutionState::STOPPED:
-                return new_es == ExecutionState::RUNNING;
+                return new_es == ExecutionState::RUNNING ||
+                       new_es == ExecutionState::PAUSED;
         }
         return false;
     }

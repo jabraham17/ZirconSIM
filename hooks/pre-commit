@@ -41,7 +41,7 @@ git diff --cached --name-only --diff-filter=d \
             echo "Run scripts/format.sh to resolve this"
 	        exit 1
         fi
-    done
+    done || exit $?
 
 git diff --cached --name-only --diff-filter=d \
 -- "*.py" | \
@@ -53,5 +53,5 @@ git diff --cached --name-only --diff-filter=d \
             echo "Run scripts/format.sh to resolve this"
 	        exit 1
         fi
-    done
+    done || exit $?
 

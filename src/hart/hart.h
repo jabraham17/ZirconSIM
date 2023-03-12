@@ -6,6 +6,7 @@
 #include "types.h"
 
 #include "common/ordered_map.h"
+#include "common/threading/syncpoint.h"
 #include "event/event.h"
 #include "isa/rf.h"
 #include "mem/memory-image.h"
@@ -68,20 +69,13 @@ class Hart {
     HartState& hs() { return *hs_; }
 
     void wait_till_done() {
-        bool done = false;
-        while(!done) {
-            hs().waitForExecutionStateChange([this, &done]() {
-                if(this->hs().getExecutionState() == ExecutionState::STOPPED ||
-                   this->hs().getExecutionState() ==
-                       ExecutionState::INVALID_STATE) {
-                    done = true;
-                }
-            });
-        }
+        sync_point.wait();
         execution_thread.join();
     }
+    void startExecution() { sync_point.signal(); }
 
   private:
+    common::threading::syncpoint sync_point;
     std::thread execution_thread;
     void execute();
 };

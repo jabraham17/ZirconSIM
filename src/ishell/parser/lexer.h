@@ -1,6 +1,7 @@
 #ifndef ZIRCON_ISHELL_PARSER_LEXER_H_
 #define ZIRCON_ISHELL_PARSER_LEXER_H_
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -73,6 +74,10 @@
     /*others*/                                                                 \
     F(COMMA)
 
+#define COUNT_LIST(elm) +1
+#define MAKE_LIST(elm) elm,
+#define MAKE_STR_LIST(elm) std::string(#elm),
+
 namespace ishell {
 
 namespace parser {
@@ -121,6 +126,10 @@ struct TokenType {
 #define LEXER_CASE(tt) this->value_ == tt ||
         return LEXER_TOKENS_KEYWORD(LEXER_CASE) false;
 #undef LEXER_CASE
+    }
+    static auto validKeywords() {
+        std::array elms = {LEXER_TOKENS_KEYWORD(MAKE_STR_LIST)};
+        return elms;
     }
     bool isOperator() {
 #define LEXER_CASE(tt) this->value_ == tt ||
