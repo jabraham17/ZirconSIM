@@ -40,16 +40,14 @@
 #define __LINENOISE_H
 
 #ifdef __cplusplus
-#include <cstddef>
+    #include <cstddef>
 #else
-#include <stddef.h>
+    #include <stddef.h>
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 typedef struct linenoiseCompletions {
     size_t len;
@@ -58,7 +56,8 @@ typedef struct linenoiseCompletions {
 
 typedef void(
     linenoiseCompletionCallback)(void*, const char*, linenoiseCompletions*);
-typedef char*(linenoiseHintsCallback)(void*, const char*, int* color, int* bold);
+typedef char*(
+    linenoiseHintsCallback)(void*, const char*, int* color, int* bold);
 typedef void(linenoiseFreeHintsCallback)(void*);
 void linenoiseSetCompletionCallback(linenoiseCompletionCallback*, void*);
 void linenoiseSetHintsCallback(linenoiseHintsCallback*, void*);
