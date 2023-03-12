@@ -3,7 +3,9 @@
 #include "getline.h"
 
 #include "command/command.h"
+#include "common/utils.h"
 #include "hart/hartstate.h"
+#include "hart/isa/rf.h"
 #include "ishell/parser/parser.h"
 
 #include <termios.h>
@@ -25,6 +27,100 @@ void Repl::execute() {
     common::debug::logln("Starting Repl::execute()");
     auto parser = ishell::parser::Parser();
     auto lineInput = getline();
+    // add keyword completion
+    lineInput.addCompletetion([](auto s) {
+        // split s by space, we do completions on most up to date word
+        auto elms = common::utils::split(s, " ");
+        // we do matching case insensitive
+        const auto lastElm = common::utils::toupper(elms.back());
+
+        std::vector<std::string> suggest;
+        // loop through all keywords, if it starts with last elm suggest it
+        for(auto k : ishell::parser::TokenType::validKeywords()) {
+            if(common::utils::startsWith(k, lastElm)) {
+                // suggest string is previous string with replacement for last
+                // elm
+                std::string sug;
+                if(elms.size() >= 2) {
+                    sug =
+                        common::utils::join(elms.begin(), elms.end() - 1, " ") +
+                        " " + k;
+                } else {
+                    sug = k;
+                }
+                suggest.push_back(sug);
+            }
+        }
+
+        return suggest;
+    });
+    // add pc and mem completion
+    lineInput.addCompletetion([](auto s) {
+        // split s by space, we do completions on most up to date word
+        auto elms = common::utils::split(s, " ");
+        // we do matching case insensitive
+        const auto lastElm = common::utils::toupper(elms.back());
+
+        std::vector<std::string> suggest;
+        if(lastElm.size() >= 1 && lastElm[0] == '$') {
+            std::string justTheName = lastElm.substr(1);
+            if(common::utils::startsWith("M", justTheName)) {
+                std::string sug;
+                if(elms.size() >= 2) {
+                    sug =
+                        common::utils::join(elms.begin(), elms.end() - 1, " ") +
+                        " $M";
+                } else {
+                    sug = "$M";
+                }
+                suggest.push_back(sug);
+            }
+            if(common::utils::startsWith("PC", justTheName)) {
+                std::string sug;
+                if(elms.size() >= 2) {
+                    sug =
+                        common::utils::join(elms.begin(), elms.end() - 1, " ") +
+                        " $PC";
+                } else {
+                    sug = "$PC";
+                }
+                suggest.push_back(sug);
+            }
+        }
+        return suggest;
+    });
+    // add register completion
+    lineInput.addCompletetion([](auto s) {
+        // split s by space, we do completions on most up to date word
+        auto elms = common::utils::split(s, " ");
+        const auto lastElm = elms.back();
+
+        std::vector<std::string> suggest;
+        if(lastElm.size() >= 1 && lastElm[0] == '$') {
+            std::string justTheName = lastElm.substr(1);
+            // loop through all registers, if it starts with last elm suggest it
+            for(auto r : isa::rf::getAllPossibleRegisterNames()) {
+                if(common::utils::startsWith(r, justTheName)) {
+                    // suggest string is previous string with replacement for
+                    // last elm
+                    std::string sug;
+                    if(elms.size() >= 2) {
+                        sug = common::utils::join(
+                                  elms.begin(),
+                                  elms.end() - 1,
+                                  " ") +
+                              " $" + r;
+                    } else {
+                        sug = "$" + r;
+                    }
+                    suggest.push_back(sug);
+                }
+            }
+        }
+
+        return suggest;
+    });
+
     while(1) {
         common::debug::logln("In Repl::execute()");
         if(hs->isPaused()) {
