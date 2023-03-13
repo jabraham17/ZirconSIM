@@ -33,7 +33,8 @@
     F(NUM)                                                                     \
     F(PC)                                                                      \
     F(MEM)                                                                     \
-    F(REGISTER)
+    F(REGISTER)                                                                \
+    F(SYMBOL)
 
 // grouping tokens
 #define LEXER_TOKENS_GROUPING(F)                                               \
@@ -44,6 +45,7 @@
 
 // operator tokens
 #define LEXER_TOKENS_OPERATOR(F)                                               \
+    F(EQUALS)                                                                  \
     F(MULTIPLY)                                                                \
     F(DIVIDE)                                                                  \
     F(PLUS)                                                                    \
@@ -72,7 +74,9 @@
     LEXER_TOKENS_GROUPING(F)                                                   \
     LEXER_TOKENS_OPERATOR(F)                                                   \
     /*others*/                                                                 \
-    F(COMMA)
+    F(COMMA)                                                                   \
+    F(SEMICOLON)                                                               \
+    F(STRING)
 
 #define COUNT_LIST(elm) +1
 #define MAKE_LIST(elm) elm,
@@ -185,6 +189,9 @@ class Lexer {
 
     Token getSymbol();
     bool isSymbol();
+
+    Token getStringToken();
+    bool isStringTokenStart();
 
     // helpers
     std::string getWord();
