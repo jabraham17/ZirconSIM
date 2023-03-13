@@ -100,6 +100,13 @@ NumberExpr::evalImpl([[maybe_unused]] hart::HartState* hs) const {
     return number;
 }
 
+std::string SymbolExpr::getString() const { return name; }
+types::SignedInteger
+SymbolExpr::evalImpl([[maybe_unused]] hart::HartState* hs) const {
+    return 0;
+#warning TODO: implement symbol table lookup
+}
+
 std::string RegisterExpr::getString() const { return "$" + name; }
 types::SignedInteger RegisterExpr::evalImpl(hart::HartState* hs) const {
     return hs->rf()
@@ -107,10 +114,22 @@ types::SignedInteger RegisterExpr::evalImpl(hart::HartState* hs) const {
         ->rawreg(regSym.idx)
         .get();
 }
+bool RegisterExpr::setImpl(hart::HartState* hs, ExprPtr value) const {
+    auto& reg =
+        hs->rf().getRegisterClassForType(regSym.rct)->rawreg(regSym.idx);
+    auto v = value->eval(hs);
+    reg.set(v);
+    return true;
+}
 
 std::string PCExpr::getString() const { return "$PC"; }
 types::SignedInteger PCExpr::evalImpl(hart::HartState* hs) const {
     return hs->pc;
+}
+bool PCExpr::setImpl(hart::HartState* hs, ExprPtr value) const {
+    auto v = value->eval(hs);
+    hs->setPC(v);
+    return true;
 }
 
 std::string MemoryExpr::getString() const {
@@ -126,6 +145,18 @@ types::SignedInteger MemoryExpr::evalImpl(hart::HartState* hs) const {
         common::debug::DebugType::EXPR,
         "Unable to read memory due to invalid address");
     return 0;
+}
+bool MemoryExpr::setImpl(hart::HartState* hs, ExprPtr value) const {
+    auto addr = expr->eval(hs);
+    if(addr) {
+        auto converted_addr = hs->mem().raw(addr);
+        auto v = value->eval(hs);
+        *(types::SignedInteger*)(converted_addr) = v;
+    }
+    common::debug::logln(
+        common::debug::DebugType::EXPR,
+        "Unable to set memory due to invalid address");
+    return false;
 }
 
 } // namespace command
