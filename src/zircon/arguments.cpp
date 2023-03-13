@@ -231,8 +231,8 @@ void MainArguments::parse(int argc, const char** argv, const char** envp) {
     auto parser = ishell::parser::Parser();
     for(auto s : control_args) {
         try {
-            auto control = parser.parse(s);
-            parsed_controls.push_back(control);
+            auto command = parser.parse(s);
+            parsed_commands.push_back(command);
         } catch(const ishell::parser::ParseException& e) {
             throw ArgumentException(
                 "Failed to parse command '" + s + "': " + e.what());
@@ -413,7 +413,7 @@ void MainArguments::addCallbacks(hart::Hart& hart, elf::File& elf) {
 }
 void MainArguments::addControllerCallbacks(hart::Hart& hart) {
     bool useColor = this->useColor();
-    for(auto a : parsed_controls) {
+    for(auto a : parsed_commands) {
         a->setHS(&hart.hs());
         a->setColor(useColor);
         if(auto watch = std::dynamic_pointer_cast<command::Watch>(a)) {
