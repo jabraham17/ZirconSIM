@@ -76,7 +76,8 @@
     /*others*/                                                                 \
     F(COMMA)                                                                   \
     F(SEMICOLON)                                                               \
-    F(STRING)
+    F(STRING)                                                                  \
+    F(MODIFIER)
 
 #define COUNT_LIST(elm) +1
 #define MAKE_LIST(elm) elm,
@@ -189,6 +190,9 @@ class Lexer {
 
     Token getSymbol();
     bool isSymbol();
+
+    Token getModifier();
+    bool isModifierStart();
 
     Token getStringToken();
     bool isStringTokenStart();

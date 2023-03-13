@@ -37,7 +37,8 @@ Token Lexer::getToken() {
         else {
 
             if(isSymbol()) tok = getSymbol();
-            if(isStringTokenStart()) tok = getStringToken();
+            else if(isModifierStart()) tok = getModifier();
+            else if(isStringTokenStart()) tok = getStringToken();
             else if(isNUM()) tok = getNUM();
             else if(isPrefixedPrimaryStart()) tok = getPrefixedPrimary();
             else tok = getKeyword();
@@ -284,6 +285,21 @@ bool Lexer::isSymbol() {
         case '~': return true;
     }
     return false;
+}
+
+Token Lexer::getModifier() {
+    Token t;
+    if(peekChar() == '/') {
+        getChar();
+        auto word = getWord();
+        t.lexeme = common::utils::toupper(word);
+        t.token_type = TokenType::MODIFIER;
+    }
+    return t;
+}
+bool Lexer::isModifierStart() {
+    char c = peekChar();
+    return c == '/';
 }
 
 bool Lexer::isStringTokenStart() {
