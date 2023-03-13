@@ -25,8 +25,8 @@ bool elf::validateFileHeader(FileHeader& fh) {
     if(fh.e_ident.EI_VERSION != 1) {
         return false;
     }
-    // check ABI, only allow SystemV (0)
-    // TODO: ABI for linux is 3, but even musl has abi of SystemV
+// check ABI, only allow SystemV (0)
+#warning todo: ABI for linux is 3, but even musl has abi of SystemV
     if(fh.e_ident.EI_OSABI != 0x00) {
         return false;
     }
