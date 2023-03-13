@@ -16,6 +16,9 @@ enum class Precedence {
     ACC
 };
 #include "parser/expr_parser_table.inc"
+
+#warning TODO change std::get if ladders to use visitor? may make cleaner and/or faster code
+
 bool ExprParser::isTerminal(const StackElm& se) {
     return std::holds_alternative<Token>(se);
 }
