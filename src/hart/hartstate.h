@@ -166,35 +166,10 @@ class HartState {
         execution_state = es;
     }
 
-    // void setExecutionState(ExecutionState es) {
-    //     if(!isValidExecutionStateTransition(es)) {
-    //         es = ExecutionState::INVALID_STATE;
-    //         common::debug::logln("Hart is now in an invalid execution
-    //         state");
-    //     }
-    //     {
-    //         std::unique_lock lk(lock_es);
-    //         execution_state = es;
-    //     }
-
-    //     signal_es.notify_all();
-    // }
-    // template <typename Callable, typename... Args>
-    // void waitForExecutionStateChange(Callable func, Args... args) {
-    //     {
-    //         std::unique_lock lk(lock_es);
-    //         signal_es.wait(lk);
-    //         func(args...);
-    //     }
-    // }
-    // void waitForExecutionStateChange() {
-    //     std::unique_lock lk(lock_es);
-    //     signal_es.wait(lk);
-    // }
-
   private:
     bool isValidExecutionStateTransition(ExecutionState new_es) {
         if(new_es == ExecutionState::INVALID_STATE) return true;
+        if(new_es == execution_state) return true;
         switch(execution_state.load()) {
             case ExecutionState::INVALID_STATE: return false;
             case ExecutionState::PAUSED:
