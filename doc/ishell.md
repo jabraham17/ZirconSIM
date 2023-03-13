@@ -43,40 +43,49 @@ The current implementation is powerful but can act in surprising ways, use with 
 All keywords such as `WATCH` and `DUMP` are case-insensitive.
 
 ```default
-control        -> action_command | watch_command
-watch_command  -> WATCH REGISTER action_list
-watch_command  -> WATCH expr action_list
-action_command -> action_list if_statement on_statement
-if_statement   -> IF expr | EPSILON
-on_statement   -> ON event_list | EPSILON
-action_list    -> action | action COMMA action_list
-event_list     -> event | event COMMA event_list
-event          -> SUBSYSTEM COLON EVENT
-action         -> STOP | PAUSE | RESUME | DISASM expr | DUMP expr
-expr           -> expr * expr
-expr           -> expr / expr
-expr           -> expr + expr
-expr           -> expr - expr
-expr           -> expr << expr
-expr           -> expr >> expr
-expr           -> expr < expr
-expr           -> expr <= expr
-expr           -> expr > expr
-expr           -> expr >= expr
-expr           -> expr == expr
-expr           -> expr ~= expr
-expr           -> expr & expr
-expr           -> expr | expr
-expr           -> expr && expr
-expr           -> expr || expr
-expr           -> - expr
-expr           -> ~ expr
-expr           -> ! expr
-expr           -> ( expr )
-expr           -> $m [ expr ]
-expr           -> $reg_name
-expr           -> 0-9
-expr           -> $pc
+command           -> action_list if_statement on_statement
+if_statement      -> IF expr | EPSILON
+on_statement      -> ON event_list | EPSILON
+
+event_list        -> event | event SEMICOLON event_list
+event             -> SUBSYSTEM COLON EVENT
+
+action_list(SEP)       -> action | action SEP action_list
+action            -> STOP | PAUSE | RESUME
+action            -> DISASM expr 
+action            -> DUMP dump_arg_list
+action            -> WATCH watch_args
+action            -> SET lvalue_expr EQUALS expr
+
+dump_arg          -> expr | STRING
+dump_arg_list     -> dump_arg | dump_arg COMMA dump_arg_list
+
+watch_args        -> lvalue_expr action_list(SEP=COMMA)
+
+lvalue_expr       -> expr
+expr              -> expr * expr
+expr              -> expr / expr
+expr              -> expr + expr
+expr              -> expr - expr
+expr              -> expr << expr
+expr              -> expr >> expr
+expr              -> expr < expr
+expr              -> expr <= expr
+expr              -> expr > expr
+expr              -> expr >= expr
+expr              -> expr == expr
+expr              -> expr ~= expr
+expr              -> expr & expr
+expr              -> expr | expr
+expr              -> expr && expr
+expr              -> expr || expr
+expr              -> - expr
+expr              -> ~ expr
+expr              -> ! expr
+expr              -> ( expr )
+expr              -> $M [ expr ]
+expr              -> primary
+primary           -> $register | NUM | $PC | @symbol
 ```
 
 ## Callback Execution Model

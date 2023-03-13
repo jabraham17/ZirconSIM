@@ -3,6 +3,7 @@
 
 #include "lexer.h"
 
+#include "command/action.h"
 #include "command/command.h"
 #include "command/expr.h"
 #include "hart/isa/rf.h"
@@ -22,48 +23,41 @@ struct ParseException : public std::runtime_error {
 
 class Parser {
   private:
-    using Control_ptr = std::shared_ptr<command::ControlBase>;
-    using Watch_ptr = std::shared_ptr<command::Watch>;
-    using Command_ptr = std::shared_ptr<command::Command>;
-    using Action_ptr = std::shared_ptr<command::action::ActionInterface>;
+    using CommandPtr = std::shared_ptr<command::CommandBase>;
+
+    using ActionPtrList = std::vector<action::ActionPtr>;
 
   public:
     Lexer lexer;
     Parser() = default;
-    Control_ptr parse(std::string input);
-    std::vector<Control_ptr> parseAll(std::string input);
-
-    /*
-    control         -> action_command | watch_command
-    watch_command   -> WATCH REGISTER action_list
-    watch_command   -> WATCH expr action_list
-    action_command  -> action_list if_statement on_statement
-    if_statement    -> IF expr | EPSILON
-    on_statement    -> ON event_list | EPSILON
-    action_list     -> action | action COMMA action_list
-    event_list      -> event | event COMMA event_list
-    event           -> SUBSYSTEM COLON EVENT
-    action          -> STOP | PAUSE | RESUME | DISASM expr | DUMP expr
-    */
+    CommandPtr parse(std::string input);
+    std::vector<CommandPtr> parseAll(std::string input);
 
   private:
     Token expect(TokenType tt);
 
-    Control_ptr parse_control();
-    Watch_ptr parse_watch_command();
-    Command_ptr parse_action_command();
+    CommandPtr parse_command();
     command::ExprPtr parse_if_statement();
     std::vector<event::EventType> parse_on_statement();
-    std::vector<Action_ptr> parse_action_list();
+
     std::vector<event::EventType> parse_event_list();
     event::EventType parse_event();
-    Action_ptr parse_action();
+
+    ActionPtrList parse_action_list(TokenType SEP);
+    action::ActionPtr parse_action();
+
+    action::Dump::DumpArg parse_dump_arg();
+    std::vector<action::Dump::DumpArg> parse_dump_arg_list();
+
+    std::pair<command::ExprPtr, ActionPtrList> parse_watch_args();
+
+    command::ExprPtr parse_lvalue_expr();
     command::ExprPtr parse_expr();
 
     // helpers
 
     // builds an action group if it makes sense to do it
-    std::vector<Action_ptr> make_action_group(const std::vector<Action_ptr>&);
+    ActionPtrList make_action_group(const ActionPtrList&);
 };
 
 } // namespace parser
