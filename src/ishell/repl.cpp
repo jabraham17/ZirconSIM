@@ -122,7 +122,6 @@ void Repl::execute() {
     });
 
     while(1) {
-        common::debug::logln("In Repl::execute()");
         if(hs->isPaused()) {
             std::string input;
             auto res = lineInput.get(input, ">>> ");
@@ -132,7 +131,8 @@ void Repl::execute() {
                 continue;
             }
             try {
-                auto control = parser.parse(input);
+                auto control =
+                    parser.parse(input, command::CommandContext::REPL);
                 control->setHS(hs);
                 if(auto command =
                        std::dynamic_pointer_cast<command::Command>(control)) {
@@ -150,7 +150,6 @@ void Repl::execute() {
             break;
         }
     }
-    common::debug::logln("Finished with Repl::execute()");
     sync_point.signal();
 }
 

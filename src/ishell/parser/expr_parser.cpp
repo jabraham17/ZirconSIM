@@ -139,9 +139,8 @@ bool ExprParser::isPrimaryRule(const std::vector<StackElm>& rhs) {
     if(rhs.size() == 1) {
         return isTokenOfType(rhs[0], TokenType::REGISTER) ||
                isTokenOfType(rhs[0], TokenType::NUM) ||
-               isTokenOfType(
-                   rhs[0],
-                   TokenType::PC || isTokenOfType(rhs[0], TokenType::SYMBOL));
+               isTokenOfType(rhs[0], TokenType::PC) ||
+               isTokenOfType(rhs[0], TokenType::SYMBOL);
     } else if(rhs.size() == 4) {
         return isTokenOfType(rhs[3], TokenType::MEM) &&
                isTokenOfType(rhs[2], TokenType::LBRACK) &&

@@ -3,6 +3,7 @@
 #include "common/debug.h"
 #include "event/event.h"
 
+#include <deque>
 #include <utility>
 
 #include "expr_parser.h"
@@ -19,26 +20,48 @@ Token Parser::expect(TokenType tt) {
         "Expected '" + std::string(tt) + "' got '" + std::string(t.token_type) +
         "'");
 }
-Parser::CommandPtr Parser::parse(std::string input) {
+command::CommandPtr
+Parser::parse(std::string input, command::CommandContext context) {
     common::debug::log(common::debug::DebugType::PARSER, "parse()\n");
     lexer = Lexer(input);
-    auto c = parse_command();
+    auto c = parse_command(context);
     expect(TokenType::END_OF_FILE);
     return c;
 }
-std::vector<Parser::CommandPtr> Parser::parseAll(std::string input) {
+std::vector<command::CommandPtr>
+Parser::parseAll(std::string input, command::CommandContext context) {
     common::debug::log(common::debug::DebugType::PARSER, "parseAll()\n");
     lexer = Lexer(input);
-    std::vector<CommandPtr> c_list;
+    std::vector<command::CommandPtr> c_list;
     while(lexer.peek().token_type != TokenType::END_OF_FILE) {
-        auto c = parse_command();
+        auto c = parse_command(context);
         c_list.push_back(c);
     }
     expect(TokenType::END_OF_FILE);
     return c_list;
 }
 
-Parser::CommandPtr Parser::parse_command() {
+template <class ForwardIT>
+static bool actionsContainWatch(ForwardIT begin, ForwardIT end) {
+    using VT = typename std::iterator_traits<ForwardIT>::value_type;
+    static_assert(
+        std::is_same<VT, action::ActionPtr>(),
+        "Iterator must be to an action");
+    std::deque<VT> q(begin, end);
+    while(!q.empty()) {
+        auto v = q.back();
+        q.pop_back();
+        if(v->template isa<action::Watch>()) return true;
+        if(v->template isa<action::ActionGroup>()) {
+            auto more_actions =
+                v->template cast<action::ActionGroup>()->getActions();
+            q.insert(q.begin(), more_actions.begin(), more_actions.end());
+        }
+    }
+    return false;
+}
+
+command::CommandPtr Parser::parse_command(command::CommandContext context) {
     common::debug::log(common::debug::DebugType::PARSER, "parse_command()\n");
     auto actions = parse_action_list(TokenType::SEMICOLON);
     auto condition = parse_if_statement();
@@ -46,12 +69,41 @@ Parser::CommandPtr Parser::parse_command() {
 
     actions = make_action_group(actions);
 
-    return std::make_shared<command::CommandBase>(
-        actions,
-        condition,
-        event_list);
+    // no events and CLI context, use a callback
+    // no events and REPL context, use an immediate, UNLESS there is a watch
+    // command otherwise regardless of context if there are events use callback
+    if(event_list.empty()) {
+        if(context == command::CommandContext::CLI) {
+            return std::make_shared<command::CallbackCommand>(
+                context,
+                actions,
+                condition);
+        } else if(
+            context == command::CommandContext::REPL &&
+            actionsContainWatch(actions.begin(), actions.end())) {
+            return std::make_shared<command::CallbackCommand>(
+                context,
+                actions,
+                condition);
+        } else if(context == command::CommandContext::REPL) {
+            return std::make_shared<command::Command>(
+                context,
+                actions,
+                condition);
+        } else {
+            // probably a really cryptic parse exception, but shouldn't occur
+            // unless you really mess up
+            throw ParseException("Cannot infer events with unknown context\n");
+        }
+    } else {
+        return std::make_shared<command::CallbackCommand>(
+            context,
+            actions,
+            condition,
+            std::set(event_list.begin(), event_list.end()));
+    }
 }
-// }
+
 command::ExprPtr Parser::parse_if_statement() {
     common::debug::log(
         common::debug::DebugType::PARSER,

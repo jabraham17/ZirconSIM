@@ -23,20 +23,20 @@ struct ParseException : public std::runtime_error {
 
 class Parser {
   private:
-    using CommandPtr = std::shared_ptr<command::CommandBase>;
-
     using ActionPtrList = std::vector<action::ActionPtr>;
 
   public:
     Lexer lexer;
     Parser() = default;
-    CommandPtr parse(std::string input);
-    std::vector<CommandPtr> parseAll(std::string input);
+    command::CommandPtr
+    parse(std::string input, command::CommandContext context);
+    std::vector<command::CommandPtr>
+    parseAll(std::string input, command::CommandContext context);
 
   private:
     Token expect(TokenType tt);
 
-    CommandPtr parse_command();
+    command::CommandPtr parse_command(command::CommandContext context);
     command::ExprPtr parse_if_statement();
     std::vector<event::EventType> parse_on_statement();
 
