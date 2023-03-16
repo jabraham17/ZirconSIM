@@ -137,6 +137,7 @@ Token Lexer::getKeyword() {
     else if(t.lexeme == "WATCH") t.token_type = TokenType::WATCH;
     else if(t.lexeme == "DUMP") t.token_type = TokenType::DUMP;
     else if(t.lexeme == "DISASM") t.token_type = TokenType::DISASM;
+    else if(t.lexeme == "SET") t.token_type = TokenType::SET;
     else if(t.lexeme == "IF") t.token_type = TokenType::IF;
     else if(t.lexeme == "ON") t.token_type = TokenType::ON;
     else if(event::isEventSubsystemType(t.lexeme))

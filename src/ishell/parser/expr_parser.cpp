@@ -166,7 +166,7 @@ ExprParser::reducePrimaryRule(const std::vector<StackElm>& rhs) {
             return std::make_shared<command::SymbolExpr>(
                 std::get<Token>(rhs[0]).lexeme);
         } else {
-            return std::make_shared<command::PCExpr>(); // PC
+            return std::make_shared<command::PCExpr>();
         }
     } else {
         // memory

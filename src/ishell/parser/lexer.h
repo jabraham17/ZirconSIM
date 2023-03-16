@@ -25,6 +25,7 @@
     F(WATCH)                                                                   \
     F(DUMP)                                                                    \
     F(DISASM)                                                                  \
+    F(SET)                                                                     \
     F(IF)                                                                      \
     F(ON)
 
