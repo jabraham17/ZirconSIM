@@ -183,6 +183,36 @@ class Watch : public ActionBase {
     static bool classof(const ActionBase* ai) {
         return ai->at == ActionType::WATCH;
     }
+    virtual void setHS(hart::HartState* hs) override {
+        ActionBase::setHS(hs);
+        updateActions();
+    }
+    virtual void setColor(bool useColor) override {
+        ActionBase::setColor(useColor);
+        this->updateActions();
+    }
+
+    virtual void increaseIndent(size_t indent = 2) override {
+        ActionBase::increaseIndent(indent);
+        for(auto a : this->actions) {
+            a->increaseIndent();
+        }
+    }
+    virtual void decreaseIndent(size_t indent = 2) override {
+        ActionBase::decreaseIndent(indent);
+        for(auto a : this->actions) {
+            a->decreaseIndent();
+        }
+    }
+
+  private:
+    void updateActions() {
+        for(auto a : this->actions) {
+            a->setHS(this->hs);
+            a->increaseIndent();
+            a->setColor(this->useColor);
+        }
+    }
 };
 
 class ActionGroup : public ActionBase {
