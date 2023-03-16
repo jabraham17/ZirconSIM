@@ -244,6 +244,8 @@ class RegisterExpr : public Expr {
 
     virtual std::string getString() const override;
 
+    virtual bool isLValue() const override { return true; }
+
     static bool classof(const Expr* e) {
         return e->getType() == ExprType::REGISTER;
     }
