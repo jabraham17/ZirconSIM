@@ -123,6 +123,7 @@ void CallbackCommand::install(hart::Hart* hart) {
                     [this](std::string, uint64_t, uint64_t, uint64_t) {
                         CALLBACK_TO_INSTALL
                     });
+                break;
             default: std::cerr << "No Event Handler Defined\n";
         }
     }
