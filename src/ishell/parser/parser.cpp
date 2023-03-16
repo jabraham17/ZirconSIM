@@ -166,30 +166,43 @@ action::ActionPtr Parser::parse_action() {
     common::debug::log(common::debug::DebugType::PARSER, "parse_action()\n");
     if(lexer.peek().token_type == TokenType::STOP) {
         expect(TokenType::STOP);
+        ParenParserRAII ppRAII(this);
         return std::make_shared<action::Stop>();
     } else if(lexer.peek().token_type == TokenType::PAUSE) {
         expect(TokenType::PAUSE);
+        ParenParserRAII ppRAII(this);
         return std::make_shared<action::Pause>();
     } else if(lexer.peek().token_type == TokenType::RESUME) {
         expect(TokenType::RESUME);
+        ParenParserRAII ppRAII(this);
         return std::make_shared<action::Resume>();
     } else if(lexer.peek().token_type == TokenType::DISASM) {
         expect(TokenType::DISASM);
+        ParenParserRAII ppRAII(this);
         auto expr = parse_expr();
         return std::make_shared<action::Disasm>(expr);
     } else if(lexer.peek().token_type == TokenType::DUMP) {
         expect(TokenType::DUMP);
+        ParenParserRAII ppRAII(this);
         auto dump_args = parse_dump_arg_list();
         return std::make_shared<action::Dump>(
             dump_args.begin(),
             dump_args.end());
     } else if(lexer.peek().token_type == TokenType::WATCH) {
         expect(TokenType::WATCH);
+        ParenParserRAII ppRAII(this);
         auto [watch_expr, watch_args] = parse_watch_args();
         return std::make_shared<action::Watch>(
             watch_expr,
             watch_args.begin(),
             watch_args.end());
+    } else if(lexer.peek().token_type == TokenType::SET) {
+        expect(TokenType::SET);
+        ParenParserRAII ppRAII(this);
+        auto lhs = parse_lvalue_expr();
+        expect(TokenType::EQUALS);
+        auto rhs = parse_expr();
+        return std::make_shared<action::Set>(lhs, rhs);
     } else throw ParseException("Unknown action: " + lexer.peek().getString());
 }
 
@@ -221,6 +234,7 @@ std::pair<command::ExprPtr, Parser::ActionPtrList> Parser::parse_watch_args() {
         common::debug::DebugType::PARSER,
         "parse_watch_args()\n");
     auto e = parse_lvalue_expr();
+    expect(TokenType::COMMA);
     auto actions = parse_action_list(TokenType::COMMA);
     return {e, actions};
 }
@@ -238,8 +252,20 @@ command::ExprPtr Parser::parse_lvalue_expr() {
 command::ExprPtr Parser::parse_expr() {
     common::debug::log(common::debug::DebugType::PARSER, "parse_expr()\n");
     std::vector<Token> input;
+    long parenCount = 0;
     while(ExprParser::isExprToken(lexer.peek())) {
-        input.push_back(lexer.getToken());
+        auto t = lexer.getToken();
+        if(t.token_type == TokenType::LPAREN) parenCount++;
+        if(t.token_type == TokenType::RPAREN) parenCount--;
+        input.push_back(t);
+    }
+    // while parenCount is lt 0 and last elm in 'input' is an RPAREN
+    // it should not be included in the 'input'
+    while(parenCount < 0 && input.back().token_type == TokenType::RPAREN) {
+        auto t = input.back();
+        input.pop_back();
+        lexer.ungetToken(t); // put it back
+        parenCount++;
     }
     ExprParser ep(input);
     auto expr = ep.parse();

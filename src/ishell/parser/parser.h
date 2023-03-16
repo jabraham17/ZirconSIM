@@ -35,6 +35,25 @@ class Parser {
 
   private:
     Token expect(TokenType tt);
+    // use RAII (ie scoping) to parse matching parens if found
+    class ParenParserRAII {
+      private:
+        Parser* parser;
+        bool parseParen;
+
+      public:
+        ParenParserRAII(Parser* parser) : parser(parser), parseParen(false) {
+            if(parser->lexer.peek().token_type == TokenType::LPAREN) {
+                parser->expect(TokenType::LPAREN);
+                parseParen = true;
+            }
+        }
+        ~ParenParserRAII() {
+            if(parseParen) {
+                parser->expect(TokenType::RPAREN);
+            }
+        }
+    };
 
     command::CommandPtr parse_command(command::CommandContext context);
     command::ExprPtr parse_if_statement();
