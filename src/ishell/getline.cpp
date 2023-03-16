@@ -68,7 +68,6 @@ getline::getline(const std::string& history_file, size_t history_size)
 
 bool getline::get(std::string& line, const std::string& prompt) {
 
-    // TODO ADD COMPLETION
     linenoiseSetCompletionCallback(completion_function, (void*)this);
     // linenoiseSetHintsCallback(hints_function, (void*)this);
 

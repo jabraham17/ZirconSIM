@@ -81,7 +81,8 @@ ifeq ($(DEBUG),1)
 COMPILE_FLAGS+= -DDEBUG=1 -g -O0 -fstandalone-debug
 LINK_FLAGS+= -g
 else
-COMPILE_FLAGS+= -O3
+# #warnings are for developers
+COMPILE_FLAGS+= -O3 -Wno-\#warnings
 endif
 
 ifeq ($(WASM),1)

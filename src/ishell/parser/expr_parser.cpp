@@ -16,6 +16,9 @@ enum class Precedence {
     ACC
 };
 #include "parser/expr_parser_table.inc"
+
+#warning TODO change std::get if ladders to use visitor? may make cleaner and/or faster code
+
 bool ExprParser::isTerminal(const StackElm& se) {
     return std::holds_alternative<Token>(se);
 }
@@ -136,7 +139,8 @@ bool ExprParser::isPrimaryRule(const std::vector<StackElm>& rhs) {
     if(rhs.size() == 1) {
         return isTokenOfType(rhs[0], TokenType::REGISTER) ||
                isTokenOfType(rhs[0], TokenType::NUM) ||
-               isTokenOfType(rhs[0], TokenType::PC);
+               isTokenOfType(rhs[0], TokenType::PC) ||
+               isTokenOfType(rhs[0], TokenType::SYMBOL);
     } else if(rhs.size() == 4) {
         return isTokenOfType(rhs[3], TokenType::MEM) &&
                isTokenOfType(rhs[2], TokenType::LBRACK) &&
@@ -158,8 +162,11 @@ ExprParser::reducePrimaryRule(const std::vector<StackElm>& rhs) {
         } else if(isTokenOfType(rhs[0], TokenType::NUM)) {
             return std::make_shared<command::NumberExpr>(
                 types::strToUnsignedInteger(std::get<Token>(rhs[0]).lexeme));
+        } else if(isTokenOfType(rhs[0], TokenType::SYMBOL)) {
+            return std::make_shared<command::SymbolExpr>(
+                std::get<Token>(rhs[0]).lexeme);
         } else {
-            return std::make_shared<command::PCExpr>(); // PC
+            return std::make_shared<command::PCExpr>();
         }
     } else {
         // memory
@@ -333,7 +340,8 @@ bool ExprParser::isExprToken(const Token& t) {
         case TokenType::RBRACK:
         case TokenType::REGISTER:
         case TokenType::NUM:
-        case TokenType::PC: return true;
+        case TokenType::PC:
+        case TokenType::SYMBOL: return true;
     }
     return false;
 }

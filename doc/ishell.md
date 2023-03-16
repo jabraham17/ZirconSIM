@@ -8,8 +8,8 @@ iShell commands can be run at startup via the command line or executed from an i
 There are two basic commands, action commands and watch commands.
 
 Action commands have the form `actions [if condition] [on events]`.
-A single command can express  multiple actions, separated by commas.
-Both the `if`  and `on` statements are options.
+A single command can express multiple actions, separated by commas.
+Both the `if` and `on` statements are options.
 `if` statements prevent all actions from being executed unless the condition is true.
 Events can be specified as `subsystem:event` as a command separated list.
 If the command is executed as a callback, then the event(s) specify which callback to install the action(s).
@@ -43,40 +43,62 @@ The current implementation is powerful but can act in surprising ways, use with 
 All keywords such as `WATCH` and `DUMP` are case-insensitive.
 
 ```default
-control        -> action_command | watch_command
-watch_command  -> WATCH REGISTER action_list
-watch_command  -> WATCH expr action_list
-action_command -> action_list if_statement on_statement
-if_statement   -> IF expr | EPSILON
-on_statement   -> ON event_list | EPSILON
-action_list    -> action | action COMMA action_list
-event_list     -> event | event COMMA event_list
-event          -> SUBSYSTEM COLON EVENT
-action         -> STOP | PAUSE | RESUME | DISASM expr | DUMP expr
-expr           -> expr * expr
-expr           -> expr / expr
-expr           -> expr + expr
-expr           -> expr - expr
-expr           -> expr << expr
-expr           -> expr >> expr
-expr           -> expr < expr
-expr           -> expr <= expr
-expr           -> expr > expr
-expr           -> expr >= expr
-expr           -> expr == expr
-expr           -> expr ~= expr
-expr           -> expr & expr
-expr           -> expr | expr
-expr           -> expr && expr
-expr           -> expr || expr
-expr           -> - expr
-expr           -> ~ expr
-expr           -> ! expr
-expr           -> ( expr )
-expr           -> $m [ expr ]
-expr           -> $reg_name
-expr           -> 0-9
-expr           -> $pc
+command           -> action_list(SEP=SEMICOLON) if_statement on_statement
+if_statement      -> IF expr | EPSILON
+on_statement      -> ON event_list | EPSILON
+
+event_list        -> event | event SEMICOLON event_list
+event             -> SUBSYSTEM COLON EVENT
+
+action_list(SEP)  -> action | action SEP action_list(SEP=SEP)
+action            -> STOP
+action            -> STOP LPAREN RPAREN
+action            -> PAUSE
+action            -> PAUSE LPAREN RPAREN
+action            -> RESUME
+action            -> RESUME LPAREN RPAREN
+
+action            -> DISASM expr
+action            -> DISASM LPAREN expr RPAREN
+
+action            -> DUMP dump_arg_list
+action            -> DUMP LPAREN dump_arg_list RPAREN
+
+action            -> WATCH watch_args
+action            -> WATCH LPAREN watch_args RPAREN
+
+action            -> SET lvalue_expr EQUALS expr
+action            -> SET LPAREN lvalue_expr EQUALS expr RPAREN
+
+dump_arg          -> expr | STRING
+dump_arg_list     -> dump_arg | dump_arg COMMA dump_arg_list
+
+watch_args        -> lvalue_expr COMMA action_list(SEP=COMMA)
+
+lvalue_expr       -> expr
+expr              -> expr * expr
+expr              -> expr / expr
+expr              -> expr + expr
+expr              -> expr - expr
+expr              -> expr << expr
+expr              -> expr >> expr
+expr              -> expr < expr
+expr              -> expr <= expr
+expr              -> expr > expr
+expr              -> expr >= expr
+expr              -> expr == expr
+expr              -> expr ~= expr
+expr              -> expr & expr
+expr              -> expr | expr
+expr              -> expr && expr
+expr              -> expr || expr
+expr              -> - expr
+expr              -> ~ expr
+expr              -> ! expr
+expr              -> ( expr )
+expr              -> $M [ expr ]
+expr              -> primary
+primary           -> $register | NUM | $PC | @symbol
 ```
 
 ## Callback Execution Model

@@ -37,6 +37,8 @@ Token Lexer::getToken() {
         else {
 
             if(isSymbol()) tok = getSymbol();
+            else if(isModifierStart()) tok = getModifier();
+            else if(isStringTokenStart()) tok = getStringToken();
             else if(isNUM()) tok = getNUM();
             else if(isPrefixedPrimaryStart()) tok = getPrefixedPrimary();
             else tok = getKeyword();
@@ -135,6 +137,7 @@ Token Lexer::getKeyword() {
     else if(t.lexeme == "WATCH") t.token_type = TokenType::WATCH;
     else if(t.lexeme == "DUMP") t.token_type = TokenType::DUMP;
     else if(t.lexeme == "DISASM") t.token_type = TokenType::DISASM;
+    else if(t.lexeme == "SET") t.token_type = TokenType::SET;
     else if(t.lexeme == "IF") t.token_type = TokenType::IF;
     else if(t.lexeme == "ON") t.token_type = TokenType::ON;
     else if(event::isEventSubsystemType(t.lexeme))
@@ -157,10 +160,20 @@ Token Lexer::getPrefixedPrimary() {
             // maintain the original case of the register
             t.lexeme = word;
         }
+    } else if(peekChar() == '@') {
+        getChar();
+        // maintain the original case of the register as symbols are case
+        // sensistive
+        auto word = getWord();
+        t.lexeme = word;
+        t.token_type = TokenType::SYMBOL;
     }
     return t;
 }
-bool Lexer::isPrefixedPrimaryStart() { return peekChar() == '$'; }
+bool Lexer::isPrefixedPrimaryStart() {
+    char c = peekChar();
+    return c == '$' || c == '@';
+}
 
 Token Lexer::getSymbol() {
     Token t;
@@ -171,6 +184,7 @@ Token Lexer::getSymbol() {
         switch(c) {
             case ':': t.token_type = TokenType::COLON; break;
             case ',': t.token_type = TokenType::COMMA; break;
+            case ';': t.token_type = TokenType::SEMICOLON; break;
             case '[': t.token_type = TokenType::LBRACK; break;
             case ']': t.token_type = TokenType::RBRACK; break;
             case '(': t.token_type = TokenType::LPAREN; break;
@@ -213,6 +227,7 @@ Token Lexer::getSymbol() {
                 break;
             }
             case '=': {
+                t.token_type = TokenType::EQUALS;
                 if(peekChar() == '=') {
                     getChar();
                     t.token_type = TokenType::EQ;
@@ -250,10 +265,74 @@ Token Lexer::getSymbol() {
 }
 bool Lexer::isSymbol() {
     char c = peekChar();
-    return c == ':' || c == ',' || c == '[' || c == ']' || c == '(' ||
-           c == ')' || c == '*' || c == '/' || c == '+' || c == '-' ||
-           c == '<' || c == '>' || c == '=' || c == '!' || c == '&' ||
-           c == '|' || c == '~';
+    switch(c) {
+        case ':':
+        case ',':
+        case ';':
+        case '[':
+        case ']':
+        case '(':
+        case ')':
+        case '*':
+        case '/':
+        case '+':
+        case '-':
+        case '<':
+        case '>':
+        case '=':
+        case '!':
+        case '&':
+        case '|':
+        case '~': return true;
+    }
+    return false;
+}
+
+Token Lexer::getModifier() {
+    Token t;
+    if(peekChar() == '/') {
+        getChar();
+        auto word = getWord();
+        t.lexeme = common::utils::toupper(word);
+        t.token_type = TokenType::MODIFIER;
+    }
+    return t;
+}
+bool Lexer::isModifierStart() {
+    char c = peekChar();
+    return c == '/';
+}
+
+bool Lexer::isStringTokenStart() {
+    char c = peekChar();
+    return c == '\'' || c == '"';
+}
+Token Lexer::getStringToken() {
+    Token t;
+    if(isStringTokenStart()) {
+        std::vector<char> chars;
+        const char escapeChar = '\'';
+        char delim;
+        bool includeNextUnconditionally = false;
+        bool validString = false;
+
+        // get the first char
+        delim = getChar();
+        while(!endOfInput() && !validString) {
+            char next = getChar();
+            if(includeNextUnconditionally) chars.push_back(next);
+            else if(next == delim) validString = true;
+            // skip over escape char and included the next char with no check
+            else if(next == escapeChar) includeNextUnconditionally = true;
+            else chars.push_back(next);
+        }
+        if(validString) {
+            t.lexeme = std::string(chars.begin(), chars.end());
+            t.token_type = TokenType::STRING;
+        }
+    }
+
+    return t;
 }
 
 std::string Lexer::getWord() {

@@ -23,6 +23,7 @@ enum class ExprType {
     REGISTER,
     PC,
     MEMORY,
+    SYMBOL,
     NONE
 };
 enum class ExprOperatorType {
@@ -47,13 +48,23 @@ enum class ExprOperatorType {
     BW_NOT,
     NOT
 };
+class Expr;
+using ExprPtr = std::shared_ptr<Expr>;
+class ParenExpr;
 
 class Expr {
+    friend ParenExpr;
+
   private:
     ExprType et;
 
   protected:
     virtual types::SignedInteger evalImpl(hart::HartState* hs) const = 0;
+    virtual bool setImpl(
+        [[maybe_unused]] hart::HartState* hs,
+        [[maybe_unused]] ExprPtr value) const {
+        assert(false);
+    }
 
   public:
     Expr(ExprType et = ExprType::NONE) : et(et) {}
@@ -91,9 +102,23 @@ class Expr {
     types::SignedInteger operator()(hart::HartState* hs) {
         return (*const_cast<const Expr*>(this))(hs);
     }
+    bool set(hart::HartState* hs, ExprPtr value) const {
+        auto ret = setImpl(hs, value);
+        common::debug::logln(
+            common::debug::DebugType::EXPR,
+            this->getString(),
+            " = ",
+            value->getString());
+        return ret;
+    };
+    bool set(hart::HartState* hs, ExprPtr value) {
+        return const_cast<const Expr*>(this)->set(hs, value);
+    }
 
     ExprType getType() const { return et; }
     ExprType getType() { return const_cast<const Expr*>(this)->getType(); }
+
+    virtual bool isLValue() const { return false; }
 
     template <typename U> bool isa() { return U::classof(this); }
     template <typename U> U* cast() {
@@ -103,7 +128,6 @@ class Expr {
 
     virtual ~Expr() = default;
 };
-using ExprPtr = std::shared_ptr<Expr>;
 
 class BinaryExpr : public Expr {
   private:
@@ -151,12 +175,17 @@ class ParenExpr : public Expr {
 
   protected:
     virtual types::SignedInteger evalImpl(hart::HartState* hs) const override;
+    virtual bool setImpl(hart::HartState* hs, ExprPtr value) const override {
+        return this->expr->setImpl(hs, value);
+    }
 
   public:
     ParenExpr(ExprPtr expr) : Expr(ExprType::PAREN), expr(expr) {}
     virtual ~ParenExpr() = default;
 
     virtual std::string getString() const override;
+
+    virtual bool isLValue() const override { return this->expr->isLValue(); }
 
     static bool classof(const Expr* e) {
         return e->getType() == ExprType::PAREN;
@@ -181,6 +210,24 @@ class NumberExpr : public Expr {
     }
 };
 
+class SymbolExpr : public Expr {
+  private:
+    std::string name;
+
+  protected:
+    virtual types::SignedInteger evalImpl(hart::HartState* hs) const override;
+
+  public:
+    SymbolExpr(const std::string& name) : Expr(ExprType::SYMBOL), name(name) {}
+    virtual ~SymbolExpr() = default;
+
+    virtual std::string getString() const override;
+
+    static bool classof(const Expr* e) {
+        return e->getType() == ExprType::SYMBOL;
+    }
+};
+
 class RegisterExpr : public Expr {
   private:
     std::string name;
@@ -188,6 +235,7 @@ class RegisterExpr : public Expr {
 
   protected:
     virtual types::SignedInteger evalImpl(hart::HartState* hs) const override;
+    virtual bool setImpl(hart::HartState* hs, ExprPtr value) const override;
 
   public:
     RegisterExpr(std::string name, isa::rf::RegisterSymbol regSym)
@@ -196,6 +244,8 @@ class RegisterExpr : public Expr {
 
     virtual std::string getString() const override;
 
+    virtual bool isLValue() const override { return true; }
+
     static bool classof(const Expr* e) {
         return e->getType() == ExprType::REGISTER;
     }
@@ -203,12 +253,15 @@ class RegisterExpr : public Expr {
 class PCExpr : public Expr {
   protected:
     virtual types::SignedInteger evalImpl(hart::HartState* hs) const override;
+    virtual bool setImpl(hart::HartState* hs, ExprPtr value) const override;
 
   public:
     PCExpr() : Expr(ExprType::PC) {}
     virtual ~PCExpr() = default;
 
     virtual std::string getString() const override;
+
+    virtual bool isLValue() const override { return true; }
 
     static bool classof(const Expr* e) { return e->getType() == ExprType::PC; }
 };
@@ -218,12 +271,15 @@ class MemoryExpr : public Expr {
 
   protected:
     virtual types::SignedInteger evalImpl(hart::HartState* hs) const override;
+    virtual bool setImpl(hart::HartState* hs, ExprPtr value) const override;
 
   public:
     MemoryExpr(ExprPtr expr) : Expr(ExprType::MEMORY), expr(expr) {}
     virtual ~MemoryExpr() = default;
 
     virtual std::string getString() const override;
+
+    virtual bool isLValue() const override { return true; }
 
     static bool classof(const Expr* e) {
         return e->getType() == ExprType::MEMORY;

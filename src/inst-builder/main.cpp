@@ -17,8 +17,8 @@ everything read as hex
 ./ib  -prefix -name -rd -rs1 -rs2
 */
 
-// TODO: does not really support custom inst
-// TODO; does not support SHAMT
+#warning todo: does not really support custom inst
+#warning todo: does not support SHAMT
 
 enum class InstructionFormat { NONE, R, I, S, B, U, J };
 InstructionFormat parseInstructionFormat(const std::string& s) {

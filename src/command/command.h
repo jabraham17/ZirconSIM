@@ -10,292 +10,116 @@
 #include "hart/types.h"
 #include "mem/memory-image.h"
 
+#include <deque>
 #include <memory>
 #include <optional>
+#include <set>
+#include <vector>
+
+namespace action {
+class ActionBase;
+using ActionPtr = std::shared_ptr<ActionBase>;
+} // namespace action
 
 namespace command {
 
-namespace action {
-enum class ActionType {
-    STOP,
-    PAUSE,
-    RESUME,
-    DISASM,
-    DUMP,
-    GROUP,
-    NONE,
-};
-class ActionInterface {
-  public:
-    ActionType at;
+enum class CommandContext { CLI, REPL };
 
+class Command;
+using CommandPtr = std::shared_ptr<Command>;
+
+class Command {
   protected:
     hart::HartState* hs;
-    size_t indent;
-    bool useColor = false;
-
-  public:
-    ActionInterface(
-        ActionType at = ActionType::NONE,
-        hart::HartState* hs = nullptr)
-        : at(at), hs(hs), indent(0) {}
-    virtual ~ActionInterface() = default;
-
-    void operator()(std::ostream* o = nullptr) { this->action(o); }
-    virtual void action(std::ostream* o = nullptr) = 0;
-
-    template <typename U> bool isa() { return U::classof(this); }
-    template <typename U> U* cast() {
-        assert(this->isa<U>());
-        return static_cast<U*>(this);
-    }
-    virtual void setHS(hart::HartState* hs) { this->hs = hs; }
-    virtual void increaseIndent(size_t indent = 2) { this->indent += indent; }
-    // FIXME: possible sign underflow may occur here
-    virtual void decreaseIndent(size_t indent = 2) { this->indent -= indent; }
-    virtual void setColor(bool useColor) { this->useColor = useColor; }
-};
-
-#define MAKE_ACTION_0_ARGS(ClassName, ActionTypeName)                          \
-    class ClassName : public ActionInterface {                                 \
-      public:                                                                  \
-        ClassName() : ClassName(nullptr) {}                                    \
-        ClassName(hart::HartState* hs)                                         \
-            : ActionInterface(ActionType::ActionTypeName, hs) {}               \
-        virtual ~ClassName() = default;                                        \
-        void action(std::ostream* o = nullptr) override;                       \
-        static bool classof(const ActionInterface* ai) {                       \
-            return ai->at == ActionType::ActionTypeName;                       \
-        }                                                                      \
-    };
-#define MAKE_ACTION_1_ARGS(ClassName, ActionTypeName)                          \
-    class ClassName : public ActionInterface {                                 \
-      private:                                                                 \
-        command::ExprPtr expr;                                                 \
-                                                                               \
-      public:                                                                  \
-        ClassName(command::ExprPtr expr) : ClassName(nullptr, expr) {}         \
-        ClassName(hart::HartState* hs, command::ExprPtr expr)                  \
-            : ActionInterface(ActionType::ActionTypeName, hs), expr(expr) {}   \
-        virtual ~ClassName() = default;                                        \
-        void action(std::ostream* o = nullptr) override;                       \
-        static bool classof(const ActionInterface* ai) {                       \
-            return ai->at == ActionType::ActionTypeName;                       \
-        }                                                                      \
-    };
-
-MAKE_ACTION_0_ARGS(Stop, STOP)
-MAKE_ACTION_0_ARGS(Pause, PAUSE)
-MAKE_ACTION_0_ARGS(Resume, RESUME)
-MAKE_ACTION_1_ARGS(Disasm, DISASM)
-MAKE_ACTION_1_ARGS(Dump, DUMP)
-
-class ActionGroup : public ActionInterface {
-  private:
-    std::vector<std::shared_ptr<action::ActionInterface>> actions;
-
-  public:
-    ActionGroup(std::vector<std::shared_ptr<action::ActionInterface>> actions)
-        : ActionGroup(nullptr, actions) {}
-    ActionGroup(
-        hart::HartState* hs,
-        std::vector<std::shared_ptr<action::ActionInterface>> actions)
-        : ActionInterface(ActionType::GROUP, hs), actions(actions) {}
-    virtual ~ActionGroup() = default;
-
-    void action(std::ostream* o = nullptr) override;
-
-    static bool classof(const ActionInterface* ai) {
-        return ai->at == ActionType::GROUP;
-    }
-    virtual void setHS(hart::HartState* hs) override {
-        ActionInterface::setHS(hs);
-        updateActions();
-    }
-    virtual void setColor(bool useColor) override {
-        ActionInterface::setColor(useColor);
-        this->updateActions();
-    }
-
-    virtual void increaseIndent(size_t indent = 2) override {
-        ActionInterface::increaseIndent(indent);
-        for(auto a : this->actions) {
-            a->increaseIndent();
-        }
-    }
-    virtual void decreaseIndent(size_t indent = 2) override {
-        ActionInterface::decreaseIndent(indent);
-        for(auto a : this->actions) {
-            a->decreaseIndent();
-        }
-    }
-
-  private:
-    void updateActions() {
-        for(auto a : this->actions) {
-            a->setHS(this->hs);
-            a->increaseIndent();
-            a->setColor(this->useColor);
-        }
-    }
-};
-} // namespace action
-
-// empty class for inheritance
-class ControlBase {
-  protected:
-    bool useColor = false;
-
-  public:
-    virtual ~ControlBase() = default;
-    virtual void setColor(bool useColor) { this->useColor = useColor; }
-    virtual void setHS(hart::HartState* hs) = 0;
-};
-
-class Command : public ControlBase {
-
-  private:
-    std::vector<std::shared_ptr<action::ActionInterface>> actions;
+    CommandContext context;
+    std::vector<::action::ActionPtr> actions;
     command::ExprPtr condition;
-    std::vector<event::EventType> events;
-    hart::HartState* hs;
+    bool useColor;
 
   public:
     Command(
-        std::vector<std::shared_ptr<action::ActionInterface>> actions,
+        hart::HartState* hs,
+        CommandContext context,
+        std::vector<::action::ActionPtr> actions,
         command::ExprPtr condition,
-        std::vector<event::EventType> events);
+        bool useColor = false);
+
+    Command(
+        CommandContext context,
+        std::vector<::action::ActionPtr> actions,
+        command::ExprPtr condition,
+        bool useColor = false)
+        : Command(nullptr, context, actions, condition, useColor) {}
+    Command(
+        CommandContext context,
+        std::vector<::action::ActionPtr> actions,
+        bool useColor = false)
+        : Command(nullptr, context, actions, nullptr, useColor) {}
+
     virtual ~Command() = default;
-
-    virtual void setHS(hart::HartState* hs) override {
-        this->hs = hs;
-        for(auto a : actions) {
-            a->setHS(this->hs);
-        }
-    }
-
-    virtual bool shouldDoit() {
-        if(hs && condition) return bool(condition->eval(hs));
-        return true; // always do it if condition doesn't exist
-    }
-    virtual void doit(std::ostream* o = nullptr) {
-        if(shouldDoit()) {
-            for(auto a : actions) {
-                a->action(o);
-            }
-        }
-    }
-    auto getEventTypes() { return events; }
-
-    virtual void setColor(bool useColor) override {
-        ControlBase::setColor(useColor);
-        for(auto a : actions)
-            a->setColor(useColor);
+    virtual void setColor(bool useColor);
+    virtual void setHS(hart::HartState* hs);
+    virtual bool shouldDoit();
+    virtual void doit([[maybe_unused]] std::ostream* o = nullptr);
+    virtual void install([[maybe_unused]] hart::Hart* hart) {
+        // does nothing in the base case
     }
 };
 
-// change watches to define commands to also dump
-// maybe restructure watches as a new operator?
-// it becomes part of the conidition?
-
-class Watch : public ControlBase {
+class CallbackCommand : public Command {
   protected:
-    std::optional<types::Address> previous;
-    std::ostream* out;
-    hart::HartState* hs;
-    std::vector<std::shared_ptr<action::ActionInterface>> actions;
+    std::set<event::EventType> events;
 
   public:
-    Watch(
-        hart::HartState* hs = nullptr,
-        std::vector<std::shared_ptr<action::ActionInterface>> actions = {})
-        : previous(), out(nullptr), hs(hs), actions(actions) {
-        this->updateActions();
-    }
-    virtual ~Watch() = default;
-
-    void setLog(std::ostream* o) { this->out = o; }
-    virtual void setHS(hart::HartState* hs) override {
-        this->hs = hs;
-        this->updateActions();
-    }
-    void
-    setActions(std::vector<std::shared_ptr<action::ActionInterface>> actions) {
-        this->actions = actions;
-        this->updateActions();
-    }
-    virtual void setColor(bool useColor) override {
-        ControlBase::setColor(useColor);
-        this->updateActions();
-    }
-
-    virtual bool hasChanged() {
-        std::optional<types::Address> value = readCurrentValue();
-        // no current value, no change
-        if(!value.has_value()) return false;
-        // no previous value, no change
-        if(!previous.has_value()) return false;
-
-        return *value != *previous;
-    }
-    virtual void update();
-    virtual std::string name() = 0;
-    virtual std::optional<types::UnsignedInteger> readCurrentValue() = 0;
-
-  private:
-    void updateActions() {
-        for(auto a : this->actions) {
-            a->setHS(this->hs);
-            a->increaseIndent();
-            a->setColor(this->useColor);
-        }
-    }
-};
-
-class WatchRegister : public Watch {
-  public:
-    isa::rf::RegisterSymbol reg;
-
-    WatchRegister(isa::rf::RegisterSymbol reg)
-        : WatchRegister(nullptr, {}, reg) {}
-    WatchRegister(
+    CallbackCommand(
         hart::HartState* hs,
-        std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        isa::rf::RegisterSymbol reg)
-        : Watch(hs, actions), reg(reg) {}
-    virtual ~WatchRegister() = default;
+        CommandContext context,
+        std::vector<::action::ActionPtr> actions,
+        command::ExprPtr condition,
+        std::set<event::EventType> events,
+        bool useColor = false);
+    CallbackCommand(
+        CommandContext context,
+        std::vector<::action::ActionPtr> actions,
+        command::ExprPtr condition,
+        std::set<event::EventType> events,
+        bool useColor = false)
+        : CallbackCommand(
+              nullptr,
+              context,
+              actions,
+              condition,
+              events,
+              useColor) {}
+    CallbackCommand(
+        CommandContext context,
+        std::vector<::action::ActionPtr> actions,
+        std::set<event::EventType> events,
+        bool useColor = false)
+        : CallbackCommand(
+              nullptr,
+              context,
+              actions,
+              nullptr,
+              events,
+              useColor) {}
 
-    virtual std::string name() override {
-        // TODO: probably want to provide a way to pass in the actual register
-        // name used by the programmer, so we get better output
-        return isa::rf::getRegisterClassString(this->reg.rct) + "[" +
-               std::to_string(this->reg.idx) + "]";
-    }
-    virtual std::optional<types::UnsignedInteger> readCurrentValue() override {
-        if(hs) {
-            auto r = hs->rf().getRegisterClassForType(reg.rct);
-            auto value = r->rawreg(reg.idx).get();
-            return value;
-        }
-        return std::nullopt;
-    }
-};
+    CallbackCommand(
+        CommandContext context,
+        std::vector<::action::ActionPtr> actions,
+        command::ExprPtr condition,
+        bool useColor = false)
+        : CallbackCommand(nullptr, context, actions, condition, {}, useColor) {}
 
-class WatchMemoryAddress : public Watch {
-  public:
-    command::ExprPtr address;
+    CallbackCommand(
+        CommandContext context,
+        std::vector<::action::ActionPtr> actions,
+        bool useColor = false)
+        : CallbackCommand(nullptr, context, actions, nullptr, {}, useColor) {}
 
-    WatchMemoryAddress(command::ExprPtr address)
-        : WatchMemoryAddress(nullptr, {}, address) {}
-    WatchMemoryAddress(
-        hart::HartState* hs,
-        std::vector<std::shared_ptr<action::ActionInterface>> actions,
-        command::ExprPtr address)
-        : Watch(hs, actions), address(address) {}
-    virtual ~WatchMemoryAddress() = default;
-
-    virtual std::string name() override;
-    virtual std::optional<types::UnsignedInteger> readCurrentValue() override;
+    // override this classes doit, cannot call directly and should do nothing
+    virtual void doit([[maybe_unused]] std::ostream* o = nullptr) override {}
+    virtual void install([[maybe_unused]] hart::Hart* hart) override;
 };
 
 } // namespace command

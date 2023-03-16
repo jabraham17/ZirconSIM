@@ -216,7 +216,6 @@ void Hart::init(
 
 void Hart::execute() {
     sync_point.wait();
-    common::debug::logln("Starting Hart::execute()");
     while(1) {
         if(hs().isRunning()) {
             try {
@@ -237,7 +236,6 @@ void Hart::execute() {
             break;
         }
     }
-    common::debug::logln("Finished with Hart::execute()");
     if(hs().isInInvalidState()) {
         std::cerr << "Hart reached an invalid and unrecoverable state"
                   << std::endl;
