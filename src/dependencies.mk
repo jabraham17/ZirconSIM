@@ -9,8 +9,8 @@ command= hart
 common= hart
 trace= hart
 color= hart
-zircon= hart command ishell elf mem trace event color common
-zircon-wasm= hart command ishell elf mem trace event color common
+zircon= ishell hart command elf mem trace event color common
+zircon-wasm= ishell hart command elf mem trace event color common
 inst-builder= hart common
 
 define make_depen
