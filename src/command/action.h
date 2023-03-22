@@ -170,7 +170,7 @@ class Dump : public ActionBase {
         : Dump(nullptr, args_begin, args_end) {}
     template <class InputIt>
     Dump(hart::HartState* hs, InputIt args_begin, InputIt args_end)
-        : ActionBase(ActionType::WATCH, hs), args(args_begin, args_end) {}
+        : ActionBase(ActionType::DUMP, hs), args(args_begin, args_end) {}
     virtual ~Dump() = default;
     void action(std::ostream* o = nullptr) override;
     static bool classof(const ActionBase* ai) {
