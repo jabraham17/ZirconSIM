@@ -131,15 +131,10 @@ void Repl::execute() {
                 continue;
             }
             try {
-                auto control =
-                    parser.parse(input, command::CommandContext::REPL);
-                control->setHS(hs);
-                if(auto command =
-                       std::dynamic_pointer_cast<command::Command>(control)) {
-                    command->doit(&std::cout);
-                } else {
-                    std::cerr << "Only COMMANDs are supported at this time\n";
-                }
+                auto c = parser.parse(input, command::CommandContext::REPL);
+                c->setHS(hs);
+                c->install();
+                c->doit(&std::cout);
             } catch(const ishell::parser::ParseException& pe) {
                 std::cerr << "Invalid command\n";
             }

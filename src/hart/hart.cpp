@@ -16,7 +16,7 @@
 namespace hart {
 
 Hart::Hart(std::shared_ptr<mem::MemoryImage> m)
-    : hs_(std::make_unique<HartState>(m)) {}
+    : hs_(std::make_unique<HartState>(this, m)) {}
 
 bool Hart::shouldHalt() {
     // if pc is beyond the bounds of memory , return true

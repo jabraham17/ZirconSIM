@@ -31,6 +31,8 @@ class HartState {
     friend command::Expr;
 
   private:
+    // the hart current being executed
+    Hart* hart;
     std::unique_ptr<isa::rf::RegisterFile> rf_;
 
     struct MemoryPair {
@@ -136,10 +138,12 @@ class HartState {
     // use raw(addr) so we don't log mem access
     types::InstructionWord getInstWord() const;
 
-    HartState(std::shared_ptr<mem::MemoryImage> m);
+    HartState(Hart* hart, std::shared_ptr<mem::MemoryImage> m);
 
     HartState& operator()() { return *this; }
     const HartState& operator()() const { return *this; }
+
+    Hart* getExecutingHart() { return hart; }
 
     void setPC(types::Address start_address) { pc = start_address; }
     void start() { setExecutionState(ExecutionState::RUNNING); }

@@ -416,7 +416,7 @@ void MainArguments::addControllerCallbacks(hart::Hart& hart) {
     for(auto a : parsed_commands) {
         a->setHS(&hart.hs());
         a->setColor(useColor);
-        a->install(&hart);
+        a->install();
     }
 }
 std::vector<std::string> MainArguments::getArgV() { return simulated_argv; }
