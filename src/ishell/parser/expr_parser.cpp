@@ -157,7 +157,7 @@ ExprParser::reducePrimaryRule(const std::vector<StackElm>& rhs) {
             if(auto reg = isa::rf::parseRegister(reg_name)) {
                 return std::make_shared<command::RegisterExpr>(reg_name, *reg);
             } else {
-                throw new ParseException("Invalid Register: " + reg_name);
+                throw ParseException("Invalid Register: " + reg_name);
             }
         } else if(isTokenOfType(rhs[0], TokenType::NUM)) {
             return std::make_shared<command::NumberExpr>(

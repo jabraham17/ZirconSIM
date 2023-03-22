@@ -61,7 +61,7 @@ class Command {
     virtual void setHS(hart::HartState* hs);
     virtual bool shouldDoit();
     virtual void doit([[maybe_unused]] std::ostream* o = nullptr);
-    virtual void install([[maybe_unused]] hart::Hart* hart) {
+    virtual void install() {
         // does nothing in the base case
     }
 };
@@ -119,7 +119,7 @@ class CallbackCommand : public Command {
 
     // override this classes doit, cannot call directly and should do nothing
     virtual void doit([[maybe_unused]] std::ostream* o = nullptr) override {}
-    virtual void install([[maybe_unused]] hart::Hart* hart) override;
+    virtual void install() override;
 };
 
 } // namespace command

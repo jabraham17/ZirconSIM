@@ -82,8 +82,8 @@ CallbackCommand::CallbackCommand(
     }
 }
 
-void CallbackCommand::install(hart::Hart* hart) {
-    if(!hs || !hart) return;
+void CallbackCommand::install() {
+    if(!hs) return;
 // attach to all relevant events
 // use super classes doit
 #define CALLBACK_TO_INSTALL this->Command::doit(&std::cout);
@@ -91,35 +91,35 @@ void CallbackCommand::install(hart::Hart* hart) {
     for(auto event_type : this->events) {
         switch(event_type) {
             case event::EventType::HART_BEFORE_EXECUTE:
-                hart->addBeforeExecuteListener(
+                hs->getExecutingHart()->addBeforeExecuteListener(
                     [this](hart::HartState&) { CALLBACK_TO_INSTALL });
                 break;
             case event::EventType::HART_AFTER_EXECUTE:
-                hart->addAfterExecuteListener(
+                hs->getExecutingHart()->addAfterExecuteListener(
                     [this](hart::HartState&) { CALLBACK_TO_INSTALL });
                 break;
             case event::EventType::MEM_READ:
-                hart->hs().mem().addReadListener(
+                hs->getExecutingHart()->hs().mem().addReadListener(
                     [this](uint64_t, uint64_t, size_t) { CALLBACK_TO_INSTALL });
                 break;
             case event::EventType::MEM_WRITE:
-                hart->hs().mem().addWriteListener(
+                hs->getExecutingHart()->hs().mem().addWriteListener(
                     [this](uint64_t, uint64_t, uint64_t, size_t) {
                         CALLBACK_TO_INSTALL
                     });
                 break;
             case event::EventType::MEM_ALLOCATION:
-                hart->hs().mem().addAllocationListener(
+                hs->getExecutingHart()->hs().mem().addAllocationListener(
                     [this](uint64_t, uint64_t) { CALLBACK_TO_INSTALL });
                 break;
             case event::EventType::REG_READ:
-                hart->hs().rf().addReadListener(
+                hs->getExecutingHart()->hs().rf().addReadListener(
                     [this](std::string, uint64_t, uint64_t) {
                         CALLBACK_TO_INSTALL
                     });
                 break;
             case event::EventType::REG_WRITE:
-                hart->hs().rf().addWriteListener(
+                hs->getExecutingHart()->hs().rf().addWriteListener(
                     [this](std::string, uint64_t, uint64_t, uint64_t) {
                         CALLBACK_TO_INSTALL
                     });

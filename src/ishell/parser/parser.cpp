@@ -74,6 +74,9 @@ command::CommandPtr Parser::parse_command(command::CommandContext context) {
     // command otherwise regardless of context if there are events use callback
     if(event_list.empty()) {
         if(context == command::CommandContext::CLI) {
+            common::debug::logln(
+                common::debug::DebugType::PARSER,
+                "Returning a callback from CLI with no events");
             return std::make_shared<command::CallbackCommand>(
                 context,
                 actions,
@@ -81,11 +84,17 @@ command::CommandPtr Parser::parse_command(command::CommandContext context) {
         } else if(
             context == command::CommandContext::REPL &&
             actionsContainWatch(actions.begin(), actions.end())) {
+            common::debug::logln(
+                common::debug::DebugType::PARSER,
+                "Returning a callback from REPL with WATCH command");
             return std::make_shared<command::CallbackCommand>(
                 context,
                 actions,
                 condition);
         } else if(context == command::CommandContext::REPL) {
+            common::debug::logln(
+                common::debug::DebugType::PARSER,
+                "Returning an immediate command from REPL");
             return std::make_shared<command::Command>(
                 context,
                 actions,
@@ -96,6 +105,9 @@ command::CommandPtr Parser::parse_command(command::CommandContext context) {
             throw ParseException("Cannot infer events with unknown context\n");
         }
     } else {
+        common::debug::logln(
+            common::debug::DebugType::PARSER,
+            "Returning a callback with user events");
         return std::make_shared<command::CallbackCommand>(
             context,
             actions,

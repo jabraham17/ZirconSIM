@@ -32,41 +32,6 @@ int main(int argc, const char** argv, const char** envp) {
             [&stats](hart::HartState& hs) { stats.count(hs); });
     }
 
-    // auto t = std::thread([&hart]() {
-    //     auto parser = ishell::parser::Parser();
-    //     while(1) {
-    //         // hart.hs().waitForExecutionStateChange();
-    //         if(hart.hs().isPaused()) {
-    //             std::cout.flush();
-    //             std::cout << "> ";
-    //             std::string input;
-    //             std::getline(std::cin, input);
-
-    //             try {
-    //                 auto control = parser.parse(input);
-    //                 control->setHS(&hart.hs());
-    //                 if(auto command =
-    //                        std::dynamic_pointer_cast<command::Command>(
-    //                            control)) {
-    //                     command->doit(&std::cout);
-    //                 } else {
-    //                     std::cerr
-    //                         << "Only COMMANDs are supported at this time\n";
-    //                 }
-    //             } catch(const ishell::parser::ParseException& pe) {
-    //                 std::cerr << "Invalid command\n";
-    //             }
-
-    //         } else if(
-    //             hart.hs().getExecutionState() ==
-    //                 hart::ExecutionState::STOPPED ||
-    //             hart.hs().getExecutionState() ==
-    //                 hart::ExecutionState::INVALID_STATE) {
-    //             break;
-    //         }
-    //     }
-    // });
-
     hart.init(args.getArgV(), args.getEnvVars());
     hart.hs().setPC(start);
 
@@ -82,7 +47,6 @@ int main(int argc, const char** argv, const char** envp) {
 
     hart.wait_till_done();
     repl.wait_till_done();
-    // t.join();
 
     if(args.accessRawArguments().get<bool>("--stats")) {
         std::cout << stats.dump() << std::endl;

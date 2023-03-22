@@ -7,8 +7,8 @@ types::InstructionWord HartState::getInstWord() const {
     return *((types::InstructionWord*)ptr);
 }
 
-HartState::HartState(std::shared_ptr<mem::MemoryImage> m)
-    : rf_(std::make_unique<isa::rf::RegisterFile>()), memories_(),
+HartState::HartState(Hart* hart, std::shared_ptr<mem::MemoryImage> m)
+    : hart(hart), rf_(std::make_unique<isa::rf::RegisterFile>()), memories_(),
       execution_state(ExecutionState::STOPPED) {
     // insert memory image for address space 0
     this->memories_.insert_or_assign(0, m);
