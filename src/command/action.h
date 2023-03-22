@@ -4,6 +4,7 @@
 #include "command.h"
 #include "expr.h"
 
+#include "common/utils.h"
 #include "hart/hart.h"
 #include "hart/isa/register.h"
 #include "hart/types.h"
@@ -60,6 +61,7 @@ class ActionBase {
     // FIXME: possible sign underflow may occur here
     virtual void decreaseIndent(size_t indent = 2) { this->indent -= indent; }
     virtual void setColor(bool useColor) { this->useColor = useColor; }
+    virtual std::string getString() { return "ACTION()"; }
 };
 
 #define MAKE_ACTION_0_ARGS(ClassName, ActionTypeName)                          \
@@ -73,6 +75,7 @@ class ActionBase {
         static bool classof(const ActionBase* ai) {                            \
             return ai->at == ActionType::ActionTypeName;                       \
         }                                                                      \
+        virtual std::string getString() override { return #ClassName "()"; }   \
     };
 #define MAKE_ACTION_1_ARGS(ClassName, ActionTypeName)                          \
     class ClassName : public ActionBase {                                      \
@@ -87,6 +90,9 @@ class ActionBase {
         void action(std::ostream* o = nullptr) override;                       \
         static bool classof(const ActionBase* ai) {                            \
             return ai->at == ActionType::ActionTypeName;                       \
+        }                                                                      \
+        virtual std::string getString() override {                             \
+            return #ClassName "(" + expr->getString() + ")";                   \
         }                                                                      \
     };
 #define MAKE_ACTION_2_ARGS(ClassName, ActionTypeName)                          \
@@ -109,6 +115,10 @@ class ActionBase {
         static bool classof(const ActionBase* ai) {                            \
             return ai->at == ActionType::ActionTypeName;                       \
         }                                                                      \
+        virtual std::string getString() override {                             \
+            return #ClassName "(" + expr1->getString() + ", " +                \
+                   expr2->getString() + ")";                                   \
+        }                                                                      \
     };
 #define MAKE_ACTION_VAR_ARGS(ClassName, ActionTypeName)                        \
     class ClassName : public ActionBase {                                      \
@@ -130,6 +140,14 @@ class ActionBase {
         void action(std::ostream* o = nullptr) override;                       \
         static bool classof(const ActionBase* ai) {                            \
             return ai->at == ActionType::ActionTypeName;                       \
+        }                                                                      \
+        virtual std::string getString() override {                             \
+            return #ClassName "(" +                                            \
+                   common::utils::join(                                        \
+                       expressions.begin(),                                    \
+                       expressions.end(),                                      \
+                       [](auto e) { return e->getString() }) +                 \
+                   ")";                                                        \
         }                                                                      \
     };
 
@@ -157,6 +175,20 @@ class Dump : public ActionBase {
     void action(std::ostream* o = nullptr) override;
     static bool classof(const ActionBase* ai) {
         return ai->at == ActionType::DUMP;
+    }
+    virtual std::string getString() override {
+        return "Dump(" +
+               common::utils::join(
+                   args.begin(),
+                   args.end(),
+                   [](auto a) {
+                       if(std::holds_alternative<std::string>(a)) {
+                           return "\"" + std::get<std::string>(a) + "\"";
+                       } else {
+                           return std::get<command::ExprPtr>(a)->getString();
+                       }
+                   }) +
+               ")";
     }
 };
 
@@ -203,6 +235,14 @@ class Watch : public ActionBase {
         for(auto a : this->actions) {
             a->decreaseIndent();
         }
+    }
+    virtual std::string getString() override {
+        return "Dump(" + expr->getString() + " " +
+               common::utils::join(
+                   actions.begin(),
+                   actions.end(),
+                   [](auto a) { return a->getString(); }) +
+               ")";
     }
 
   private:
@@ -253,6 +293,15 @@ class ActionGroup : public ActionBase {
         }
     }
     std::vector<ActionPtr> getActions() { return actions; }
+
+    virtual std::string getString() override {
+        return "{" +
+               common::utils::join(
+                   actions.begin(),
+                   actions.end(),
+                   [](auto a) { return a->getString(); }) +
+               "}";
+    }
 
   private:
     void updateActions() {
