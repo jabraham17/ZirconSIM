@@ -15,6 +15,16 @@ enum class Precedence {
     ERR,
     ACC
 };
+std::string getPrecedenceString(Precedence p) {
+    switch(p) {
+        case Precedence::TAKE: return "TAKE";
+        case Precedence::YIELD: return "YIELD";
+        case Precedence::SAME: return "SAME";
+        case Precedence::ERR: return "ERR";
+        case Precedence::ACC: return "ACC";
+    }
+    return "";
+}
 #include "parser/expr_parser_table.inc"
 
 #warning TODO change std::get if ladders to use visitor? may make cleaner and/or faster code
@@ -208,7 +218,7 @@ std::string getStringStackElm(ExprParser::StackElm e) {
     if(std::holds_alternative<Token>(e)) {
         return std::get<Token>(e).getString();
     } else {
-        return std::get<command::ExprPtr>(e)->getString();
+        return "e'" + std::get<command::ExprPtr>(e)->getString() + "'";
     }
 }
 
@@ -231,6 +241,14 @@ command::ExprPtr ExprParser::parse() {
             break;
         auto action =
             precedence_table::getAction(tos.token_type, toi.token_type);
+        common::debug::logln(
+            common::debug::DebugType::PARSER,
+            "ACTION=",
+            getPrecedenceString(action),
+            ", TOS=",
+            tos.getString(),
+            ", TOI=",
+            toi.getString());
 
         if(action == Precedence::YIELD || action == Precedence::SAME) { // shift
             toi = getInputToken();
@@ -242,7 +260,6 @@ command::ExprPtr ExprParser::parse() {
                 debugPrintStack(stack);
                 common::debug::rawlog(common::debug::DebugType::PARSER) << "\n";
             }
-
         } else if(action == Precedence::TAKE) {
             std::vector<StackElm> rhs;
             Token last_popped_term;
