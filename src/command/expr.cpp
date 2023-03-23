@@ -63,7 +63,7 @@ static std::string getOperatorString(ExprOperatorType op) {
         case ExprOperatorType::BW_AND: return "&";
         case ExprOperatorType::BW_OR: return "|";
         case ExprOperatorType::AND: return "&&";
-        case ExprOperatorType::OR: return "|";
+        case ExprOperatorType::OR: return "||";
         case ExprOperatorType::NEGATE: return "-";
         case ExprOperatorType::BW_NOT: return "~";
         case ExprOperatorType::NOT: return "!";
