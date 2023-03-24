@@ -168,3 +168,13 @@ std::unordered_map<uint64_t, std::string> elf::File::getSymbolTable() {
     }
     return syms;
 }
+
+std::unordered_map<std::string, uint64_t> elf::File::getSymbolToAddressMap() {
+    std::unordered_map<std::string, uint64_t> symbolToAddress;
+    auto symbolTable = getSymbolTable();
+    for(auto [key, value] : symbolTable) {
+        // reverse entries
+        symbolToAddress[value] = key;
+    }
+    return symbolToAddress;
+}

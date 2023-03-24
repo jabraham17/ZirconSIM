@@ -22,6 +22,7 @@ int main(int argc, const char** argv, const char** envp) {
     hart::Hart hart(std::make_shared<mem::MemoryImage>());
     elf.buildMemoryImage(hart.hs().mem());
     auto start = elf.getStartAddress();
+    hart.hs().setElfSymbols(elf.getSymbolToAddressMap());
 
     args.addCallbacks(hart, elf);
     args.addControllerCallbacks(hart);

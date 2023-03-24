@@ -117,6 +117,7 @@ class File {
     uint64_t getStartAddress();
 
     std::unordered_map<uint64_t, std::string> getSymbolTable();
+    std::unordered_map<std::string, uint64_t> getSymbolToAddressMap();
 };
 
 } // namespace elf
