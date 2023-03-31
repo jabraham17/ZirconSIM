@@ -9,6 +9,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 
 namespace command {
@@ -50,6 +51,8 @@ class HartState {
     // std::mutex lock_es;
     // std::condition_variable signal_es;
     std::atomic<ExecutionState> execution_state;
+
+    std::unordered_map<std::string, uint64_t> elfSymbols;
 
   public:
     isa::rf::RegisterFile& rf() const { return *rf_; }
@@ -100,6 +103,16 @@ class HartState {
             addrSpace,
             std::make_shared<mem::MemoryImage>());
         return addrSpace;
+    }
+    void setElfSymbols(std::unordered_map<std::string, uint64_t> elfSymbols) {
+        this->elfSymbols = elfSymbols;
+    }
+    std::optional<uint64_t> getSymbol(const std::string& symbol) {
+        if(auto it = this->elfSymbols.find(symbol);
+           it != this->elfSymbols.end()) {
+            return it->second;
+        }
+        return std::nullopt;
     }
 
     struct PCProxy {

@@ -141,7 +141,7 @@ MainArguments::MainArguments()
         .metavar("CONTROL")
         .help("a control sequence to apply");
 
-    program_args.add_argument("--start-paused")
+    program_args.add_argument("-p", "--start-paused")
         .default_value(false)
         .implicit_value(true)
         .help("start with the hart in a paused state");

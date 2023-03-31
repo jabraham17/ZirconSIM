@@ -100,11 +100,15 @@ NumberExpr::evalImpl([[maybe_unused]] hart::HartState* hs) const {
     return number;
 }
 
-std::string SymbolExpr::getString() const { return name; }
-types::SignedInteger
-SymbolExpr::evalImpl([[maybe_unused]] hart::HartState* hs) const {
-    return 0;
-#warning TODO: implement symbol table lookup
+std::string SymbolExpr::getString() const { return "@" + name; }
+types::SignedInteger SymbolExpr::evalImpl(hart::HartState* hs) const {
+    auto symbolValue = hs->getSymbol(this->name);
+    if(symbolValue.has_value()) {
+        return types::SignedInteger(*symbolValue);
+    } else {
+        std::cerr << "PANIC BAD SYMBOL\n";
+        exit(1);
+    }
 }
 
 std::string RegisterExpr::getString() const { return "$" + name; }
